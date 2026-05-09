@@ -9,7 +9,17 @@ module ActiveSupport
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
+  end
+end
 
-    # Add more helper methods to be used by all tests here...
+class ActionDispatch::IntegrationTest
+  include Committee::Rails::Test::Methods
+
+  def committee_options
+    @committee_options ||= {
+      schema_path: Rails.root.join("openapi/v1.yaml").to_s,
+      parse_response_by_content_type: true,
+      ignore_response_fields_not_in_spec: true
+    }
   end
 end

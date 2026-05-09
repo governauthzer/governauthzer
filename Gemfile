@@ -63,4 +63,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  # OpenAPI contract enforcement — validates requests/responses against openapi/v1.yaml
+  gem "committee-rails"
 end

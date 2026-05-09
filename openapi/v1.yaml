@@ -1,0 +1,29 @@
+openapi: "3.1.0"
+
+info:
+  title: governauthzer Management API
+  version: "1"
+  description: |
+    Decision-plane IGA — bring your own provisioner.
+
+    This is the management API for governauthzer. It is the only user-management
+    surface at v1. Your HRIS or onboarding system calls POST on hire, PATCH for
+    attribute updates and status transitions, GET for read/list.
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development
+  - url: /api/v1
+    description: Default (relative)
+
+components:
+  securitySchemes:
+    BearerToken:
+      type: http
+      scheme: bearer
+      description: API token issued per consumer. Pass as Authorization header.
+
+security:
+  - BearerToken: []
+
+paths: {}
