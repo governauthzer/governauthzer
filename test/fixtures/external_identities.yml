@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+alice_workday:
+  user: alice
+  source: workday
+  external_id: EMP-1001
+
+bob_workday:
+  user: bob
+  source: workday
+  external_id: EMP-1002
