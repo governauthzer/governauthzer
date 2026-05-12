@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+alice:
+  email: alice@example.com
+  name: Alice Active
+  status: active
+  start_date: 2026-01-01
+
+bob:
+  email: bob@example.com
+  name: Bob Pending
+  status: pending_start
+  start_date: 2026-12-01
