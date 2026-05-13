@@ -1,7 +1,7 @@
 class Role < ApplicationRecord
   belongs_to :application
-  has_many :user_roles, dependent: :restrict_with_error
-  has_many :users, through: :user_roles
+  has_many :accesses, dependent: :restrict_with_error
+  has_many :users, through: :accesses
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: { scope: :application_id }

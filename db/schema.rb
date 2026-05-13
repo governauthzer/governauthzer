@@ -10,9 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_12_134009) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_13_100919) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "accesses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.text "justification"
+    t.uuid "requested_by_id"
+    t.uuid "role_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["requested_by_id"], name: "index_accesses_on_requested_by_id"
+    t.index ["role_id"], name: "index_accesses_on_role_id"
+    t.index ["status"], name: "index_accesses_on_status"
+    t.index ["user_id", "role_id"], name: "index_accesses_on_user_id_and_role_id", unique: true
+    t.index ["user_id"], name: "index_accesses_on_user_id"
+  end
 
   create_table "applications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -43,17 +59,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_134009) do
     t.index ["application_id"], name: "index_roles_on_application_id"
   end
 
-  create_table "user_roles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "expires_at"
-    t.uuid "role_id", null: false
-    t.datetime "updated_at", null: false
-    t.uuid "user_id", null: false
-    t.index ["role_id"], name: "index_user_roles_on_role_id"
-    t.index ["user_id", "role_id"], name: "index_user_roles_on_user_id_and_role_id", unique: true
-    t.index ["user_id"], name: "index_user_roles_on_user_id"
-  end
-
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "department"
@@ -70,9 +75,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_134009) do
     t.index ["status"], name: "index_users_on_status"
   end
 
+  add_foreign_key "accesses", "roles"
+  add_foreign_key "accesses", "users"
+  add_foreign_key "accesses", "users", column: "requested_by_id"
   add_foreign_key "external_identities", "users"
   add_foreign_key "roles", "applications"
-  add_foreign_key "user_roles", "roles"
-  add_foreign_key "user_roles", "users"
   add_foreign_key "users", "users", column: "manager_id"
 end
