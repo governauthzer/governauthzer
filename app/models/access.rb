@@ -4,7 +4,7 @@ class Access < ApplicationRecord
   belongs_to :user
   belongs_to :role
   belongs_to :requested_by, class_name: "User", optional: true
-  belongs_to :approved_by, class_name: "User", optional: true
+  has_many :approval_decisions, dependent: :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :user_id, uniqueness: { scope: :role_id }
@@ -24,7 +24,25 @@ class Access < ApplicationRecord
     expires_at.present? && expires_at <= Time.current
   end
 
+  def approved_by
+    final_approval_decision&.approver
+  end
+
+  def approved_at
+    final_approval_decision&.created_at
+  end
+
   def audit_display
     "#{user.name} → #{role.name}"
+  end
+
+  private
+
+  def final_approval_decision
+    approval_decisions
+      .where(decision: "approved")
+      .joins(:approval_step)
+      .order("approval_steps.position DESC, approval_decisions.created_at DESC")
+      .first
   end
 end

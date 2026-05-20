@@ -1,5 +1,6 @@
 class Role < ApplicationRecord
   belongs_to :application
+  belongs_to :approval_workflow, optional: true
   has_many :accesses, dependent: :restrict_with_error
   has_many :users, through: :accesses
 

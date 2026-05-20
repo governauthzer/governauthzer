@@ -10,13 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_20_084028) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_20_125045) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "accesses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.datetime "approved_at"
-    t.uuid "approved_by_id"
     t.datetime "created_at", null: false
     t.datetime "expires_at"
     t.text "justification"
@@ -25,7 +23,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_084028) do
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
-    t.index ["approved_by_id"], name: "index_accesses_on_approved_by_id"
     t.index ["requested_by_id"], name: "index_accesses_on_requested_by_id"
     t.index ["role_id"], name: "index_accesses_on_role_id"
     t.index ["status"], name: "index_accesses_on_status"
@@ -39,6 +36,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_084028) do
     t.string "slug", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_applications_on_slug", unique: true
+  end
+
+  create_table "approval_decisions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "access_id", null: false
+    t.uuid "approval_step_id", null: false
+    t.uuid "approver_id", null: false
+    t.text "comment"
+    t.datetime "created_at", null: false
+    t.string "decision", null: false
+    t.datetime "updated_at", null: false
+    t.index ["access_id"], name: "index_approval_decisions_on_access_id"
+    t.index ["approval_step_id"], name: "index_approval_decisions_on_approval_step_id"
+    t.index ["approver_id"], name: "index_approval_decisions_on_approver_id"
+  end
+
+  create_table "approval_steps", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "approval_workflow_id", null: false
+    t.uuid "approver_user_id"
+    t.datetime "created_at", null: false
+    t.uuid "fallback_user_id", null: false
+    t.integer "position", null: false
+    t.string "strategy", null: false
+    t.datetime "updated_at", null: false
+    t.index ["approval_workflow_id", "position"], name: "index_approval_steps_on_approval_workflow_id_and_position", unique: true
+    t.index ["approval_workflow_id"], name: "index_approval_steps_on_approval_workflow_id"
+    t.index ["approver_user_id"], name: "index_approval_steps_on_approver_user_id"
+    t.index ["fallback_user_id"], name: "index_approval_steps_on_fallback_user_id"
+  end
+
+  create_table "approval_workflows", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.boolean "protected", default: false, null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_approval_workflows_on_slug", unique: true
   end
 
   create_table "audit_events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -75,6 +108,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_084028) do
 
   create_table "roles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "application_id", null: false
+    t.uuid "approval_workflow_id"
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.boolean "protected", default: false, null: false
@@ -82,6 +116,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_084028) do
     t.datetime "updated_at", null: false
     t.index ["application_id", "slug"], name: "index_roles_on_application_id_and_slug", unique: true
     t.index ["application_id"], name: "index_roles_on_application_id"
+    t.index ["approval_workflow_id"], name: "index_roles_on_approval_workflow_id"
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -102,10 +137,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_084028) do
 
   add_foreign_key "accesses", "roles"
   add_foreign_key "accesses", "users"
-  add_foreign_key "accesses", "users", column: "approved_by_id"
   add_foreign_key "accesses", "users", column: "requested_by_id"
+  add_foreign_key "approval_decisions", "accesses"
+  add_foreign_key "approval_decisions", "approval_steps"
+  add_foreign_key "approval_decisions", "users", column: "approver_id"
+  add_foreign_key "approval_steps", "approval_workflows"
+  add_foreign_key "approval_steps", "users", column: "approver_user_id"
+  add_foreign_key "approval_steps", "users", column: "fallback_user_id"
   add_foreign_key "audit_events", "users", column: "actor_id"
   add_foreign_key "external_identities", "users"
   add_foreign_key "roles", "applications"
+  add_foreign_key "roles", "approval_workflows"
   add_foreign_key "users", "users", column: "manager_id"
 end
