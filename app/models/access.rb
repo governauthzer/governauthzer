@@ -4,6 +4,7 @@ class Access < ApplicationRecord
   belongs_to :user
   belongs_to :role
   belongs_to :requested_by, class_name: "User", optional: true
+  belongs_to :approved_by, class_name: "User", optional: true
 
   validates :status, inclusion: { in: STATUSES }
   validates :user_id, uniqueness: { scope: :role_id }
