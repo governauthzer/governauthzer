@@ -23,4 +23,8 @@ class Access < ApplicationRecord
   def expired?
     expires_at.present? && expires_at <= Time.current
   end
+
+  def audit_display
+    "#{user.name} → #{role.name}"
+  end
 end

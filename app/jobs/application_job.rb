@@ -4,4 +4,8 @@ class ApplicationJob < ActiveJob::Base
 
   # Most jobs are safe to ignore if the underlying records are no longer available
   # discard_on ActiveJob::DeserializationError
+
+  around_perform do |_job, block|
+    Current.set(correlation_id: SecureRandom.uuid) { block.call }
+  end
 end
