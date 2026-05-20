@@ -10,11 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_13_100919) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_20_084028) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "accesses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "approved_at"
+    t.uuid "approved_by_id"
     t.datetime "created_at", null: false
     t.datetime "expires_at"
     t.text "justification"
@@ -23,6 +25,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100919) do
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
+    t.index ["approved_by_id"], name: "index_accesses_on_approved_by_id"
     t.index ["requested_by_id"], name: "index_accesses_on_requested_by_id"
     t.index ["role_id"], name: "index_accesses_on_role_id"
     t.index ["status"], name: "index_accesses_on_status"
@@ -36,6 +39,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100919) do
     t.string "slug", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_applications_on_slug", unique: true
+  end
+
+  create_table "audit_events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "actor_display"
+    t.uuid "actor_id"
+    t.string "actor_type", null: false
+    t.jsonb "changes"
+    t.uuid "correlation_id", null: false
+    t.string "event_type", null: false
+    t.inet "ip_address"
+    t.text "justification"
+    t.jsonb "metadata"
+    t.datetime "occurred_at", null: false
+    t.string "schema_version", default: "1.0", null: false
+    t.jsonb "targets", default: [], null: false
+    t.text "user_agent"
+    t.index ["actor_id", "occurred_at"], name: "index_audit_events_on_actor_id_and_occurred_at"
+    t.index ["actor_id"], name: "index_audit_events_on_actor_id"
+    t.index ["correlation_id"], name: "index_audit_events_on_correlation_id"
+    t.index ["event_type"], name: "index_audit_events_on_event_type"
+    t.index ["occurred_at"], name: "index_audit_events_on_occurred_at", order: :desc
+    t.index ["targets"], name: "index_audit_events_on_targets", opclass: :jsonb_path_ops, using: :gin
   end
 
   create_table "external_identities", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -77,7 +102,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100919) do
 
   add_foreign_key "accesses", "roles"
   add_foreign_key "accesses", "users"
+  add_foreign_key "accesses", "users", column: "approved_by_id"
   add_foreign_key "accesses", "users", column: "requested_by_id"
+  add_foreign_key "audit_events", "users", column: "actor_id"
   add_foreign_key "external_identities", "users"
   add_foreign_key "roles", "applications"
   add_foreign_key "users", "users", column: "manager_id"
