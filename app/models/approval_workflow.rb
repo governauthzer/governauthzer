@@ -1,4 +1,6 @@
 class ApprovalWorkflow < ApplicationRecord
+  DEFAULT_SLUG = "default-manager".freeze
+
   has_many :approval_steps, -> { order(:position) }, dependent: :restrict_with_error
   has_many :roles, dependent: :restrict_with_error
 
@@ -6,6 +8,10 @@ class ApprovalWorkflow < ApplicationRecord
   validates :slug, presence: true, uniqueness: true
 
   before_validation :normalize_slug
+
+  def self.default
+    find_by!(slug: DEFAULT_SLUG)
+  end
 
   private
 

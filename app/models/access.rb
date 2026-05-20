@@ -32,6 +32,24 @@ class Access < ApplicationRecord
     final_approval_decision&.created_at
   end
 
+  def workflow
+    role.approval_workflow || ApprovalWorkflow.default
+  end
+
+  def current_step
+    workflow.approval_steps.find do |step|
+      !approval_decisions.approvals.exists?(approval_step: step)
+    end
+  end
+
+  def current_approver
+    current_step&.resolve_approver(requester: requested_by)
+  end
+
+  def fully_approved?
+    current_step.nil?
+  end
+
   def audit_display
     "#{user.name} → #{role.name}"
   end
@@ -40,7 +58,7 @@ class Access < ApplicationRecord
 
   def final_approval_decision
     approval_decisions
-      .where(decision: "approved")
+      .approvals
       .joins(:approval_step)
       .order("approval_steps.position DESC, approval_decisions.created_at DESC")
       .first

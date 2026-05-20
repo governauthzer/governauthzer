@@ -6,4 +6,7 @@ class ApprovalDecision < ApplicationRecord
   belongs_to :approver, class_name: "User"
 
   validates :decision, inclusion: { in: DECISIONS }
+
+  scope :approvals, -> { where(decision: "approved") }
+  scope :denials, -> { where(decision: "denied") }
 end
