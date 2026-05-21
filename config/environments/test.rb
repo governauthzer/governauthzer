@@ -6,6 +6,12 @@
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
+  # Stable encryption keys for the test environment. NOT secrets — deterministic strings so
+  # tests run without provisioning credentials or env vars. Never reuse outside test env.
+  config.active_record.encryption.primary_key         = "test_primary_key_at_least_32_characters_xxxx"
+  config.active_record.encryption.deterministic_key   = "test_deterministic_key_at_least_32_chars_xx"
+  config.active_record.encryption.key_derivation_salt = "test_key_derivation_salt_at_least_32_chars_x"
+
   # While tests run files are not watched, reloading is not necessary.
   config.enable_reloading = false
 

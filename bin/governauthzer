@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# governauthzer admin CLI.
+#
+# Subcommands:
+#   generate-encryption-keys    Print three fresh encryption keys for production deployment.
+#
+# Future subcommands (Phase 2 work):
+#   emergency-login             Issue a single-use one-time login URL (break-glass).
+
+require "securerandom"
+
+SUBCOMMAND = ARGV.shift
+
+def usage
+  warn <<~USAGE
+    Usage: bin/governauthzer <subcommand> [args]
+
+    Subcommands:
+      generate-encryption-keys    Print three fresh encryption keys for production deployment.
+  USAGE
+  exit 1
+end
+
+case SUBCOMMAND
+when "generate-encryption-keys"
+  primary = SecureRandom.alphanumeric(32)
+  deter   = SecureRandom.alphanumeric(32)
+  salt    = SecureRandom.alphanumeric(32)
+
+  puts <<~OUT
+    # Generated encryption keys for governauthzer.
+    # Set these as environment variables in production.
+    # Store them in your secret manager (Vault / AWS Secrets Manager / Kubernetes Secrets / ...).
+    # KEEP THEM SAFE — losing these keys means losing access to all encrypted data.
+
+    GOVERNAUTHZER_ENCRYPTION_PRIMARY_KEY=#{primary}
+    GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY=#{deter}
+    GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT=#{salt}
+  OUT
+else
+  usage
+end
