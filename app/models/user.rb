@@ -3,6 +3,8 @@ class User < ApplicationRecord
 
   belongs_to :manager, class_name: "User", optional: true
   has_many :external_identities, dependent: :restrict_with_error
+  has_many :omniauth_identities, dependent: :restrict_with_error
+  has_many :emergency_tokens, dependent: :restrict_with_error
   has_many :accesses, dependent: :restrict_with_error
   has_many :roles, through: :accesses
 

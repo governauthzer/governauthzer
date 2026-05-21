@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_20_125045) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_21_130504) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,6 +96,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_125045) do
     t.index ["targets"], name: "index_audit_events_on_targets", opclass: :jsonb_path_ops, using: :gin
   end
 
+  create_table "auth_providers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.jsonb "claim_mappings", default: [], null: false
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: true, null: false
+    t.string "name", null: false
+    t.string "oidc_client_id", null: false
+    t.string "oidc_client_secret"
+    t.string "oidc_issuer_url", null: false
+    t.string "oidc_scope", default: "openid email profile", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["enabled"], name: "index_auth_providers_on_enabled"
+    t.index ["slug"], name: "index_auth_providers_on_slug", unique: true
+  end
+
+  create_table "emergency_tokens", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.uuid "issued_by_id"
+    t.text "reason", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "used_at"
+    t.uuid "user_id", null: false
+    t.index ["issued_by_id"], name: "index_emergency_tokens_on_issued_by_id"
+    t.index ["token_digest"], name: "index_emergency_tokens_on_token_digest", unique: true
+    t.index ["user_id", "used_at"], name: "index_emergency_tokens_on_user_id_and_used_at"
+    t.index ["user_id"], name: "index_emergency_tokens_on_user_id"
+  end
+
   create_table "external_identities", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "external_id", null: false
@@ -104,6 +134,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_125045) do
     t.uuid "user_id", null: false
     t.index ["source", "external_id"], name: "index_external_identities_on_source_and_external_id", unique: true
     t.index ["user_id"], name: "index_external_identities_on_user_id"
+  end
+
+  create_table "omniauth_identities", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "auth_provider_id", null: false
+    t.datetime "created_at", null: false
+    t.string "subject", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["auth_provider_id", "subject"], name: "index_omniauth_identities_on_auth_provider_id_and_subject", unique: true
+    t.index ["auth_provider_id"], name: "index_omniauth_identities_on_auth_provider_id"
+    t.index ["user_id"], name: "index_omniauth_identities_on_user_id"
   end
 
   create_table "roles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -145,7 +186,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_125045) do
   add_foreign_key "approval_steps", "users", column: "approver_user_id"
   add_foreign_key "approval_steps", "users", column: "fallback_user_id"
   add_foreign_key "audit_events", "users", column: "actor_id"
+  add_foreign_key "emergency_tokens", "users"
+  add_foreign_key "emergency_tokens", "users", column: "issued_by_id"
   add_foreign_key "external_identities", "users"
+  add_foreign_key "omniauth_identities", "auth_providers"
+  add_foreign_key "omniauth_identities", "users"
   add_foreign_key "roles", "applications"
   add_foreign_key "roles", "approval_workflows"
   add_foreign_key "users", "users", column: "manager_id"
