@@ -13,7 +13,7 @@ class CreateAuditEvents < ActiveRecord::Migration[8.1]
       t.jsonb :targets, null: false, default: []
 
       t.text :justification
-      t.jsonb :changes
+      t.jsonb :attribute_changes
 
       t.inet :ip_address
       t.text :user_agent

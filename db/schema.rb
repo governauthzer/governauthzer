@@ -78,7 +78,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_130504) do
     t.string "actor_display"
     t.uuid "actor_id"
     t.string "actor_type", null: false
-    t.jsonb "changes"
+    t.jsonb "attribute_changes"
     t.uuid "correlation_id", null: false
     t.string "event_type", null: false
     t.inet "ip_address"

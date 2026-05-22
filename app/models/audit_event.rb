@@ -9,7 +9,7 @@ class AuditEvent < ApplicationRecord
   validates :correlation_id, presence: true
   validate :actor_id_matches_actor_type
 
-  def self.record!(event_type:, actor:, targets: [], justification: nil, changes: nil, metadata: nil)
+  def self.record!(event_type:, actor:, targets: [], justification: nil, attribute_changes: nil, metadata: nil)
     create!(
       occurred_at: Time.current,
       schema_version: CURRENT_SCHEMA_VERSION,
@@ -19,7 +19,7 @@ class AuditEvent < ApplicationRecord
       actor_display: actor == :system ? nil : actor.audit_display,
       targets: Array(targets).map { |t| target_descriptor(t) },
       justification: justification,
-      changes: changes,
+      attribute_changes: attribute_changes,
       ip_address: Current.ip_address,
       user_agent: Current.user_agent,
       correlation_id: Current.correlation_id,
