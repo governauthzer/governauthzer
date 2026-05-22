@@ -1,26 +1,26 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# governauthzer admin CLI.
-#
-# Subcommands:
-#   generate-encryption-keys    Print three fresh encryption keys for production deployment.
-#
-# Future subcommands (Phase 2 work):
-#   emergency-login             Issue a single-use one-time login URL (break-glass).
-
 require "securerandom"
+require "optparse"
 
 SUBCOMMAND = ARGV.shift
 
-def usage
+def usage(exit_code = 1)
   warn <<~USAGE
     Usage: bin/governauthzer <subcommand> [args]
 
     Subcommands:
-      generate-encryption-keys    Print three fresh encryption keys for production deployment.
+      generate-encryption-keys
+          Print three fresh encryption keys for production deployment.
+          Pure crypto, does not load Rails.
+
+      seed-admin --email EMAIL --name NAME
+          Create the first operator user. Idempotent for the governauthzer-itself
+          Application and its operator Role. After running, use `emergency-login`
+          to obtain a one-time login URL for the new operator's first sign-in.
   USAGE
-  exit 1
+  exit(exit_code)
 end
 
 case SUBCOMMAND
@@ -39,6 +39,23 @@ when "generate-encryption-keys"
     GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY=#{deter}
     GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT=#{salt}
   OUT
+
+when "seed-admin"
+  email = nil
+  name  = nil
+  OptionParser.new do |opts|
+    opts.banner = "Usage: bin/governauthzer seed-admin --email EMAIL --name NAME"
+    opts.on("--email EMAIL") { |v| email = v }
+    opts.on("--name NAME")   { |v| name  = v }
+  end.parse!(ARGV)
+
+  abort "ERROR: --email is required" if email.nil? || email.empty?
+  abort "ERROR: --name is required"  if name.nil?  || name.empty?
+
+  require File.expand_path("../config/environment", __dir__)
+
+  Governauthzer::CLI::SeedAdmin.new(email: email, name: name).run
+
 else
   usage
 end
