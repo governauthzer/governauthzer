@@ -1,0 +1,37 @@
+<% content_for :title, "New API token — Governauthzer" %>
+
+<div class="w-full max-w-xl">
+  <h1 class="text-2xl font-semibold mb-6">Create API token</h1>
+
+  <%= form_with model: [ :admin, @api_token ], local: true, class: "space-y-5" do |f| %>
+    <% if @api_token.errors.any? %>
+      <div class="p-3 rounded bg-gray-200 text-gray-800 text-sm space-y-1">
+        <% @api_token.errors.full_messages.each do |msg| %>
+          <div>• <%= msg %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div>
+      <%= f.label :name, class: "block text-sm font-medium mb-1" %>
+      <%= f.text_field :name, required: true, class: input_class, placeholder: "HRIS sync, CI runner, ..." %>
+      <p class="text-xs text-gray-500 mt-1">Human-readable label identifying the consumer. Not visible to the token holder.</p>
+    </div>
+
+    <div>
+      <%= f.label :expires_at, "Expires at", class: "block text-sm font-medium mb-1" %>
+      <%= f.datetime_local_field :expires_at, class: input_class %>
+      <p class="text-xs text-gray-500 mt-1">Leave blank for a token that never expires.</p>
+    </div>
+
+    <div class="rounded border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+      The plain token value will be displayed <strong>once</strong> after creation. If you miss it,
+      revoke this token and generate a new one.
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <%= f.submit "Generate token", class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
+      <%= link_to "Cancel", admin_api_tokens_path, class: "text-sm underline" %>
+    </div>
+  <% end %>
+</div>

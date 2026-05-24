@@ -14,7 +14,14 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resources :auth_providers, except: :show
+    resources :api_tokens, only: %i[index new create destroy]
     root to: redirect("/admin/auth_providers")
+  end
+
+  namespace :api do
+    namespace :v1 do
+      get "whoami" => "whoami#show", as: :whoami
+    end
   end
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)

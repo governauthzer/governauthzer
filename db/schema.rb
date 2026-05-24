@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_21_130504) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_24_170950) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,6 +30,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_130504) do
     t.index ["status"], name: "index_accesses_on_status"
     t.index ["user_id", "role_id"], name: "index_accesses_on_user_id_and_role_id", unique: true
     t.index ["user_id"], name: "index_accesses_on_user_id"
+  end
+
+  create_table "api_tokens", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.string "name", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
   end
 
   create_table "applications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

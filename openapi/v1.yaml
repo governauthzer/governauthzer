@@ -26,4 +26,41 @@ components:
 security:
   - BearerToken: []
 
-paths: {}
+paths:
+  /whoami:
+    get:
+      summary: Verify API token
+      description: |
+        Returns information about the API token used to authenticate this request.
+        Use this endpoint after configuring a token to verify it is valid and active.
+      operationId: whoami
+      security:
+        - BearerToken: []
+      responses:
+        "200":
+          description: Token is valid.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token_id, token_name]
+                properties:
+                  token_id:
+                    type: string
+                    format: uuid
+                  token_name:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+        "401":
+          description: Missing or invalid API token.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error]
+                properties:
+                  error:
+                    type: string

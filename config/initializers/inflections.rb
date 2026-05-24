@@ -12,6 +12,4 @@
 
 ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.acronym "CLI"
-  inflect.acronym "OIDC"
-  inflect.acronym "API"
 end
