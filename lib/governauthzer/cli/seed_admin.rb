@@ -61,6 +61,7 @@ module Governauthzer
           user: user,
           role: role,
           status: "approved",
+          source: "manual",
           requested_by: nil,
           justification: "Bootstrap: seeded by bin/governauthzer seed-admin"
         )

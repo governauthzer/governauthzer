@@ -1,5 +1,8 @@
 class Access < ApplicationRecord
   STATUSES = %w[pending approved].freeze
+  # `birthright` and `claim_mapping` are reserved for Phase 7 features — included
+  # in the enum now so adding them later doesn't require a migration or model change.
+  SOURCES = %w[manual self_request birthright claim_mapping].freeze
 
   belongs_to :user
   belongs_to :role
@@ -7,6 +10,7 @@ class Access < ApplicationRecord
   has_many :approval_decisions, dependent: :destroy
 
   validates :status, inclusion: { in: STATUSES }
+  validates :source, inclusion: { in: SOURCES }
   validates :user_id, uniqueness: { scope: :role_id }
 
   scope :pending, -> { where(status: "pending") }

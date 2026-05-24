@@ -5,6 +5,7 @@ class CreateAccesses < ActiveRecord::Migration[8.1]
       t.references :role, type: :uuid, null: false, foreign_key: true
       t.references :requested_by, type: :uuid, foreign_key: { to_table: :users }
       t.string :status, null: false, default: "pending"
+      t.string :source, null: false, default: "manual"
       t.text :justification
       t.datetime :expires_at
 
@@ -13,5 +14,6 @@ class CreateAccesses < ActiveRecord::Migration[8.1]
 
     add_index :accesses, [ :user_id, :role_id ], unique: true
     add_index :accesses, :status
+    add_index :accesses, :source
   end
 end

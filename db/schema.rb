@@ -20,11 +20,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_130504) do
     t.text "justification"
     t.uuid "requested_by_id"
     t.uuid "role_id", null: false
+    t.string "source", default: "manual", null: false
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
     t.index ["requested_by_id"], name: "index_accesses_on_requested_by_id"
     t.index ["role_id"], name: "index_accesses_on_role_id"
+    t.index ["source"], name: "index_accesses_on_source"
     t.index ["status"], name: "index_accesses_on_status"
     t.index ["user_id", "role_id"], name: "index_accesses_on_user_id_and_role_id", unique: true
     t.index ["user_id"], name: "index_accesses_on_user_id"
