@@ -8,6 +8,10 @@ Rails.application.routes.draw do
   get    "/emergency-login/:token" => "emergency_logins#redeem", as: :emergency_login
   delete "/logout"                 => "sessions#destroy",        as: :logout
 
+  get  "/login"                  => "logins#show",                 as: :login
+  get  "/auth/:slug/callback"    => "omniauth_sessions#callback",  as: :oidc_callback, constraints: { slug: /[a-z0-9-]+/ }
+  get  "/auth/failure"           => "omniauth_sessions#failure",   as: :oidc_failure
+
   namespace :admin do
     resources :auth_providers, except: :show
     root to: redirect("/admin/auth_providers")

@@ -1,0 +1,24 @@
+<% content_for :title, "Identity not registered — Governauthzer" %>
+
+<div class="w-full max-w-xl">
+  <h1 class="text-2xl font-semibold mb-4">Identity not registered</h1>
+
+  <p class="text-sm text-gray-700 mb-4">
+    Your identity from <strong><%= @provider_name %></strong> is not linked to any user
+    in this system. Your administrator must link it before you can sign in.
+  </p>
+
+  <div class="bg-gray-100 rounded p-4 text-xs font-mono mb-4 break-all">
+    <div class="text-gray-500 mb-1">Your IdP subject:</div>
+    <div><%= @subject %></div>
+  </div>
+
+  <details class="text-xs text-gray-600">
+    <summary class="cursor-pointer">Administrator: link this identity via Rails console</summary>
+    <pre class="mt-2 bg-gray-100 rounded p-3 overflow-x-auto"><code>OmniauthIdentity.create!(
+  user: User.find_by!(email: "alice@example.com"),
+  auth_provider: AuthProvider.find_by!(slug: "<%= @provider_slug %>"),
+  subject: "<%= @subject %>"
+)</code></pre>
+  </details>
+</div>
