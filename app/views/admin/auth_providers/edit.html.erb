@@ -1,0 +1,6 @@
+<% content_for :title, "Edit #{@auth_provider.name} — Governauthzer" %>
+
+<div class="w-full max-w-xl">
+  <h1 class="text-2xl font-semibold mb-6">Edit <span class="text-gray-500"><%= @auth_provider.name %></span></h1>
+  <%= render "form", auth_provider: @auth_provider %>
+</div>
