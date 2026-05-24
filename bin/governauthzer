@@ -19,6 +19,10 @@ def usage(exit_code = 1)
           Create the first operator user. Idempotent for the governauthzer-itself
           Application and its operator Role. After running, use `emergency-login`
           to obtain a one-time login URL for the new operator's first sign-in.
+
+      emergency-login --user EMAIL --reason TEXT [--issued-by EMAIL]
+          Issue a single-use, 10-minute login URL for the given user. Use for
+          break-glass scenarios (IdP outage, bootstrap, lost-access incidents).
   USAGE
   exit(exit_code)
 end
@@ -55,6 +59,28 @@ when "seed-admin"
   require File.expand_path("../config/environment", __dir__)
 
   Governauthzer::CLI::SeedAdmin.new(email: email, name: name).run
+
+when "emergency-login"
+  user_email = nil
+  reason     = nil
+  issued_by  = nil
+  OptionParser.new do |opts|
+    opts.banner = "Usage: bin/governauthzer emergency-login --user EMAIL --reason TEXT [--issued-by EMAIL]"
+    opts.on("--user EMAIL")      { |v| user_email = v }
+    opts.on("--reason TEXT")     { |v| reason     = v }
+    opts.on("--issued-by EMAIL") { |v| issued_by  = v }
+  end.parse!(ARGV)
+
+  abort "ERROR: --user is required"   if user_email.nil? || user_email.empty?
+  abort "ERROR: --reason is required" if reason.nil?     || reason.empty?
+
+  require File.expand_path("../config/environment", __dir__)
+
+  Governauthzer::CLI::EmergencyLogin.new(
+    user_email: user_email,
+    reason: reason,
+    issued_by_email: issued_by
+  ).run
 
 else
   usage

@@ -1,0 +1,14 @@
+<% content_for :title, "Signed in — Governauthzer" %>
+
+<div class="max-w-md w-full">
+  <h1 class="text-2xl font-semibold mb-4">Signed in</h1>
+  <p class="mb-2">Welcome, <%= current_user.name %>.</p>
+  <p class="mb-6 text-sm text-gray-600">
+    <% if current_user.operator? %>
+      You are signed in as an operator.
+    <% else %>
+      You are signed in.
+    <% end %>
+  </p>
+  <%= button_to "Sign out", logout_path, method: :delete, class: "text-sm underline" %>
+</div>
