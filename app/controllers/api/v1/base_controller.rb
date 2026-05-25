@@ -1,4 +1,6 @@
 class Api::V1::BaseController < ActionController::API
+  include AuditContext
+
   # Include order matters: ErrorRendering provides render_error, which Sorting's
   # rescue handler calls. Pagination is independent. Don't reorder without
   # checking what each concern depends on at include-time.

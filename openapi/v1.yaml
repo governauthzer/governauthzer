@@ -47,6 +47,211 @@ components:
               description: Optional structured context specific to the error code.
               additionalProperties: true
 
+    ExternalIdentity:
+      type: object
+      required: [id, source, external_id]
+      properties:
+        id:
+          type: string
+          format: uuid
+        source:
+          type: string
+          description: Normalized source slug (lowercase, dash-separated).
+        external_id:
+          type: string
+
+    ExternalIdentityRef:
+      type: object
+      required: [source, external_id]
+      properties:
+        source:
+          type: string
+          description: |
+            HRIS source identifier (e.g., "workday", "bamboohr"). Normalized
+            server-side: lowercased, non-alphanumerics replaced with dashes,
+            repeated dashes squeezed.
+        external_id:
+          type: string
+          description: The user's identifier in the source system.
+
+    OmniauthIdentity:
+      type: object
+      required: [id, auth_provider_slug, subject]
+      properties:
+        id:
+          type: string
+          format: uuid
+        auth_provider_slug:
+          type: string
+        subject:
+          type: string
+          description: The OIDC `sub` claim value for this user at this provider.
+
+    OmniauthIdentityRef:
+      type: object
+      required: [auth_provider_slug, subject]
+      properties:
+        auth_provider_slug:
+          type: string
+          description: Slug of an existing, enabled auth_provider. Unknown slug → 422 `unknown_auth_provider_slug`.
+        subject:
+          type: string
+          description: The OIDC `sub` claim value for this user at this provider.
+
+    RoleRef:
+      type: object
+      required: [id, slug, name, application_slug]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        application_slug:
+          type: string
+
+    User:
+      type: object
+      required: [id, email, name, status, created_at, updated_at, external_identities, omniauth_identities, roles]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          description: Single full-name field (no first/last split). HRIS is source of truth.
+        status:
+          type: string
+          enum: [pending_start, active, suspended, terminated]
+        manager_id:
+          type: string
+          format: uuid
+          nullable: true
+        department:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        external_identities:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExternalIdentity"
+        omniauth_identities:
+          type: array
+          items:
+            $ref: "#/components/schemas/OmniauthIdentity"
+        roles:
+          type: array
+          description: Roles currently granted to this user (from approved accesses).
+          items:
+            $ref: "#/components/schemas/RoleRef"
+
+    UserCreate:
+      type: object
+      required: [user]
+      properties:
+        user:
+          type: object
+          required: [email, name]
+          properties:
+            email:
+              type: string
+              format: email
+            name:
+              type: string
+            status:
+              type: string
+              enum: [pending_start, active, suspended, terminated]
+              description: |
+                Optional. If omitted, derived from `start_date`: NULL or past → `active`,
+                future → `pending_start`. Explicit value wins.
+            manager_id:
+              type: string
+              format: uuid
+              nullable: true
+            department:
+              type: string
+              nullable: true
+            title:
+              type: string
+              nullable: true
+            start_date:
+              type: string
+              format: date
+              nullable: true
+            end_date:
+              type: string
+              format: date
+              nullable: true
+            external_identities:
+              type: array
+              items:
+                $ref: "#/components/schemas/ExternalIdentityRef"
+            omniauth_identities:
+              type: array
+              items:
+                $ref: "#/components/schemas/OmniauthIdentityRef"
+
+    UserUpdate:
+      type: object
+      required: [user]
+      description: |
+        Partial update. Only included fields are changed. Status transitions are
+        validated against the state machine; illegal transitions → 422
+        `validation_failed`. PATCH on a terminated user → 422 `reactivation_required`
+        regardless of attempted changes. Identity management uses dedicated endpoints,
+        not this PATCH.
+      properties:
+        user:
+          type: object
+          properties:
+            email:
+              type: string
+              format: email
+            name:
+              type: string
+            status:
+              type: string
+              enum: [pending_start, active, suspended, terminated]
+            manager_id:
+              type: string
+              format: uuid
+              nullable: true
+            department:
+              type: string
+              nullable: true
+            title:
+              type: string
+              nullable: true
+            start_date:
+              type: string
+              format: date
+              nullable: true
+            end_date:
+              type: string
+              format: date
+              nullable: true
+
   responses:
     Unauthorized:
       description: Missing or invalid API token.
@@ -67,7 +272,25 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     ValidationFailed:
-      description: Request body failed validation. `details.errors` is a map of field → array of error messages.
+      description: |
+        Request body failed validation. Distinguish by `error.code`:
+        `validation_failed` (generic), `reactivation_required` (PATCH on terminated user),
+        `unknown_auth_provider_slug` (referenced auth_provider does not exist or is disabled).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: |
+        Identity collision. `error.code` is `external_id_collision` or
+        `omniauth_identity_collision`; `error.details` carries `existing_user_id` plus
+        the colliding identity attributes.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    MethodNotAllowed:
+      description: HTTP method not supported on this resource. `error.message` explains the rationale and points to the supported alternative.
       content:
         application/json:
           schema:
@@ -106,3 +329,170 @@ paths:
                     nullable: true
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /users:
+    get:
+      summary: List users
+      operationId: listUsers
+      security:
+        - BearerToken: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: sort
+          in: query
+          description: |
+            Sort fields, comma-separated. Prefix with `-` for descending order.
+            Whitelisted fields: `created_at`, `updated_at`, `email`, `name`, `status`.
+            Default: `-created_at`. Unknown field → 400 `invalid_sort`.
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_start, active, suspended, terminated]
+        - name: manager_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: department
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated user list. Total count in `X-Total-Count` header; pagination links in `Link` header.
+          headers:
+            X-Total-Count:
+              description: Total number of records matching the filter (HTTP header — string-encoded integer).
+              schema:
+                type: string
+                pattern: "^[0-9]+$"
+            Link:
+              description: |
+                Pagination links per RFC 5988. Includes `rel="first"`, `rel="last"`,
+                and (when applicable) `rel="prev"` / `rel="next"`.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      summary: Create a user
+      description: |
+        Atomic creation of a user with optional inline external_identities and
+        omniauth_identities. All identities are validated and inserted in a single
+        transaction with the user row.
+      operationId: createUser
+      security:
+        - BearerToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreate"
+      responses:
+        "201":
+          description: User created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+
+  /users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get a user
+      operationId: getUser
+      security:
+        - BearerToken: []
+      responses:
+        "200":
+          description: User found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      summary: Update a user
+      operationId: updateUser
+      security:
+        - BearerToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: User updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+
+    delete:
+      summary: Not supported
+      description: |
+        Users cannot be deleted via API; IGA audit-trail requirements forbid
+        physical deletion. Use PATCH with `status: terminated` instead. GDPR
+        right-to-erasure will land as a separate explicit endpoint.
+      operationId: deleteUser
+      security:
+        - BearerToken: []
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
