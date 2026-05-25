@@ -7,7 +7,12 @@ class ApplicationController < ActionController::Base
 
   before_action :set_audit_context
 
-  helper_method :current_user, :signed_in?
+  helper_method :current_user, :signed_in?, :policy_for
+
+  def policy_for(record)
+    klass = "#{record.class.name}Policy".constantize
+    klass.new(user: current_user, record: record)
+  end
 
   private
 

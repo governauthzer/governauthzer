@@ -18,8 +18,10 @@ class ActionDispatch::IntegrationTest
   def committee_options
     @committee_options ||= {
       schema_path: Rails.root.join("openapi/v1.yaml").to_s,
+      prefix: "/api/v1",
       parse_response_by_content_type: true,
-      ignore_response_fields_not_in_spec: true
+      ignore_response_fields_not_in_spec: true,
+      strict_reference_validation: true
     }
   end
 end
