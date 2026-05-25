@@ -3,29 +3,6 @@ class Api::V1::UsersController < Api::V1::BaseController
 
   SORT_WHITELIST = %w[created_at updated_at email name status].freeze
 
-  ERROR_MAPPING = {
-    unknown_auth_provider_slug: {
-      status: :unprocessable_content,
-      code: "unknown_auth_provider_slug",
-      message: "Unknown auth_provider_slug."
-    },
-    external_id_collision: {
-      status: :conflict,
-      code: "external_id_collision",
-      message: "External identity already linked to another user."
-    },
-    omniauth_identity_collision: {
-      status: :conflict,
-      code: "omniauth_identity_collision",
-      message: "OmniAuth identity already linked to another user."
-    },
-    reactivation_required: {
-      status: :unprocessable_content,
-      code: "reactivation_required",
-      message: "User is terminated; reactivation requires the explicit reactivation flow."
-    }
-  }.freeze
-
   def index
     scope = filtered_scope
     sorted = apply_default_sort(apply_sort(scope, whitelist: SORT_WHITELIST))
@@ -39,9 +16,10 @@ class Api::V1::UsersController < Api::V1::BaseController
   def create
     permitted = create_params
     result = Users::Creator.call(
-      attrs: permitted.except(:external_identities, :omniauth_identities).to_h.symbolize_keys,
+      attrs: extract_attrs(permitted).symbolize_keys,
       external_identities: nested_array(permitted[:external_identities]),
       omniauth_identities: nested_array(permitted[:omniauth_identities]),
+      manager_external_id: extract_manager_external_id(permitted),
       actor: :system
     )
 
@@ -53,9 +31,11 @@ class Api::V1::UsersController < Api::V1::BaseController
   end
 
   def update
+    permitted = update_params
     result = Users::Updater.call(
       user: @user,
-      attrs: update_params.to_h.symbolize_keys,
+      attrs: extract_attrs(permitted).symbolize_keys,
+      manager_external_id: extract_manager_external_id(permitted),
       actor: :system
     )
 
@@ -101,27 +81,30 @@ class Api::V1::UsersController < Api::V1::BaseController
     params.require(:user).permit(
       :email, :name, :status, :manager_id, :department, :title, :start_date, :end_date,
       external_identities: %i[source external_id],
-      omniauth_identities: %i[auth_provider_slug subject]
+      omniauth_identities: %i[auth_provider_slug subject],
+      manager_external_id: %i[source external_id]
     )
   end
 
   def update_params
     params.require(:user).permit(
-      :email, :name, :status, :manager_id, :department, :title, :start_date, :end_date
+      :email, :name, :status, :manager_id, :department, :title, :start_date, :end_date,
+      manager_external_id: %i[source external_id]
     )
+  end
+
+  def extract_attrs(permitted)
+    permitted.except(:external_identities, :omniauth_identities, :manager_external_id).to_h
+  end
+
+  def extract_manager_external_id(permitted)
+    return ApplicationService::NOT_PROVIDED unless params[:user].key?(:manager_external_id)
+    raw = permitted[:manager_external_id]
+    return nil if raw.nil?
+    raw.to_h.symbolize_keys
   end
 
   def nested_array(param)
     (param || []).map { |entry| entry.to_h.symbolize_keys }
-  end
-
-  def render_service_failure(result)
-    spec = ERROR_MAPPING.fetch(result.code)
-    render_error(
-      code: spec[:code],
-      status: spec[:status],
-      message: spec[:message],
-      details: result.context
-    )
   end
 end

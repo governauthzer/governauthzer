@@ -7,6 +7,7 @@ class Api::V1::BaseController < ActionController::API
   include Api::ErrorRendering
   include Api::Pagination
   include Api::Sorting
+  include Api::ServiceFailureRendering
 
   before_action :authenticate_api_token!
 

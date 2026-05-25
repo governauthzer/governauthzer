@@ -1,21 +1,27 @@
 module Users
   class Creator < ApplicationService
-    def initialize(attrs:, external_identities: [], omniauth_identities: [], actor:)
+    include Users::ManagerReferenceResolver
+
+    def initialize(attrs:, external_identities: [], omniauth_identities: [], actor:, manager_external_id: NOT_PROVIDED)
       @attrs = attrs
       @external_identities = external_identities
       @omniauth_identities = omniauth_identities
       @actor = actor
+      @manager_external_id = manager_external_id
     end
 
     def call
       ActiveRecord::Base.transaction do
+        resolved_attrs, manager_failure = resolve_manager_reference(@attrs, @manager_external_id)
+        return manager_failure if manager_failure
+
         collision = check_external_collisions
         return collision if collision
 
         collision = check_omniauth_collisions
         return collision if collision
 
-        user = User.new(@attrs)
+        user = User.new(resolved_attrs)
 
         @external_identities.each do |ei|
           user.external_identities.build(source: ei[:source], external_id: ei[:external_id])

@@ -22,6 +22,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "whoami" => "whoami#show", as: :whoami
       resources :users, only: %i[index show create update destroy]
+      patch "users/by-external-id/:source/:external_id" => "users_by_external_id#update",
+            as: :user_by_external_id,
+            constraints: { external_id: %r{[^/]+} }
     end
   end
 

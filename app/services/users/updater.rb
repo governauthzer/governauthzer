@@ -1,16 +1,22 @@
 module Users
   class Updater < ApplicationService
-    def initialize(user:, attrs:, actor:)
+    include Users::ManagerReferenceResolver
+
+    def initialize(user:, attrs:, actor:, manager_external_id: NOT_PROVIDED)
       @user = user
       @attrs = attrs
       @actor = actor
+      @manager_external_id = manager_external_id
     end
 
     def call
       return failure(:reactivation_required, user_id: @user.id) if @user.terminated?
 
       ActiveRecord::Base.transaction do
-        @user.assign_attributes(@attrs)
+        resolved_attrs, manager_failure = resolve_manager_reference(@attrs, @manager_external_id)
+        return manager_failure if manager_failure
+
+        @user.assign_attributes(resolved_attrs)
         attribute_changes = @user.changes
         @user.save!
 

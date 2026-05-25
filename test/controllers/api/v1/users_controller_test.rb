@@ -261,6 +261,89 @@ class Api::V1::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response_schema_confirm(404)
   end
 
+  # ----- manager_external_id -------------------------------------------------
+
+  test "update resolves manager_external_id to manager_id" do
+    alice = users(:alice)  # has external_identity (workday, EMP-1001)
+    bob = users(:bob)      # has external_identity (workday, EMP-1002)
+
+    payload = { user: { manager_external_id: { source: "workday", external_id: "EMP-1001" } } }
+    patch "/api/v1/users/#{bob.id}", params: payload.to_json, headers: @headers
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_equal alice.id, body["manager_id"]
+  end
+
+  test "update normalizes source on manager_external_id lookup" do
+    bob = users(:bob)
+    payload = { user: { manager_external_id: { source: "Workday", external_id: "EMP-1001" } } }
+    patch "/api/v1/users/#{bob.id}", params: payload.to_json, headers: @headers
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_equal users(:alice).id, body["manager_id"]
+  end
+
+  test "update returns 422 conflicting_manager_ref when both manager_id and manager_external_id set" do
+    alice = users(:alice)
+    bob = users(:bob)
+    payload = {
+      user: {
+        manager_id: alice.id,
+        manager_external_id: { source: "workday", external_id: "EMP-1001" }
+      }
+    }
+    patch "/api/v1/users/#{bob.id}", params: payload.to_json, headers: @headers
+
+    assert_response :unprocessable_content
+    assert_response_schema_confirm(422)
+    body = JSON.parse(response.body)
+    assert_equal "conflicting_manager_ref", body.dig("error", "code")
+  end
+
+  test "update returns 422 manager_not_found when manager_external_id does not resolve" do
+    bob = users(:bob)
+    payload = { user: { manager_external_id: { source: "workday", external_id: "EMP-NOPE" } } }
+    patch "/api/v1/users/#{bob.id}", params: payload.to_json, headers: @headers
+
+    assert_response :unprocessable_content
+    assert_response_schema_confirm(422)
+    body = JSON.parse(response.body)
+    assert_equal "manager_not_found", body.dig("error", "code")
+    assert_equal "workday", body.dig("error", "details", "source")
+    assert_equal "EMP-NOPE", body.dig("error", "details", "external_id")
+  end
+
+  test "update clears manager when manager_external_id is null" do
+    alice = users(:alice)
+    bob = users(:bob)
+    bob.update_column(:manager_id, alice.id)
+
+    payload = { user: { manager_external_id: nil } }
+    patch "/api/v1/users/#{bob.id}", params: payload.to_json, headers: @headers
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_nil body["manager_id"]
+  end
+
+  test "create accepts manager_external_id" do
+    alice = users(:alice)
+    payload = {
+      user: {
+        email: "new@example.com",
+        name: "New",
+        manager_external_id: { source: "workday", external_id: "EMP-1001" }
+      }
+    }
+    post "/api/v1/users", params: payload.to_json, headers: @headers
+
+    assert_response :created
+    body = JSON.parse(response.body)
+    assert_equal alice.id, body["manager_id"]
+  end
+
   # ----- destroy -------------------------------------------------------------
 
   test "destroy returns 405 with structured error" do

@@ -166,6 +166,23 @@ components:
           items:
             $ref: "#/components/schemas/RoleRef"
 
+    ManagerExternalIdRef:
+      type: object
+      nullable: true
+      description: |
+        Reference a manager by HRIS external identifier instead of UUID. Server resolves
+        to user_id before save. Mutually exclusive with `manager_id` (422 `conflicting_manager_ref`
+        if both present). When explicitly `null`, clears the manager assignment (same as
+        `manager_id: null`). Unknown reference → 422 `manager_not_found`.
+      required: [source, external_id]
+      properties:
+        source:
+          type: string
+          description: HRIS source slug (normalized server-side).
+        external_id:
+          type: string
+          description: User's identifier in the source system (e.g., Workday employee_id).
+
     UserCreate:
       type: object
       required: [user]
@@ -189,6 +206,8 @@ components:
               type: string
               format: uuid
               nullable: true
+            manager_external_id:
+              $ref: "#/components/schemas/ManagerExternalIdRef"
             department:
               type: string
               nullable: true
@@ -237,6 +256,8 @@ components:
               type: string
               format: uuid
               nullable: true
+            manager_external_id:
+              $ref: "#/components/schemas/ManagerExternalIdRef"
             department:
               type: string
               nullable: true
@@ -275,7 +296,9 @@ components:
       description: |
         Request body failed validation. Distinguish by `error.code`:
         `validation_failed` (generic), `reactivation_required` (PATCH on terminated user),
-        `unknown_auth_provider_slug` (referenced auth_provider does not exist or is disabled).
+        `unknown_auth_provider_slug` (referenced auth_provider does not exist or is disabled),
+        `conflicting_manager_ref` (both manager_id and manager_external_id set),
+        `manager_not_found` (manager_external_id does not resolve to any user).
       content:
         application/json:
           schema:
@@ -496,3 +519,51 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
+
+  /users/by-external-id/{source}/{external_id}:
+    parameters:
+      - name: source
+        in: path
+        required: true
+        description: HRIS source slug (normalized server-side — `Workday`, `workday`, `WORKDAY` all resolve to `workday`).
+        schema:
+          type: string
+      - name: external_id
+        in: path
+        required: true
+        description: User's identifier in the source system.
+        schema:
+          type: string
+
+    patch:
+      summary: Update a user by HRIS external identifier
+      description: |
+        Alternative to `PATCH /users/{id}` for callers that hold an HRIS-side
+        identifier rather than the governauthzer UUID. Looks up via `external_identities`
+        table (the `(source, external_id)` unique row), then delegates to the same
+        update path. Body, semantics, error envelope, and audit emission are identical
+        to `PATCH /users/{id}`.
+      operationId: updateUserByExternalId
+      security:
+        - BearerToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: User updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
