@@ -4,6 +4,12 @@ class ApiToken < ApplicationRecord
   validates :name, presence: true
   validates :token_digest, presence: true, uniqueness: true
 
+  # Source is normalized identically to ExternalIdentity#source so the snapshot
+  # diff can match `external_identities WHERE source = token.source` directly.
+  # NULL = full-access management token; non-NULL = HRIS-sync token locked to
+  # exactly one source (Decision 1: token scope is the auth boundary).
+  before_validation :normalize_source
+
   scope :live, -> { where("expires_at IS NULL OR expires_at > ?", Time.current) }
 
   # Token format: `gva_<43 chars>` — 4-char prefix for grepability + secret-scanner
@@ -27,5 +33,16 @@ class ApiToken < ApplicationRecord
 
   def redeemable?
     !expired?
+  end
+
+  # True when this token is scoped to a single HRIS source (sync agent token).
+  def sync_scoped?
+    source.present?
+  end
+
+  private
+
+  def normalize_source
+    self.source = ExternalIdentity.normalize_source(source)
   end
 end
