@@ -9,6 +9,10 @@ Rails.application.routes.draw do
   delete "/logout"                 => "sessions#destroy",        as: :logout
 
   get  "/login"                  => "logins#show",                 as: :login
+
+  # Public API documentation (Redoc). The OpenAPI contract is public by design.
+  get  "/api-docs"               => "docs#show", as: :api_docs
+  get  "/api-docs/v1.yaml"       => "docs#spec", as: :api_docs_spec
   get  "/auth/:slug/callback"    => "omniauth_sessions#callback",  as: :oidc_callback, constraints: { slug: /[a-z0-9-]+/ }
   get  "/auth/failure"           => "omniauth_sessions#failure",   as: :oidc_failure
 

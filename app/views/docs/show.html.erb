@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>governauthzer API — v1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <style>body { margin: 0; padding: 0; }</style>
+  </head>
+  <body>
+    <redoc spec-url="<%= api_docs_spec_path %>"></redoc>
+    <%# Redoc standalone bundle from CDN. Deferred hardening (Phase 6): pin an exact
+        version + SRI, and vendor the bundle so air-gapped deployments work offline.
+        The raw contract stays available at the spec-url above regardless. %>
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+  </body>
+</html>
