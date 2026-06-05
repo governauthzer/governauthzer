@@ -12,6 +12,14 @@ class CreateUsers < ActiveRecord::Migration[8.1]
       t.date :start_date
       t.date :end_date
 
+      # Set when a user enters `orphaned` (lost its last external_identity in a
+      # snapshot drop); read by Sync::OrphanedSweeper to expire the 72h grace.
+      t.datetime :orphaned_at
+
+      # Bumped to invalidate live signed-cookie sessions (orphan cascade,
+      # termination cascade). Signed-cookie reader rejects on version mismatch.
+      t.integer :session_version, null: false, default: 0
+
       t.timestamps
     end
 

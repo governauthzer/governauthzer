@@ -1,10 +1,12 @@
 class User < ApplicationRecord
-  STATUSES = %w[pending_start active suspended terminated].freeze
+  STATUSES = %w[pending_start active suspended terminated orphaned].freeze
 
   TRANSITIONS = {
-    "pending_start" => %w[active terminated],
-    "active" => %w[suspended terminated],
-    "suspended" => %w[active terminated],
+    "pending_start" => %w[active terminated orphaned],
+    "active" => %w[suspended terminated orphaned],
+    "suspended" => %w[active terminated orphaned],
+    # active = operator merged a new identity; terminated = grace expired.
+    "orphaned" => %w[active terminated],
     "terminated" => []
   }.freeze
 
@@ -36,6 +38,10 @@ class User < ApplicationRecord
 
   def terminated?
     status == "terminated"
+  end
+
+  def orphaned?
+    status == "orphaned"
   end
 
   def employee_id(source:)

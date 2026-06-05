@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_170950) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_05_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -36,8 +36,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_170950) do
     t.datetime "created_at", null: false
     t.datetime "expires_at"
     t.string "name", null: false
+    t.string "source"
     t.string "token_digest", null: false
     t.datetime "updated_at", null: false
+    t.index ["source"], name: "index_api_tokens_on_source", where: "(source IS NOT NULL)"
     t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
   end
 
@@ -171,6 +173,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_170950) do
     t.index ["approval_workflow_id"], name: "index_roles_on_approval_workflow_id"
   end
 
+  create_table "snapshot_runs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "api_token_id", null: false
+    t.datetime "applied_at", null: false
+    t.datetime "as_of", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "diff_summary", default: {}, null: false
+    t.string "payload_hash", null: false
+    t.string "source", null: false
+    t.string "status", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_count", null: false
+    t.jsonb "warnings", default: [], null: false
+    t.index ["api_token_id"], name: "index_snapshot_runs_on_api_token_id"
+    t.index ["source", "applied_at"], name: "index_snapshot_runs_on_source_and_applied_at"
+    t.index ["source", "as_of"], name: "index_snapshot_runs_on_source_and_as_of", unique: true, where: "((status)::text = 'applied'::text)"
+  end
+
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "department"
@@ -178,6 +197,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_170950) do
     t.date "end_date"
     t.uuid "manager_id"
     t.string "name", null: false
+    t.datetime "orphaned_at"
+    t.integer "session_version", default: 0, null: false
     t.date "start_date"
     t.string "status", default: "pending_start", null: false
     t.string "title"
@@ -204,5 +225,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_170950) do
   add_foreign_key "omniauth_identities", "users"
   add_foreign_key "roles", "applications"
   add_foreign_key "roles", "approval_workflows"
+  add_foreign_key "snapshot_runs", "api_tokens"
   add_foreign_key "users", "users", column: "manager_id"
 end

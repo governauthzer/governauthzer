@@ -12,6 +12,10 @@ class ExternalIdentity < ApplicationRecord
     raw.downcase.gsub(/[^a-z0-9-]/, "-").squeeze("-")
   end
 
+  def audit_display
+    "#{source}/#{external_id}"
+  end
+
   private
 
   def apply_source_normalization

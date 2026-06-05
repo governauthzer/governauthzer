@@ -25,6 +25,7 @@ Rails.application.routes.draw do
       patch "users/by-external-id/:source/:external_id" => "users_by_external_id#update",
             as: :user_by_external_id,
             constraints: { external_id: %r{[^/]+} }
+      post "sync/snapshots" => "sync/snapshots#create", as: :sync_snapshots
     end
   end
 

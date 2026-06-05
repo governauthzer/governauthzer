@@ -127,7 +127,11 @@ components:
           description: Single full-name field (no first/last split). HRIS is source of truth.
         status:
           type: string
-          enum: [pending_start, active, suspended, terminated]
+          enum: [pending_start, active, suspended, terminated, orphaned]
+          description: |
+            `orphaned` is a system-assigned state: the user lost its last
+            external_identity in a snapshot drop and is in the reversible 72h
+            grace before termination. Not directly settable via the API.
         manager_id:
           type: string
           format: uuid
@@ -273,9 +277,141 @@ components:
               format: date
               nullable: true
 
+    SnapshotUser:
+      type: object
+      required: [external_id, email, name]
+      description: Complete desired state of one user within a source. Absence from the array is the drop signal.
+      properties:
+        external_id:
+          type: string
+          description: User's identifier in this source. Unique within the source.
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        status:
+          type: string
+          enum: [active, pending_start, suspended]
+          description: |
+            Optional; derived from start_date if omitted. `terminated` is rejected
+            (400 `terminated_in_snapshot`) — termination is expressed by absence.
+        department:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        manager_external_id:
+          type: string
+          nullable: true
+          description: Manager's external_id in the same source. Resolved in a second pass; forward references within the snapshot are fine.
+
+    SyncSnapshotCreate:
+      type: object
+      required: [as_of, expected_count, users]
+      properties:
+        as_of:
+          type: string
+          format: date-time
+          description: ISO-8601 UTC timestamp the agent assigns to this roster. Must not be in the future (5-min skew guard) or older than the last applied snapshot for this source.
+        expected_count:
+          type: integer
+          minimum: 0
+          description: Asserted size of `users`. A drift greater than 5% from the actual array size → 400 `count_mismatch` (truncated-feed guard).
+        dry_run:
+          type: boolean
+          default: false
+          description: When true, compute and return the diff without applying any writes.
+        override_circuit_breaker:
+          type: boolean
+          default: false
+          description: When true, bypass the mass-termination safety threshold. Required when computed orphans exceed 10% of the source's users.
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/SnapshotUser"
+
+    SyncSnapshotDiff:
+      type: object
+      required: [users_created, users_updated, users_unchanged, identities_dropped, users_orphaned, users_terminated]
+      properties:
+        users_created:
+          type: integer
+        users_updated:
+          type: integer
+        users_unchanged:
+          type: integer
+        identities_dropped:
+          type: integer
+        users_orphaned:
+          type: integer
+        users_terminated:
+          type: integer
+          description: Usually 0 — terminations happen later via the grace sweeper, not inline.
+
+    SyncSnapshotResponse:
+      type: object
+      required: [source, as_of, applied, diff, orphaned, warnings]
+      properties:
+        source:
+          type: string
+          description: The source the token is scoped to (echoed back).
+        as_of:
+          type: string
+          format: date-time
+        applied:
+          type: boolean
+          description: false when dry_run was set.
+        diff:
+          $ref: "#/components/schemas/SyncSnapshotDiff"
+        orphaned:
+          type: array
+          description: Users that lost their last identity in this snapshot and entered the orphan grace.
+          items:
+            type: object
+            required: [id, email]
+            properties:
+              id:
+                type: string
+                format: uuid
+              email:
+                type: string
+        warnings:
+          type: array
+          description: Non-fatal issues (e.g., dangling or self-referential manager).
+          items:
+            type: object
+            required: [code]
+            additionalProperties: true
+            properties:
+              code:
+                type: string
+        snapshot_run_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The persisted snapshot_runs row; null for dry runs.
+
   responses:
     Unauthorized:
       description: Missing or invalid API token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: |
+        The token is valid but lacks the scope this endpoint requires.
+        `error.code` is `source_scope_required` for the snapshot endpoint.
       content:
         application/json:
           schema:
@@ -565,5 +701,45 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+
+  /sync/snapshots:
+    post:
+      summary: Apply a full-roster snapshot for one source
+      description: |
+        Snapshot-and-diff sync. The agent sends the complete active roster for one
+        HRIS source; the server diffs it against current state. Users absent from
+        `users[]` have their identity for this source dropped, and are orphaned if
+        they have no identity from any other source.
+
+        The source is taken from the API token scope — never the body. The token
+        must be source-scoped (403 `source_scope_required` otherwise). Atomic: any
+        error means nothing is applied.
+      operationId: applySnapshot
+      security:
+        - BearerToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncSnapshotCreate"
+      responses:
+        "200":
+          description: |
+            Snapshot processed. `applied` is true for a real apply, false for a dry run.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncSnapshotResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "422":
           $ref: "#/components/responses/ValidationFailed"
