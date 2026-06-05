@@ -51,7 +51,7 @@ module Sync
             event_type: "user.created",
             actor: @actor,
             targets: [ user, *user.external_identities ],
-            metadata: { "source" => @source, "via" => "snapshot" }
+            metadata: { "source" => "api", "via" => "snapshot", "hris_source" => @source }
           )
         end
         @diff.new_users.size
@@ -73,7 +73,7 @@ module Sync
             actor: @actor,
             targets: user,
             attribute_changes: changes,
-            metadata: { "source" => @source, "via" => "snapshot" }
+            metadata: { "source" => "api", "via" => "snapshot", "hris_source" => @source }
           )
         end
         count
@@ -89,7 +89,7 @@ module Sync
             event_type: "external_identity.unlinked",
             actor: @actor,
             targets: [ user, identity ],
-            metadata: { "source" => @source, "via" => "snapshot" }
+            metadata: { "source" => "api", "via" => "snapshot", "hris_source" => @source }
           )
           identity.destroy!
         end
@@ -99,7 +99,7 @@ module Sync
       def orphan_affected
         @diff.orphan_user_ids.map do |user_id|
           user = User.find(user_id)
-          OrphanedCascade.call(user: user, actor: @actor, via: "snapshot")
+          OrphanedCascade.call(user: user, actor: @actor, source: "api", via: "snapshot")
           { "id" => user.id, "email" => user.email }
         end
       end
@@ -140,7 +140,7 @@ module Sync
           actor: @actor,
           targets: user,
           attribute_changes: changes,
-          metadata: { "source" => @source, "via" => "snapshot" }
+          metadata: { "source" => "api", "via" => "snapshot", "hris_source" => @source }
         )
       end
 

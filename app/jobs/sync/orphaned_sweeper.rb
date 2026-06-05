@@ -25,6 +25,7 @@ module Sync
           targets: user,
           attribute_changes: { "status" => [ "orphaned", "terminated" ] },
           metadata: {
+            "source" => "job",
             "via" => "orphaned_sweeper",
             "reason" => "orphan_grace_expired",
             "orphaned_at" => prior_orphaned_at&.iso8601

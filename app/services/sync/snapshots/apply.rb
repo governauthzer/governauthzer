@@ -64,12 +64,13 @@ module Sync
             actor: @actor,
             targets: run,
             metadata: {
-              "source" => @source,
+              "source" => "api",
+              "via" => "snapshot",
+              "hris_source" => @source,
               "as_of" => as_of.iso8601,
               "diff" => summary[:diff],
               "api_token_id" => @api_token.id,
-              "api_token_name" => @api_token.name,
-              "via" => "snapshot"
+              "api_token_name" => @api_token.name
             }
           )
 

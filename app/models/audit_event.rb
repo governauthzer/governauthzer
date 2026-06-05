@@ -9,6 +9,16 @@ class AuditEvent < ApplicationRecord
   validates :correlation_id, presence: true
   validate :actor_id_matches_actor_type
 
+  # Canonical write path for the audit log. Do not call `create!` directly.
+  #
+  # `metadata` convention:
+  #   - "source"  → the write CHANNEL the operation entered through:
+  #                 "api" | "admin-ui" | "job" | "*-cli" (auth.* events use the
+  #                 auth method here, e.g. "oidc"). Keep channel queries honest —
+  #                 do NOT put a domain value (e.g. an HRIS source) under "source".
+  #   - "via"     → the trigger sub-flow when one channel has several, e.g.
+  #                 "snapshot" / "orphaned_sweeper" / "termination".
+  #   - domain context (HRIS source, decision_method, reason, …) gets its own key.
   def self.record!(event_type:, actor:, targets: [], justification: nil, attribute_changes: nil, metadata: nil)
     create!(
       occurred_at: Time.current,

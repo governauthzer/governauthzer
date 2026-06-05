@@ -75,6 +75,24 @@ class Api::V1::Sync::SnapshotsControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "snapshot audit events use the api channel and carry hris_source" do
+    post_snapshot({
+      as_of: 1.hour.ago.utc.iso8601,
+      expected_count: 3,
+      users: [ alice_payload, bob_payload, { external_id: "EMP-1003", email: "carol@example.com", name: "Carol" } ]
+    })
+    assert_response :ok
+
+    created = AuditEvent.where(event_type: "user.created").order(occurred_at: :desc).first
+    assert_equal "api", created.metadata["source"], "metadata.source must be the channel, not the HRIS source"
+    assert_equal "snapshot", created.metadata["via"]
+    assert_equal "workday", created.metadata["hris_source"]
+
+    applied = AuditEvent.find_by(event_type: "sync.snapshot.applied")
+    assert_equal "api", applied.metadata["source"]
+    assert_equal "workday", applied.metadata["hris_source"]
+  end
+
   # --- auth / scope ----------------------------------------------------------
 
   test "rejects a token without source scope" do
