@@ -454,6 +454,21 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: |
+        Too many requests. `error.code` is `rate_limited`; `error.details.retry_after`
+        and the `Retry-After` header give the seconds to wait. Limits are per-IP
+        (600/min) and per-token (3000/min) across `/api/v1/*`.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: string
+            pattern: "^[0-9]+$"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
 
 security:
   - BearerToken: []
@@ -488,6 +503,8 @@ paths:
                     nullable: true
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
 
   /users:
     get:
@@ -556,6 +573,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
 
     post:
       summary: Create a user
@@ -583,6 +602,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
         "409":
           $ref: "#/components/responses/Conflict"
         "422":
@@ -611,6 +632,8 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -636,6 +659,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
         "404":
           $ref: "#/components/responses/NotFound"
         "422":
@@ -653,6 +678,8 @@ paths:
       responses:
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
 
@@ -699,6 +726,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
         "404":
           $ref: "#/components/responses/NotFound"
         "422":
@@ -737,6 +766,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
         "403":
           $ref: "#/components/responses/Forbidden"
         "409":
