@@ -228,6 +228,20 @@ class Api::V1::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "suspended", body["status"]
   end
 
+  test "suspending bumps session_version; reinstating does not bump again" do
+    alice = users(:alice)
+    prior = alice.session_version
+
+    patch "/api/v1/users/#{alice.id}", params: { user: { status: "suspended" } }.to_json, headers: @headers
+    assert_response :ok
+    assert_equal prior + 1, alice.reload.session_version
+
+    bumped = alice.session_version
+    patch "/api/v1/users/#{alice.id}", params: { user: { status: "active" } }.to_json, headers: @headers
+    assert_response :ok
+    assert_equal bumped, alice.reload.session_version, "reinstatement should not bump session_version"
+  end
+
   test "update rejects illegal status transition active to pending_start" do
     alice = users(:alice)
     payload = { user: { status: "pending_start" } }

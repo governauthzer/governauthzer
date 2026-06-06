@@ -17,3 +17,11 @@ production:
     class: Sync::OrphanedSweeper
     queue: default
     schedule: every hour at minute 37
+  activate_pending_start_users:
+    class: Users::ActivationSweeper
+    queue: default
+    schedule: every hour at minute 7
+  expire_time_bounded_grants:
+    class: Accesses::ExpirySweeper
+    queue: default
+    schedule: every hour at minute 22

@@ -28,6 +28,12 @@ module Users
         attribute_changes = @user.changes
         @user.save!
 
+        # Transitioning into a non-active status (suspend) freezes the user. The
+        # `active?` gate in ApplicationController already rejects the session on the
+        # next request; the session_version bump keeps this consistent with the
+        # orphan/termination cascades for the Phase-6 invalidate-on-change invariant.
+        @user.increment!(:session_version) if attribute_changes.key?("status") && !@user.active?
+
         if attribute_changes.any?
           AuditEvent.record!(
             event_type: "user.updated",

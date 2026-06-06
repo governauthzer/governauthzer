@@ -9,15 +9,19 @@ module AccessRevocation
 
   def revoke_all_accesses(user:, actor:, source:, via:, reason:)
     user.accesses.includes(:role).each do |access|
-      if access.approved?
-        AuditEvent.record!(
-          event_type: "access.revoked",
-          actor: actor,
-          targets: [ user, access, access.role ],
-          metadata: { "source" => source, "via" => via, "reason" => reason }
-        )
-      end
-      access.destroy!
+      revoke_access(access: access, actor: actor, source: source, via: via, reason: reason)
     end
+  end
+
+  def revoke_access(access:, actor:, source:, via:, reason:)
+    if access.approved?
+      AuditEvent.record!(
+        event_type: "access.revoked",
+        actor: actor,
+        targets: [ access.user, access, access.role ],
+        metadata: { "source" => source, "via" => via, "reason" => reason }
+      )
+    end
+    access.destroy!
   end
 end
