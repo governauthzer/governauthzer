@@ -5,6 +5,8 @@
         class: "hover:underline #{'font-semibold text-gray-900' if controller_name.in?(%w[approval_workflows approval_steps])}" %>
   <%= link_to "Users", admin_users_path,
         class: "hover:underline #{'font-semibold text-gray-900' if controller_name.in?(%w[users omniauth_identities])}" %>
+  <%= link_to "Audit log", admin_audit_events_path,
+        class: "hover:underline #{'font-semibold text-gray-900' if controller_name == 'audit_events'}" %>
   <%= link_to "OIDC providers", admin_auth_providers_path,
         class: "hover:underline #{'font-semibold text-gray-900' if controller_name == 'auth_providers'}" %>
   <%= link_to "API tokens", admin_api_tokens_path,

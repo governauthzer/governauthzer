@@ -1,0 +1,79 @@
+<% content_for :title, "#{@event.event_type} — Audit log" %>
+
+<div class="w-full max-w-3xl">
+  <%= render "admin/nav" %>
+
+  <%= link_to "← Back to audit log", admin_audit_events_path, class: "text-sm text-copper-700 hover:underline" %>
+  <h1 class="text-2xl font-semibold font-mono mt-3 mb-6"><%= @event.event_type %></h1>
+
+  <dl class="grid grid-cols-3 gap-y-3 text-sm mb-8">
+    <dt class="text-gray-500">Time (UTC)</dt>
+    <dd class="col-span-2 font-mono"><%= @event.occurred_at.utc.iso8601 %></dd>
+
+    <dt class="text-gray-500">Actor</dt>
+    <dd class="col-span-2">
+      <%= @event.actor_display || "system" %>
+      <span class="text-gray-400">(<%= @event.actor_type %>)</span>
+    </dd>
+
+    <dt class="text-gray-500">Correlation</dt>
+    <dd class="col-span-2">
+      <%= link_to @event.correlation_id, admin_audit_events_path(correlation_id: @event.correlation_id),
+            class: "font-mono text-copper-700 hover:underline" %>
+    </dd>
+
+    <% if @event.justification.present? %>
+      <dt class="text-gray-500">Justification</dt>
+      <dd class="col-span-2"><%= @event.justification %></dd>
+    <% end %>
+
+    <dt class="text-gray-500">IP</dt>
+    <dd class="col-span-2 font-mono"><%= @event.ip_address || "—" %></dd>
+
+    <dt class="text-gray-500">User agent</dt>
+    <dd class="col-span-2 text-gray-600 break-all"><%= @event.user_agent || "—" %></dd>
+  </dl>
+
+  <section class="mb-8">
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Targets</h2>
+    <% if @event.targets.blank? %>
+      <p class="text-sm text-gray-500">None.</p>
+    <% else %>
+      <ul class="divide-y divide-gray-100 border-t border-gray-200 text-sm">
+        <% @event.targets.each do |target| %>
+          <li class="py-2">
+            <span class="font-medium"><%= target["display"] %></span>
+            <span class="text-gray-400">· <%= target["type"] %></span>
+            <%= link_to "events", admin_audit_events_path(target_type: target["type"], target_id: target["id"]),
+                  class: "ml-1 text-xs text-copper-700 hover:underline" %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <% if @event.attribute_changes.present? %>
+    <section class="mb-8">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Attribute changes</h2>
+      <table class="w-full text-sm border-t border-gray-200">
+        <tbody>
+          <% @event.attribute_changes.each do |field, (before, after)| %>
+            <tr class="border-t border-gray-100">
+              <td class="py-2 pr-4 font-mono text-gray-700"><%= field %></td>
+              <td class="py-2 pr-4 text-gray-500"><%= before.nil? ? "∅" : before %></td>
+              <td class="py-2 pr-2 text-gray-400">→</td>
+              <td class="py-2 pr-4"><%= after.nil? ? "∅" : after %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </section>
+  <% end %>
+
+  <% if @event.metadata.present? %>
+    <section>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Metadata</h2>
+      <pre class="text-xs bg-gray-50 border border-gray-200 rounded p-3 overflow-x-auto"><%= JSON.pretty_generate(@event.metadata) %></pre>
+    </section>
+  <% end %>
+</div>

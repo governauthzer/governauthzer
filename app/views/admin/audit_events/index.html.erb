@@ -1,0 +1,86 @@
+<% content_for :title, "Audit log — Governauthzer" %>
+
+<div class="w-full max-w-6xl">
+  <%= render "admin/nav" %>
+
+  <h1 class="text-2xl font-semibold mb-6">Audit log</h1>
+
+  <%= form_with url: admin_audit_events_path, method: :get, local: true,
+        class: "flex flex-wrap items-end gap-3 mb-6 text-sm" do %>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Event type</label>
+      <%= select_tag :event_type,
+            options_for_select([ [ "All", "" ] ] + @event_types.map { |t| [ t, t ] }, params[:event_type]),
+            class: "#{input_class} w-56" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Actor</label>
+      <%= text_field_tag :actor, params[:actor], placeholder: "name or email", class: "#{input_class} w-44" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">From</label>
+      <%= date_field_tag :from, params[:from], class: input_class %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">To</label>
+      <%= date_field_tag :to, params[:to], class: input_class %>
+    </div>
+    <%= hidden_field_tag :correlation_id, params[:correlation_id] if params[:correlation_id].present? %>
+    <%= submit_tag "Filter", class: "px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-700 cursor-pointer" %>
+    <%= link_to "Clear", admin_audit_events_path, class: "px-3 py-2 underline" %>
+  <% end %>
+
+  <% if params[:correlation_id].present? %>
+    <p class="text-xs text-gray-500 mb-3">
+      Filtered to correlation <span class="font-mono"><%= params[:correlation_id] %></span> ·
+      <%= link_to "remove", admin_audit_events_path(request.query_parameters.except("correlation_id")), class: "underline" %>
+    </p>
+  <% end %>
+
+  <p class="text-xs text-gray-500 mb-3"><%= @total %> event<%= "s" unless @total == 1 %></p>
+
+  <% if @events.empty? %>
+    <p class="text-sm text-gray-600">No events match.</p>
+  <% else %>
+    <table class="w-full text-sm border-t border-gray-200">
+      <thead>
+        <tr class="text-left text-gray-500">
+          <th class="py-2 pr-4 font-medium">Time (UTC)</th>
+          <th class="py-2 pr-4 font-medium">Event</th>
+          <th class="py-2 pr-4 font-medium">Actor</th>
+          <th class="py-2 pr-4 font-medium">Targets</th>
+          <th class="py-2 pr-4 font-medium"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @events.each do |event| %>
+          <tr class="border-t border-gray-100 align-top">
+            <td class="py-2 pr-4 whitespace-nowrap text-gray-600 font-mono text-xs">
+              <%= event.occurred_at.utc.strftime("%Y-%m-%d %H:%M:%S") %>
+            </td>
+            <td class="py-2 pr-4 font-mono"><%= event.event_type %></td>
+            <td class="py-2 pr-4"><%= event.actor_display || "system" %></td>
+            <td class="py-2 pr-4 text-gray-600 truncate max-w-xs">
+              <%= event.targets.map { |t| t["display"] }.compact.join(", ").presence || "—" %>
+            </td>
+            <td class="py-2 pr-4 text-right">
+              <%= link_to "Details", admin_audit_event_path(event), class: "text-copper-700 hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <div class="flex items-center justify-between mt-6 text-sm">
+      <span class="text-gray-500">Page <%= @page %> of <%= @pages %></span>
+      <div class="flex gap-3">
+        <% if @page > 1 %>
+          <%= link_to "← Prev", admin_audit_events_path(request.query_parameters.merge(page: @page - 1)), class: "underline" %>
+        <% end %>
+        <% if @page < @pages %>
+          <%= link_to "Next →", admin_audit_events_path(request.query_parameters.merge(page: @page + 1)), class: "underline" %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

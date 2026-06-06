@@ -27,6 +27,7 @@ Rails.application.routes.draw do
       resources :omniauth_identities, only: :create
     end
     resources :omniauth_identities, only: :destroy
+    resources :audit_events, only: %i[index show]
     resources :auth_providers, except: :show
     resources :api_tokens, only: %i[index new create destroy]
     root to: redirect("/admin/applications")

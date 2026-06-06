@@ -16,7 +16,11 @@
       <% end %>
     </div>
   </div>
-  <p class="text-sm text-gray-500 mb-8"><%= @user.email %></p>
+  <p class="text-sm text-gray-500 mb-1"><%= @user.email %></p>
+  <p class="mb-8">
+    <%= link_to "View audit log →", admin_audit_events_path(target_type: "User", target_id: @user.id),
+          class: "text-xs text-copper-700 hover:underline" %>
+  </p>
 
   <section class="mb-10">
     <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Profile</h2>
