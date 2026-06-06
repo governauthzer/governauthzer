@@ -7,6 +7,7 @@ class CatalogController < ApplicationController
   def index
     held_role_ids = current_user.accesses.pluck(:role_id)
     @roles = Role.includes(:application)
+                 .where(protected: false)
                  .where.not(id: held_role_ids)
                  .order(:name)
   end

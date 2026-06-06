@@ -18,6 +18,7 @@ module Accesses
     end
 
     def call
+      return failure(:role_protected) if @role.protected
       return failure(:access_already_exists) if Access.exists?(user: @user, role: @role)
 
       access = Access.new(

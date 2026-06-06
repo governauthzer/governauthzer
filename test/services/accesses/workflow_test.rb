@@ -25,6 +25,16 @@ class Accesses::WorkflowTest < ActiveSupport::TestCase
     assert_equal @manager, access.current_approver
   end
 
+  test "request for a protected role is refused (no self-request escalation)" do
+    protected_role = Role.create!(application: @app, name: "Operator", slug: "operator",
+                                  protected: true, approval_workflow: @workflow)
+    result = Accesses::Requester.call(user: @requester, role: protected_role, actor: @requester)
+
+    assert_not result.success
+    assert_equal :role_protected, result.code
+    assert_equal 0, Access.where(user: @requester, role: protected_role).count
+  end
+
   test "request is rejected when an active access already exists" do
     Accesses::Requester.call(user: @requester, role: @role, actor: @requester)
     result = Accesses::Requester.call(user: @requester, role: @role, actor: @requester)
