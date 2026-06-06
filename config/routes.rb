@@ -33,10 +33,11 @@ Rails.application.routes.draw do
     end
   end
 
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # End-user UI (every signed-in active user; operators land here too) — the
+  # self-service request / approval flow. Operator-only screens live under /admin.
+  root "dashboard#index"
+  get  "/catalog" => "catalog#index", as: :catalog
+  resources :access_requests, only: %i[create destroy]
+  post "/approvals/:id/approve" => "approvals#approve", as: :approve_access
+  post "/approvals/:id/deny"    => "approvals#deny",    as: :deny_access
 end

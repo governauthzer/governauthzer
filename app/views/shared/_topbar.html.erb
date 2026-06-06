@@ -1,0 +1,12 @@
+<header class="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
+  <%= link_to "Governauthzer", root_path, class: "text-lg font-semibold tracking-tight" %>
+  <nav class="flex items-center gap-4 text-sm">
+    <%= link_to "Request access", catalog_path, class: "text-copper-700 hover:underline" %>
+    <% if current_user.operator? %>
+      <%= link_to "Admin", admin_root_path, class: "text-gray-600 hover:underline" %>
+    <% end %>
+    <span class="text-gray-400"><%= current_user.name %></span>
+    <%= button_to "Sign out", logout_path, method: :delete,
+                  class: "text-gray-500 hover:underline", form_class: "inline" %>
+  </nav>
+</header>

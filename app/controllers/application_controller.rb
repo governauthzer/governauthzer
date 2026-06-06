@@ -16,6 +16,10 @@ class ApplicationController < ActionController::Base
 
   private
 
+  def require_login!
+    redirect_to login_path unless signed_in?
+  end
+
   def current_user
     return @current_user if defined?(@current_user)
     @current_user = resolve_current_user

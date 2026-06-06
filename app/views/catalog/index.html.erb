@@ -1,0 +1,30 @@
+<% content_for :title, "Request access — Governauthzer" %>
+
+<div class="w-full max-w-3xl mx-auto">
+  <%= render "shared/topbar" %>
+  <%= render "shared/flash" %>
+
+  <h1 class="text-xl font-semibold mb-6">Request access</h1>
+
+  <% if @roles.empty? %>
+    <p class="text-sm text-gray-500">There are no roles available to request.</p>
+  <% else %>
+    <ul class="space-y-3">
+      <% @roles.each do |role| %>
+        <li class="border border-gray-200 rounded p-4">
+          <div class="mb-2">
+            <span class="font-medium"><%= role.name %></span>
+            <span class="text-gray-400 text-sm">· <%= role.application.name %></span>
+          </div>
+          <%= form_with url: access_requests_path, method: :post do %>
+            <%= hidden_field_tag :role_id, role.id %>
+            <%= text_field_tag :justification, nil, placeholder: "Why do you need this? (optional)",
+                  class: "w-full text-sm border border-gray-300 rounded px-2 py-1 mb-2" %>
+            <%= submit_tag "Request",
+                  class: "px-3 py-1.5 bg-gray-900 text-white text-sm rounded hover:bg-gray-700 cursor-pointer" %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>
