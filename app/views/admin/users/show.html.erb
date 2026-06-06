@@ -39,9 +39,14 @@
     <% else %>
       <ul class="divide-y divide-gray-100 border-t border-gray-200 text-sm">
         <% @approved.each do |access| %>
-          <li class="py-2">
-            <span class="font-medium"><%= access.role.name %></span>
-            <span class="text-gray-400">· <%= access.role.application.name %></span>
+          <li class="flex items-center justify-between py-2">
+            <span>
+              <span class="font-medium"><%= access.role.name %></span>
+              <span class="text-gray-400">· <%= access.role.application.name %></span>
+            </span>
+            <%= button_to "Revoke", admin_access_path(access), method: :delete,
+                  form: { data: { turbo_confirm: "Revoke #{access.role.name} from #{@user.name}?" } },
+                  class: "text-xs text-gray-500 hover:underline" %>
           </li>
         <% end %>
       </ul>

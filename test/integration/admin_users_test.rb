@@ -50,6 +50,19 @@ class AdminUsersTest < ActionDispatch::IntegrationTest
     assert_equal 0, @target.accesses.count
   end
 
+  test "operator revokes a granted access" do
+    app = Application.create!(name: "Slack", slug: "slack")
+    role = app.roles.create!(name: "Member", slug: "member")
+    access = Access.create!(user: @target, role: role, status: "approved", source: "manual")
+
+    assert_difference("Access.count", -1) do
+      assert_difference("AuditEvent.where(event_type: 'access.revoked').count", 1) do
+        delete "/admin/accesses/#{access.id}"
+      end
+    end
+    assert_redirected_to "/admin/users/#{@target.id}"
+  end
+
   test "operator links and unlinks an OIDC identity" do
     assert_difference([ "OmniauthIdentity.count", "AuditEvent.where(event_type: 'omniauth_identity.linked').count" ], 1) do
       post "/admin/users/#{@target.id}/omniauth_identities",
