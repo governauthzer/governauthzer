@@ -2,11 +2,12 @@ module Users
   class Updater < ApplicationService
     include Users::ManagerReferenceResolver
 
-    def initialize(user:, attrs:, actor:, manager_external_id: NOT_PROVIDED)
+    def initialize(user:, attrs:, actor:, manager_external_id: NOT_PROVIDED, source: "api")
       @user = user
       @attrs = attrs
       @actor = actor
       @manager_external_id = manager_external_id
+      @source = source # audit channel: "api" (default) or "admin-ui"
     end
 
     def call
@@ -18,7 +19,7 @@ module Users
         # user.terminated) and ignore any other attributes in the same PATCH —
         # HRIS/operator termination events carry only the status flip.
         if @attrs[:status].to_s == "terminated"
-          return Users::Terminator.call(user: @user, actor: @actor, source: "api", via: "termination")
+          return Users::Terminator.call(user: @user, actor: @actor, source: @source, via: "termination")
         end
 
         resolved_attrs, manager_failure = resolve_manager_reference(@attrs, @manager_external_id)
@@ -40,7 +41,7 @@ module Users
             actor: @actor,
             targets: @user,
             attribute_changes: attribute_changes,
-            metadata: { "source" => "api" }
+            metadata: { "source" => @source }
           )
         end
 

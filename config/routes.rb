@@ -23,6 +23,10 @@ Rails.application.routes.draw do
     resources :approval_workflows do
       resources :approval_steps, only: %i[new create edit update destroy], shallow: true
     end
+    resources :users, only: %i[index show update] do
+      resources :omniauth_identities, only: :create
+    end
+    resources :omniauth_identities, only: :destroy
     resources :auth_providers, except: :show
     resources :api_tokens, only: %i[index new create destroy]
     root to: redirect("/admin/applications")
