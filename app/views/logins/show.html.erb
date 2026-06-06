@@ -19,4 +19,10 @@
       use the <code>bin/governauthzer emergency-login</code> CLI to obtain a one-time login URL.
     </p>
   <% end %>
+
+  <% if Rails.env.development? %>
+    <div class="mt-6 pt-6 border-t border-gray-200">
+      <%= link_to "Developer sign-in →", dev_sign_in_path, class: "text-sm text-copper-700 hover:underline" %>
+    </div>
+  <% end %>
 </div>

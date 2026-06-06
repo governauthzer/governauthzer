@@ -40,4 +40,12 @@ Rails.application.routes.draw do
   resources :access_requests, only: %i[create destroy]
   post "/approvals/:id/approve" => "approvals#approve", as: :approve_access
   post "/approvals/:id/deny"    => "approvals#deny",    as: :deny_access
+
+  # Development-only one-click sign-in. Declared only in development, so these
+  # routes simply do not exist in production (404), independent of the controller
+  # guard. See Dev::SessionsController.
+  if Rails.env.development?
+    get  "/dev/sign-in" => "dev/sessions#new",    as: :dev_sign_in
+    post "/dev/sign-in" => "dev/sessions#create"
+  end
 end
