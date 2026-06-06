@@ -9,6 +9,8 @@ module Accesses
   #   - zero-step workflow → fully_approved? immediately → granted on the spot.
   #   - steps exist but no eligible approver resolves → failure(:no_eligible_approver).
   class Requester < ApplicationService
+    include AccessNotifications
+
     def initialize(user:, role:, actor:, justification: nil, expires_at: nil)
       @user = user
       @role = role
@@ -31,7 +33,13 @@ module Accesses
 
       ActiveRecord::Base.transaction do
         access.save!
-        access.fully_approved? ? grant(access) : announce_request(access)
+        if access.fully_approved?
+          grant(access)
+          notify_approved(access)
+        else
+          announce_request(access)
+          notify_review(access)
+        end
         success(access)
       end
     end

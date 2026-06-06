@@ -1,0 +1,7 @@
+Hi <%= @name %>,
+
+Your request for <%= @role_name %> (<%= @application_name %>) was denied.
+<% if @comment.present? %>
+Reason: <%= @comment %>
+<% end %>
+<%= root_url %>

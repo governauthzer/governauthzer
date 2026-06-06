@@ -1,0 +1,9 @@
+<p>Hi <%= @name %>,</p>
+
+<p>Your request for <strong><%= @role_name %></strong> (<%= @application_name %>) was denied.</p>
+
+<% if @comment.present? %>
+  <p><em>Reason:</em> <%= @comment %></p>
+<% end %>
+
+<p><%= link_to "Open governauthzer", root_url %></p>

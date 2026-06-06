@@ -5,6 +5,8 @@ module Accesses
   # (user_id, role_id) index would otherwise block a legitimate re-request.
   # Authorized via AccessPolicy#deny? by the caller.
   class Denier < ApplicationService
+    include AccessNotifications
+
     def initialize(access:, approver:, actor:, comment: nil)
       @access = access
       @approver = approver
@@ -23,6 +25,7 @@ module Accesses
           justification: @comment,
           metadata: { "source" => "admin-ui", "via" => "approval", "step_position" => @access.current_step&.position }
         )
+        notify_denied(@access, @comment)
         @access.destroy!
         success(@access)
       end

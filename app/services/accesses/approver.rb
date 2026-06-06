@@ -5,6 +5,8 @@ module Accesses
   # `access.approval_recorded` and leave the access pending for the next approver.
   # The caller (controller) is expected to have authorized via AccessPolicy#approve?.
   class Approver < ApplicationService
+    include AccessNotifications
+
     def initialize(access:, approver:, actor:, comment: nil)
       @access = access
       @approver = approver
@@ -18,7 +20,13 @@ module Accesses
       step = @access.current_step
       ActiveRecord::Base.transaction do
         @access.approval_decisions.create!(approval_step: step, approver: @approver, decision: "approved", comment: @comment)
-        @access.fully_approved? ? grant : record_step(step)
+        if @access.fully_approved?
+          grant
+          notify_approved(@access)
+        else
+          record_step(step)
+          notify_review(@access)
+        end
         success(@access)
       end
     end

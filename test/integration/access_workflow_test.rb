@@ -24,7 +24,7 @@ class AccessWorkflowTest < ActionDispatch::IntegrationTest
 
   test "end-to-end: request, appears in approver inbox, approve grants access" do
     sign_in_as @requester
-    assert_difference("AuditEvent.where(event_type: 'access.requested').count", 1) do
+    assert_enqueued_emails 1 do
       post "/access_requests", params: { role_id: @role.id, justification: "need it" }
     end
     assert_redirected_to "/"
@@ -36,7 +36,8 @@ class AccessWorkflowTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_includes response.body, @requester.name
 
-    assert_difference("AuditEvent.where(event_type: 'access.approved').count", 1) do
+    # one email to the requester on grant
+    assert_enqueued_emails 1 do
       post "/approvals/#{access.id}/approve", params: { comment: "ok" }
     end
     assert_equal "approved", access.reload.status
@@ -70,8 +71,10 @@ class AccessWorkflowTest < ActionDispatch::IntegrationTest
     access = Access.find_by!(user: @requester, role: @role)
 
     sign_in_as @manager
-    assert_difference("AuditEvent.where(event_type: 'access.denied').count", 1) do
-      post "/approvals/#{access.id}/deny", params: { comment: "no" }
+    assert_enqueued_emails 1 do
+      assert_difference("AuditEvent.where(event_type: 'access.denied').count", 1) do
+        post "/approvals/#{access.id}/deny", params: { comment: "no" }
+      end
     end
     assert_not Access.exists?(access.id)
   end

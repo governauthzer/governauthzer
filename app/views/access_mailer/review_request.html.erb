@@ -1,0 +1,10 @@
+<p>Hi <%= @approver_name %>,</p>
+
+<p><strong><%= @requester_name %></strong> has requested access to
+   <strong><%= @role_name %></strong> (<%= @application_name %>) and it is awaiting your approval.</p>
+
+<% if @justification.present? %>
+  <p><em>Justification:</em> <%= @justification %></p>
+<% end %>
+
+<p><%= link_to "Review the request", root_url %></p>

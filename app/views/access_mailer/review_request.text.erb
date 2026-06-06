@@ -1,0 +1,7 @@
+Hi <%= @approver_name %>,
+
+<%= @requester_name %> has requested access to <%= @role_name %> (<%= @application_name %>) and it is awaiting your approval.
+<% if @justification.present? %>
+Justification: <%= @justification %>
+<% end %>
+Review it here: <%= root_url %>

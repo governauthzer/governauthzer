@@ -47,5 +47,8 @@ Rails.application.routes.draw do
   if Rails.env.development?
     get  "/dev/sign-in" => "dev/sessions#new",    as: :dev_sign_in
     post "/dev/sign-in" => "dev/sessions#create"
+
+    # Browse captured outgoing mail.
+    mount LetterOpenerWeb::Engine, at: "/letter_opener"
   end
 end
