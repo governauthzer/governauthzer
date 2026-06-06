@@ -1,0 +1,7 @@
+<% content_for :title, "Edit #{@workflow.name} — Governauthzer" %>
+
+<div class="w-full max-w-5xl">
+  <%= render "admin/nav" %>
+  <h1 class="text-2xl font-semibold mb-6">Edit <span class="text-gray-500"><%= @workflow.name %></span></h1>
+  <%= render "form", workflow: @workflow %>
+</div>

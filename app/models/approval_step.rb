@@ -8,6 +8,7 @@ class ApprovalStep < ApplicationRecord
 
   validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :strategy, inclusion: { in: STRATEGIES }
+  validates :approver_user, presence: true, if: -> { strategy == "named_user" }
 
   def resolve_approver(requester:)
     candidate = approver_candidate(requester)

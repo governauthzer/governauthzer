@@ -1,0 +1,46 @@
+<% content_for :title, "Workflows — Governauthzer" %>
+
+<div class="w-full max-w-5xl">
+  <%= render "admin/nav" %>
+  <%= render "shared/flash" %>
+
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold">Approval workflows</h1>
+    <%= link_to "Add workflow", new_admin_approval_workflow_path,
+                class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
+  </div>
+
+  <% if @workflows.empty? %>
+    <p class="text-sm text-gray-600">No workflows yet.</p>
+  <% else %>
+    <table class="w-full text-sm border-t border-gray-200">
+      <thead>
+        <tr class="text-left text-gray-500">
+          <th class="py-2 pr-4 font-medium">Name</th>
+          <th class="py-2 pr-4 font-medium">Slug</th>
+          <th class="py-2 pr-4 font-medium">Steps</th>
+          <th class="py-2 pr-4 font-medium">Roles using it</th>
+          <th class="py-2 pr-4 font-medium"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @workflows.each do |workflow| %>
+          <tr class="border-t border-gray-100">
+            <td class="py-3 pr-4 font-medium">
+              <%= workflow.name %>
+              <% if workflow.slug == ApprovalWorkflow::DEFAULT_SLUG %>
+                <span class="ml-1 text-xs text-gray-400">(default)</span>
+              <% end %>
+            </td>
+            <td class="py-3 pr-4 font-mono text-gray-700"><%= workflow.slug %></td>
+            <td class="py-3 pr-4 text-gray-600"><%= workflow.steps_count %></td>
+            <td class="py-3 pr-4 text-gray-600"><%= workflow.roles_count %></td>
+            <td class="py-3 pr-4 text-right">
+              <%= link_to "View", admin_approval_workflow_path(workflow), class: "text-copper-700 hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>
