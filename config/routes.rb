@@ -17,9 +17,12 @@ Rails.application.routes.draw do
   get  "/auth/failure"           => "omniauth_sessions#failure",   as: :oidc_failure
 
   namespace :admin do
+    resources :applications do
+      resources :roles, only: %i[new create edit update destroy], shallow: true
+    end
     resources :auth_providers, except: :show
     resources :api_tokens, only: %i[index new create destroy]
-    root to: redirect("/admin/auth_providers")
+    root to: redirect("/admin/applications")
   end
 
   namespace :api do

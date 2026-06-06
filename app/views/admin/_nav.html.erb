@@ -1,0 +1,10 @@
+<nav class="flex items-center gap-5 text-sm mb-8 pb-3 border-b border-gray-200">
+  <%= link_to "Applications", admin_applications_path,
+        class: "hover:underline #{'font-semibold text-gray-900' if controller_name.in?(%w[applications roles])}" %>
+  <%= link_to "OIDC providers", admin_auth_providers_path,
+        class: "hover:underline #{'font-semibold text-gray-900' if controller_name == 'auth_providers'}" %>
+  <%= link_to "API tokens", admin_api_tokens_path,
+        class: "hover:underline #{'font-semibold text-gray-900' if controller_name == 'api_tokens'}" %>
+  <span class="ml-auto text-gray-400">Admin · <%= current_user.name %></span>
+  <%= link_to "← Back to app", root_path, class: "text-copper-700 hover:underline" %>
+</nav>

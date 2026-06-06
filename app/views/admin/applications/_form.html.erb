@@ -1,0 +1,25 @@
+<%= form_with model: [ :admin, application ], local: true, class: "space-y-5 max-w-xl" do |f| %>
+  <% if application.errors.any? %>
+    <div class="p-3 rounded bg-gray-200 text-gray-800 text-sm space-y-1">
+      <% application.errors.full_messages.each do |msg| %>
+        <div>• <%= msg %></div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, class: "block text-sm font-medium mb-1" %>
+    <%= f.text_field :name, required: true, class: input_class %>
+  </div>
+
+  <div>
+    <%= f.label :slug, class: "block text-sm font-medium mb-1" %>
+    <%= f.text_field :slug, required: true, class: "#{input_class} font-mono" %>
+    <p class="text-xs text-gray-500 mt-1">Stable identifier. Normalized to lowercase with dashes.</p>
+  </div>
+
+  <div class="flex items-center gap-3 pt-2">
+    <%= f.submit class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
+    <%= link_to "Cancel", admin_applications_path, class: "text-sm underline" %>
+  </div>
+<% end %>

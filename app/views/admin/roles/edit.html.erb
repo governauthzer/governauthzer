@@ -1,0 +1,10 @@
+<% content_for :title, "Edit #{@role.name} — Governauthzer" %>
+
+<div class="w-full max-w-xl">
+  <%= render "admin/nav" %>
+  <h1 class="text-2xl font-semibold mb-6">
+    Edit role <span class="text-gray-500"><%= @role.name %></span>
+    <span class="text-sm text-gray-400">· <%= @role.application.name %></span>
+  </h1>
+  <%= render "form", role: @role, url: admin_role_path(@role) %>
+</div>
