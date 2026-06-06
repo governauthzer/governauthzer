@@ -8,37 +8,23 @@ module Sync
   # session_version bump is the forward-looking hook for the broader
   # invalidate-on-role-change invariant (Phase 6), not load-bearing here yet.
   class OrphanedCascade < ApplicationService
+    include AccessRevocation
+
     def initialize(user:, actor:, source:, via:, reason: "user_orphaned")
       @user = user
       @actor = actor
-      @source = source    # audit channel: "api" (snapshot), future "admin-ui" (termination)
-      @via = via          # trigger sub-flow: "snapshot", future "termination"
+      @source = source    # audit channel: "api" (snapshot)
+      @via = via          # trigger sub-flow: "snapshot"
       @reason = reason
     end
 
     def call
-      revoke_accesses
+      revoke_all_accesses(user: @user, actor: @actor, source: @source, via: @via, reason: @reason)
       orphan_user
       success(@user)
     end
 
     private
-
-    def revoke_accesses
-      @user.accesses.includes(:role).each do |access|
-        # emit-before-destroy so the target snapshot survives the row deletion
-        # (audit-log lock 2026-05-20: access.revoked is emit-before-destroy).
-        if access.approved?
-          AuditEvent.record!(
-            event_type: "access.revoked",
-            actor: @actor,
-            targets: [ @user, access, access.role ],
-            metadata: { "source" => @source, "via" => @via, "reason" => @reason }
-          )
-        end
-        access.destroy!
-      end
-    end
 
     def orphan_user
       prior_status = @user.status

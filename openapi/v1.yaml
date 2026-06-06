@@ -242,7 +242,10 @@ components:
         Partial update. Only included fields are changed. Status transitions are
         validated against the state machine; illegal transitions → 422
         `validation_failed`. PATCH on a terminated user → 422 `reactivation_required`
-        regardless of attempted changes. Identity management uses dedicated endpoints,
+        regardless of attempted changes. Setting `status: terminated` is a terminal,
+        exclusive operation: it revokes all of the user's accesses (approved and
+        pending) and emits the corresponding audit/webhook events; any other fields in
+        the same request are ignored. Identity management uses dedicated endpoints,
         not this PATCH.
       properties:
         user:

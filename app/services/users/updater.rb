@@ -13,6 +13,14 @@ module Users
       return failure(:reactivation_required, user_id: @user.id) if @user.terminated?
 
       ActiveRecord::Base.transaction do
+        # Termination is a terminal, exclusive operation: when the payload moves
+        # status to `terminated` we run the full cascade (revoke accesses + emit
+        # user.terminated) and ignore any other attributes in the same PATCH —
+        # HRIS/operator termination events carry only the status flip.
+        if @attrs[:status].to_s == "terminated"
+          return Users::Terminator.call(user: @user, actor: @actor, source: "api", via: "termination")
+        end
+
         resolved_attrs, manager_failure = resolve_manager_reference(@attrs, @manager_external_id)
         return manager_failure if manager_failure
 

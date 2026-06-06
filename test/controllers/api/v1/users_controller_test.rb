@@ -240,6 +240,47 @@ class Api::V1::UsersControllerTest < ActionDispatch::IntegrationTest
     assert body.dig("error", "details", "errors", "status").present?
   end
 
+  test "update to terminated runs the cascade: revokes approved access and emits user.terminated" do
+    alice = users(:alice)
+    app = Application.create!(name: "Slack", slug: "slack")
+    role = Role.create!(application: app, name: "Slack User", slug: "slack-user")
+    Access.create!(user: alice, role: role, status: "approved", source: "manual")
+    prior_version = alice.session_version
+
+    assert_difference("AuditEvent.where(event_type: 'access.revoked').count", 1) do
+      assert_difference("AuditEvent.where(event_type: 'user.terminated').count", 1) do
+        patch "/api/v1/users/#{alice.id}", params: { user: { status: "terminated" } }.to_json, headers: @headers
+      end
+    end
+
+    assert_response :ok
+    assert_response_schema_confirm(200)
+    body = JSON.parse(response.body)
+    assert_equal "terminated", body["status"]
+    assert_empty body["roles"]
+
+    alice.reload
+    assert_equal "terminated", alice.status
+    assert_equal 0, alice.accesses.count
+    assert_equal prior_version + 1, alice.session_version
+  end
+
+  test "update to terminated destroys a pending access without emitting access.revoked" do
+    alice = users(:alice)
+    app = Application.create!(name: "Slack", slug: "slack")
+    role = Role.create!(application: app, name: "Slack User", slug: "slack-user")
+    Access.create!(user: alice, role: role, status: "pending", source: "self_request")
+
+    assert_no_difference("AuditEvent.where(event_type: 'access.revoked').count") do
+      assert_difference("AuditEvent.where(event_type: 'user.terminated').count", 1) do
+        patch "/api/v1/users/#{alice.id}", params: { user: { status: "terminated" } }.to_json, headers: @headers
+      end
+    end
+
+    assert_response :ok
+    assert_equal 0, alice.reload.accesses.count
+  end
+
   test "update returns 422 reactivation_required on terminated user" do
     alice = users(:alice)
     alice.update_column(:status, "terminated")
