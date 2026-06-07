@@ -31,7 +31,7 @@ Rails.application.routes.draw do
     resources :audit_events, only: %i[index show]
     resources :auth_providers, except: :show
     resources :api_tokens, only: %i[index new create destroy]
-    root to: redirect("/admin/applications")
+    root to: "dashboard#index"
   end
 
   namespace :api do

@@ -1,0 +1,79 @@
+<% content_for :title, "Dashboard — Governauthzer" %>
+
+<div class="w-full max-w-6xl">
+  <%= render "admin/nav" %>
+  <%= render "shared/flash" %>
+
+  <h1 class="text-2xl font-semibold mb-6">Dashboard</h1>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+    <div class="border border-gray-200 rounded p-4">
+      <div class="text-3xl font-semibold tabular-nums"><%= @pending_approvals %></div>
+      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Pending approvals</div>
+    </div>
+    <%= link_to admin_users_path, class: "border border-gray-200 rounded p-4 hover:border-gray-400 transition-colors" do %>
+      <div class="text-3xl font-semibold tabular-nums"><%= @users_total %></div>
+      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Users</div>
+    <% end %>
+    <%= link_to admin_applications_path, class: "border border-gray-200 rounded p-4 hover:border-gray-400 transition-colors" do %>
+      <div class="text-3xl font-semibold tabular-nums"><%= @applications_count %></div>
+      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Applications</div>
+    <% end %>
+    <div class="border border-gray-200 rounded p-4">
+      <div class="text-3xl font-semibold tabular-nums"><%= @roles_count %></div>
+      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Roles</div>
+    </div>
+  </div>
+
+  <section class="mb-10">
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Users by status</h2>
+    <div class="flex flex-wrap gap-3">
+      <% User::STATUSES.each do |status| %>
+        <%= link_to admin_users_path(status: status),
+              class: "flex items-center gap-2 border border-gray-200 rounded px-3 py-2 text-sm hover:border-gray-400 transition-colors" do %>
+          <%= status_pill(status) %>
+          <span class="tabular-nums font-medium"><%= @users_by_status.fetch(status, 0) %></span>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+  <section>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Recent activity</h2>
+      <%= link_to "View all →", admin_audit_events_path, class: "text-sm text-copper-700 hover:underline" %>
+    </div>
+    <% if @recent_events.empty? %>
+      <p class="text-sm text-gray-600">No activity yet.</p>
+    <% else %>
+      <table class="w-full text-sm border-t border-gray-200">
+        <thead>
+          <tr class="text-left text-gray-500">
+            <th class="py-2 pr-4 font-medium">Time (UTC)</th>
+            <th class="py-2 pr-4 font-medium">Event</th>
+            <th class="py-2 pr-4 font-medium">Actor</th>
+            <th class="py-2 pr-4 font-medium">Targets</th>
+            <th class="py-2 pr-4 font-medium"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @recent_events.each do |event| %>
+            <tr class="border-t border-gray-100 align-top">
+              <td class="py-2 pr-4 whitespace-nowrap text-gray-600 font-mono text-xs">
+                <%= event.occurred_at.utc.strftime("%Y-%m-%d %H:%M:%S") %>
+              </td>
+              <td class="py-2 pr-4 font-mono"><%= event.event_type %></td>
+              <td class="py-2 pr-4"><%= event.actor_display || "system" %></td>
+              <td class="py-2 pr-4 text-gray-600 truncate max-w-xs">
+                <%= event.targets.map { |t| t["display"] }.compact.join(", ").presence || "—" %>
+              </td>
+              <td class="py-2 pr-4 text-right">
+                <%= link_to "Details", admin_audit_event_path(event), class: "text-copper-700 hover:underline" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </section>
+</div>

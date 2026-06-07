@@ -1,4 +1,6 @@
 <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm mb-8 pb-3 border-b border-gray-200">
+  <%= link_to "Dashboard", admin_root_path,
+        class: "hover:underline #{'font-semibold text-gray-900' if controller_name == 'dashboard'}" %>
   <%= link_to "Applications", admin_applications_path,
         class: "hover:underline #{'font-semibold text-gray-900' if controller_name.in?(%w[applications roles])}" %>
   <%= link_to "Workflows", admin_approval_workflows_path,
