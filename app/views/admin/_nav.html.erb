@@ -8,7 +8,14 @@
     <header class="max-w-5xl mx-auto flex items-center justify-between gap-3
                    h-12 pl-2 pr-2 rounded-lg bg-white/90 backdrop-blur shadow-md">
       <div class="flex items-center gap-1 min-w-0 overflow-x-auto">
-        <%= link_to admin_root_path, class: "shrink-0 flex items-center justify-center w-7 h-7 mr-0.5 rounded-md bg-gray-900 text-white text-xs font-semibold" do %>G<% end %>
+        <%= link_to admin_root_path, class: "shrink-0 flex items-center justify-center w-7 h-7 mr-0.5" do %>
+          <svg class="w-7 h-7" viewBox="0 0 48 48" aria-hidden="true">
+            <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"></polygon>
+            <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"></polygon>
+            <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"></polygon>
+            <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"></polygon>
+          </svg>
+        <% end %>
         <%= nav_link.("Dashboard", admin_root_path, controller_name == "dashboard") %>
         <%= nav_link.("Applications", admin_applications_path, controller_name.in?(%w[applications roles])) %>
         <%= nav_link.("Workflows", admin_approval_workflows_path, controller_name.in?(%w[approval_workflows approval_steps])) %>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<!--
+  Governauthzer — Brand page.
+  Static, no auth, always available at /brand.html.
+
+  This page mirrors the design tokens in app/assets/tailwind/application.css.
+  If those tokens change, update the CSS variables in <style> below to match.
+
+  LOGO: search for "LOGO SLOT" markers. Drop the real mark/lockup there and
+  replace public/icon.svg + public/icon.png. Until then, the "G" placeholder
+  matches the current topbar (app/views/shared/_topbar.html.erb).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brand — Governauthzer</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+      --gray-950: #0f0f0f; --gray-900: #1a1a1a; --gray-800: #2a2a2a;
+      --gray-700: #3d3d3d; --gray-600: #525252; --gray-500: #6b6b6b;
+      --gray-400: #8a8a8a; --gray-300: #c2c2c2; --gray-200: #e2e2e2;
+      --gray-100: #efefef; --gray-50:  #f7f7f7;
+
+      --copper-800: #6f3719; --copper-700: #8a4520; --copper-600: #a35228;
+      --copper-500: #b85e2a; --copper-400: #c46e3a; --copper-300: #d4854f;
+      --copper-200: #ecc8b0; --copper-100: #f5e6dc; --copper-50:  #fbf3ed;
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      color: var(--gray-900);
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: "cv02","cv03","cv04","cv11";
+      line-height: 1.5;
+    }
+    code, .mono { font-family: var(--font-mono); }
+
+    .wrap { max-width: 880px; margin: 0 auto; padding: 64px 24px 96px; }
+
+    .page-title { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+    .page-subtitle { font-size: 0.875rem; color: var(--gray-500); margin: 6px 0 0; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--gray-500); margin: 0 0 16px;
+    }
+    section { margin-top: 56px; }
+    section > h2 { /* fallback */ }
+    .hr { height: 1px; background: var(--gray-200); border: 0; margin: 0; }
+
+    /* Brand mark placeholder — matches the topbar "G" square */
+    .mark {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--gray-900); color: #fff; font-weight: 600;
+      border-radius: 12px; flex: none;
+    }
+    .mark-lg { width: 96px; height: 96px; font-size: 44px; border-radius: 20px; }
+    .mark-md { width: 56px; height: 56px; font-size: 26px; border-radius: 14px; }
+    .mark-sm { width: 28px; height: 28px; font-size: 13px; border-radius: 8px; }
+
+    .lockup { display: inline-flex; align-items: center; gap: 12px; }
+    .lockup .wordmark { font-family: "Space Grotesk", var(--font-sans); font-size: 1.5rem; font-weight: 500; letter-spacing: -0.035em; }
+
+    .swatches-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    .swatch { border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden; }
+    .swatch .chip { height: 64px; }
+    .swatch .meta { padding: 8px 10px; }
+    .swatch .name { font-size: 0.75rem; font-weight: 500; }
+    .swatch .hex { font-family: var(--font-mono); font-size: 0.7rem; color: var(--gray-500); }
+
+    /* Surfaces / components mirrored from application.css */
+    .card { background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; padding: 20px; }
+    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border-radius: 6px; font-size: 0.875rem; font-weight: 500; padding: 8px 16px;
+      cursor: pointer; border: 1px solid transparent; font-family: inherit;
+    }
+    .btn-primary { background: var(--gray-900); color: #fff; }
+    .btn-secondary { background: #fff; border-color: var(--gray-300); color: var(--gray-700); }
+    .btn-danger { background: #fff; border-color: var(--gray-300); color: #b91c1c; }
+    .btn-link { background: transparent; color: var(--copper-700); font-weight: 500; padding: 8px 0; }
+
+    .input {
+      width: 100%; background: #fff; border: 1px solid var(--gray-300); border-radius: 6px;
+      padding: 8px 12px; font-size: 0.875rem; color: var(--gray-900); font-family: inherit;
+    }
+    .field-label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--gray-700); margin-bottom: 4px; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;
+    }
+    .pill-gray { background: var(--gray-100); color: var(--gray-700); }
+    .pill-green { background: #dcfce7; color: #15803d; }
+    .pill-amber { background: #fef3c7; color: #b45309; }
+    .pill-copper { background: var(--copper-100); color: var(--copper-700); }
+
+    table.data-table { width: 100%; font-size: 0.875rem; border-collapse: collapse; }
+    .data-table thead th {
+      text-align: left; font-size: 0.75rem; font-weight: 500; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--gray-500); background: var(--gray-50);
+      padding: 10px 16px; border-bottom: 1px solid var(--gray-200);
+    }
+    .data-table tbody td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); }
+    .panel { border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden; }
+
+    .type-row { display: flex; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--gray-100); }
+    .type-row .label { width: 120px; flex: none; font-size: 0.75rem; color: var(--gray-500); }
+
+    .note {
+      font-size: 0.8rem; color: var(--gray-500); background: var(--gray-50);
+      border: 1px dashed var(--gray-300); border-radius: 8px; padding: 12px 14px;
+    }
+    a.dl { font-size: 0.8rem; color: var(--copper-700); text-decoration: none; }
+    a.dl:hover { text-decoration: underline; }
+
+    .on-dark { background: var(--gray-950); border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- Header -->
+    <header style="display:flex; align-items:center; gap:14px;">
+      <svg viewBox="0 0 48 48" style="width:48px;height:48px;flex:none;">
+        <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"/>
+        <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"/>
+        <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"/>
+        <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"/>
+      </svg>
+      <div>
+        <h1 class="page-title">Governauthzer — Brand</h1>
+        <p class="page-subtitle">Visual identity &amp; design tokens. Always available at <code>/brand.html</code>.</p>
+      </div>
+    </header>
+
+    <!-- Logo -->
+    <section>
+      <p class="section-label">Logo</p>
+      <div class="card">
+        <div style="display:flex; flex-wrap:wrap; gap:40px; align-items:center;">
+          <div style="text-align:center;">
+            <svg viewBox="0 0 48 48" style="width:96px;height:96px;">
+              <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"/>
+              <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"/>
+              <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"/>
+              <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"/>
+            </svg>
+            <div class="hex" style="margin-top:10px; font-size:0.7rem; color:var(--gray-500);">Mark · on light</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="on-dark" style="padding:24px; display:inline-block;">
+              <svg viewBox="0 0 48 48" style="width:96px;height:96px; display:block;">
+                <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"/>
+                <polygon points="38,12 38,36 29,27 29,21" fill="#f7f7f7"/>
+                <polygon points="36,38 12,38 21,29 27,29" fill="#f7f7f7"/>
+                <polygon points="10,36 10,12 19,21 19,27" fill="#f7f7f7"/>
+              </svg>
+            </div>
+            <div class="hex" style="margin-top:10px; font-size:0.7rem; color:var(--gray-500);">Mark · on dark</div>
+          </div>
+          <div style="text-align:center;">
+            <span class="lockup">
+              <svg viewBox="0 0 48 48" style="width:40px;height:40px;flex:none;">
+                <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"/>
+                <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"/>
+                <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"/>
+                <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"/>
+              </svg>
+              <span class="wordmark">governauthzer</span>
+            </span>
+            <div class="hex" style="margin-top:10px; font-size:0.7rem; color:var(--gray-500);">Horizontal lockup</div>
+          </div>
+        </div>
+        <div style="margin-top:24px; display:flex; gap:18px; flex-wrap:wrap;">
+          <a class="dl" href="/brand-assets/aperture.svg" download>↓ mark (light) .svg</a>
+          <a class="dl" href="/brand-assets/aperture-ondark.svg" download>↓ mark (dark) .svg</a>
+          <a class="dl" href="/brand-assets/aperture-mono-black.svg" download>↓ mono black .svg</a>
+          <a class="dl" href="/brand-assets/aperture-mono-white.svg" download>↓ mono white .svg</a>
+          <a class="dl" href="/brand-assets/aperture-lockup.svg" download>↓ lockup .svg</a>
+          <a class="dl" href="/brand-assets/aperture-lockup.png" download>↓ lockup .png</a>
+          <a class="dl" href="/brand-assets/icon-maskable.png" download>↓ app tile 512 .png</a>
+        </div>
+        <p class="note" style="margin-top:16px;">
+          Direction: <strong>Aperture</strong> — a square iris of four blades around an open center; the
+          upper blade is the single copper accent (<code>#b85e2a</code>). Wordmark is Space Grotesk Medium,
+          lowercase. Clear space = aperture height; minimum size 16&nbsp;px (below that use the app-icon tile).
+        </p>
+      </div>
+    </section>
+
+    <!-- Favicon -->
+    <section>
+      <p class="section-label">App icon / Favicon</p>
+      <div class="card" style="display:flex; align-items:flex-end; gap:28px;">
+        <div style="text-align:center;"><img src="/brand-assets/icon-maskable.png" width="64" height="64" style="border-radius:14px; display:block;"><div class="hex" style="margin-top:8px;font-size:0.7rem;color:var(--gray-500);">tile 64</div></div>
+        <div style="text-align:center;"><img src="/brand-assets/favicon-48.png" width="48" height="48" style="display:block;"><div class="hex" style="margin-top:8px;font-size:0.7rem;color:var(--gray-500);">48</div></div>
+        <div style="text-align:center;"><img src="/brand-assets/favicon-32.png" width="32" height="32" style="display:block;"><div class="hex" style="margin-top:8px;font-size:0.7rem;color:var(--gray-500);">32</div></div>
+        <div style="text-align:center;"><img src="/brand-assets/favicon-16.png" width="16" height="16" style="display:block;"><div class="hex" style="margin-top:8px;font-size:0.7rem;color:var(--gray-500);">16</div></div>
+      </div>
+    </section>
+
+    <!-- Color -->
+    <section>
+      <p class="section-label">Color — Neutrals</p>
+      <div class="swatches-grid">
+        <div class="swatch"><div class="chip" style="background:#0f0f0f"></div><div class="meta"><div class="name">gray-950</div><div class="hex">#0f0f0f</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#1a1a1a"></div><div class="meta"><div class="name">gray-900</div><div class="hex">#1a1a1a</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#2a2a2a"></div><div class="meta"><div class="name">gray-800</div><div class="hex">#2a2a2a</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#3d3d3d"></div><div class="meta"><div class="name">gray-700</div><div class="hex">#3d3d3d</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#525252"></div><div class="meta"><div class="name">gray-600</div><div class="hex">#525252</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#6b6b6b"></div><div class="meta"><div class="name">gray-500</div><div class="hex">#6b6b6b</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#8a8a8a"></div><div class="meta"><div class="name">gray-400</div><div class="hex">#8a8a8a</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#c2c2c2"></div><div class="meta"><div class="name">gray-300</div><div class="hex">#c2c2c2</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#e2e2e2"></div><div class="meta"><div class="name">gray-200</div><div class="hex">#e2e2e2</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#efefef"></div><div class="meta"><div class="name">gray-100</div><div class="hex">#efefef</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#f7f7f7"></div><div class="meta"><div class="name">gray-50</div><div class="hex">#f7f7f7</div></div></div>
+      </div>
+
+      <p class="section-label" style="margin-top:32px;">Color — Copper (single accent)</p>
+      <div class="swatches-grid">
+        <div class="swatch"><div class="chip" style="background:#6f3719"></div><div class="meta"><div class="name">copper-800</div><div class="hex">#6f3719</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#8a4520"></div><div class="meta"><div class="name">copper-700</div><div class="hex">#8a4520</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#a35228"></div><div class="meta"><div class="name">copper-600</div><div class="hex">#a35228</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#b85e2a"></div><div class="meta"><div class="name">copper-500</div><div class="hex">#b85e2a</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#c46e3a"></div><div class="meta"><div class="name">copper-400</div><div class="hex">#c46e3a</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#d4854f"></div><div class="meta"><div class="name">copper-300</div><div class="hex">#d4854f</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#ecc8b0"></div><div class="meta"><div class="name">copper-200</div><div class="hex">#ecc8b0</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#f5e6dc"></div><div class="meta"><div class="name">copper-100</div><div class="hex">#f5e6dc</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#fbf3ed"></div><div class="meta"><div class="name">copper-50</div><div class="hex">#fbf3ed</div></div></div>
+      </div>
+    </section>
+
+    <!-- Typography -->
+    <section>
+      <p class="section-label">Typography</p>
+      <div class="card">
+        <div class="type-row"><span class="label">Sans · Inter</span><span style="font-size:1.5rem; font-weight:600; letter-spacing:-0.02em;">The quick brown fox</span></div>
+        <div class="type-row"><span class="label">Sans · weights</span><span><span style="font-weight:400;">Regular</span> · <span style="font-weight:500;">Medium</span> · <span style="font-weight:600;">Semibold</span> · <span style="font-weight:700;">Bold</span></span></div>
+        <div class="type-row" style="border-bottom:0;"><span class="label">Mono · JetBrains</span><span class="mono" style="font-size:1.1rem;">access_grant_01HZ · 2026-06-10</span></div>
+      </div>
+    </section>
+
+    <!-- Components -->
+    <section>
+      <p class="section-label">Components</p>
+      <div class="demo-grid">
+        <div class="card">
+          <div style="font-size:0.75rem; color:var(--gray-500); margin-bottom:12px;">Buttons</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-primary">Primary</button>
+            <button class="btn btn-secondary">Secondary</button>
+            <button class="btn btn-danger">Revoke</button>
+            <button class="btn btn-link">Inline action</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:0.75rem; color:var(--gray-500); margin-bottom:12px;">Badges</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <span class="pill pill-green">Active</span>
+            <span class="pill pill-amber">Pending</span>
+            <span class="pill pill-gray">Revoked</span>
+            <span class="pill pill-copper">Operator</span>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:0.75rem; color:var(--gray-500); margin-bottom:12px;">Input</div>
+          <label class="field-label">Email</label>
+          <input class="input" type="text" placeholder="name@company.com">
+        </div>
+        <div class="panel">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>Access</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>a.gasanov</td><td>GitHub · admin</td><td><span class="pill pill-green">Active</span></td></tr>
+              <tr><td>j.doe</td><td>AWS · readonly</td><td><span class="pill pill-amber">Pending</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
