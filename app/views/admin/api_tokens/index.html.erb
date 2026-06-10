@@ -1,67 +1,67 @@
 <% content_for :title, "API tokens — Governauthzer" %>
 
-<div class="w-full max-w-5xl">
+<div class="max-w-5xl mx-auto">
   <%= render "admin/nav" %>
   <% if @plain_token %>
-    <div class="mb-6 p-4 rounded border border-copper-700 bg-copper-100">
-      <p class="text-sm text-copper-700 mb-2">
+    <div class="mb-6 p-4 rounded-lg border border-copper-300 bg-copper-50">
+      <p class="text-sm text-copper-800 mb-2">
         Token created: <strong><%= @plain_token_name %></strong>. Copy it now — it won't be shown again.
       </p>
-      <pre class="bg-white rounded p-3 text-xs font-mono break-all border border-copper-300"><%= @plain_token %></pre>
+      <pre class="bg-white rounded-lg p-3 text-xs font-mono break-all border border-copper-200 text-gray-900"><%= @plain_token %></pre>
     </div>
   <% end %>
 
-  <% if notice %>
-    <div class="mb-4 p-3 rounded bg-copper-100 text-copper-700 text-sm"><%= notice %></div>
-  <% end %>
+  <%= render "shared/flash" %>
 
   <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-semibold">API tokens</h1>
+    <h1 class="page-title">API tokens</h1>
     <%= link_to "Create token", new_admin_api_token_path,
-                class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
+                class: "btn btn-primary" %>
   </div>
 
   <% if @api_tokens.empty? %>
     <p class="text-sm text-gray-600">No API tokens issued yet.</p>
   <% else %>
-    <table class="w-full text-sm border-t border-gray-200">
-      <thead>
-        <tr class="text-left text-gray-500">
-          <th class="py-2 pr-4 font-medium">Name</th>
-          <th class="py-2 pr-4 font-medium">Scope</th>
-          <th class="py-2 pr-4 font-medium">Created</th>
-          <th class="py-2 pr-4 font-medium">Expires</th>
-          <th class="py-2 pr-4 font-medium"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @api_tokens.each do |token| %>
-          <tr class="border-t border-gray-100">
-            <td class="py-3 pr-4 font-medium"><%= token.name %></td>
-            <td class="py-3 pr-4 text-gray-600">
-              <% if token.sync_scoped? %>
-                <span class="font-mono text-xs px-2 py-0.5 rounded bg-copper-100 text-copper-700"><%= token.source %></span>
-              <% else %>
-                <span class="text-gray-400">management</span>
-              <% end %>
-            </td>
-            <td class="py-3 pr-4 text-gray-600"><%= token.created_at.to_date.iso8601 %></td>
-            <td class="py-3 pr-4 text-gray-600">
-              <% if token.expires_at %>
-                <%= token.expires_at.to_date.iso8601 %><%= " (expired)" if token.expired? %>
-              <% else %>
-                never
-              <% end %>
-            </td>
-            <td class="py-3 pr-4 text-right">
-              <%= button_to "Revoke", admin_api_token_path(token),
-                            method: :delete,
-                            form: { data: { turbo_confirm: "Revoke #{token.name}? Clients using it will lose access." } },
-                            class: "underline text-gray-700 bg-transparent" %>
-            </td>
+    <div class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Scope</th>
+            <th>Created</th>
+            <th>Expires</th>
+            <th></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @api_tokens.each do |token| %>
+            <tr class="row-hover">
+              <td class="font-medium text-gray-900"><%= token.name %></td>
+              <td class="text-gray-600">
+                <% if token.sync_scoped? %>
+                  <span class="font-mono text-xs px-2 py-0.5 rounded bg-copper-50 text-copper-700"><%= token.source %></span>
+                <% else %>
+                  <span class="text-gray-400">management</span>
+                <% end %>
+              </td>
+              <td class="text-gray-600 font-mono text-xs"><%= token.created_at.to_date.iso8601 %></td>
+              <td class="text-gray-600 font-mono text-xs">
+                <% if token.expires_at %>
+                  <%= token.expires_at.to_date.iso8601 %><%= " (expired)" if token.expired? %>
+                <% else %>
+                  <span class="text-gray-400">never</span>
+                <% end %>
+              </td>
+              <td class="text-right">
+                <%= button_to "Revoke", admin_api_token_path(token),
+                              method: :delete,
+                              form: { data: { turbo_confirm: "Revoke #{token.name}? Clients using it will lose access." } },
+                              class: "btn-quiet" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% end %>
 </div>

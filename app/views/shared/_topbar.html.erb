@@ -1,12 +1,23 @@
-<header class="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
-  <%= link_to "Governauthzer", root_path, class: "text-lg font-semibold tracking-tight" %>
-  <nav class="flex items-center gap-4 text-sm">
-    <%= link_to "Request access", catalog_path, class: "text-copper-700 hover:underline" %>
-    <% if current_user.operator? %>
-      <%= link_to "Admin", admin_root_path, class: "text-gray-600 hover:underline" %>
-    <% end %>
-    <span class="text-gray-400"><%= current_user.name %></span>
-    <%= button_to "Sign out", logout_path, method: :delete,
-                  class: "text-gray-500 hover:underline", form_class: "inline" %>
-  </nav>
-</header>
+<div class="fixed top-3 inset-x-0 z-40">
+  <div class="container mx-auto px-5">
+    <header class="max-w-5xl mx-auto flex items-center justify-between gap-3
+                   h-12 pl-2 pr-2 rounded-lg bg-white/90 backdrop-blur shadow-md">
+      <%= link_to root_path, class: "shrink-0 flex items-center gap-1.5 group" do %>
+        <span class="flex items-center justify-center w-7 h-7 rounded-md bg-gray-900 text-white text-xs font-semibold">G</span>
+        <span class="text-sm font-semibold tracking-tight pr-1 group-hover:text-gray-600">Governauthzer</span>
+      <% end %>
+      <nav class="flex items-center gap-1 shrink-0">
+        <%= link_to "Request access", catalog_path,
+              class: "shrink-0 px-3 py-1.5 rounded-md text-sm #{controller_name == 'catalog' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}" %>
+        <% if current_user.operator? %>
+          <%= link_to "Admin", admin_root_path, class: "shrink-0 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100" %>
+        <% end %>
+        <span class="shrink-0 w-px h-5 bg-gray-200 mx-1"></span>
+        <%= button_to "Sign out", logout_path, method: :delete,
+              class: "shrink-0 px-3 py-1.5 rounded-md text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100",
+              form_class: "inline shrink-0" %>
+      </nav>
+    </header>
+  </div>
+</div>
+<div class="h-12" aria-hidden="true"></div>

@@ -1,18 +1,18 @@
 <% content_for :title, "#{@user.name} — Governauthzer" %>
 <% status_labels = { "active" => "Activate", "suspended" => "Suspend", "terminated" => "Terminate" } %>
 
-<div class="w-full max-w-5xl">
+<div class="max-w-5xl mx-auto">
   <%= render "admin/nav" %>
   <%= render "shared/flash" %>
 
   <div class="flex items-center justify-between mb-1">
-    <h1 class="text-2xl font-semibold"><%= @user.name %> <%= status_pill(@user.status) %></h1>
+    <h1 class="page-title"><%= @user.name %> <%= status_pill(@user.status) %></h1>
     <div class="flex items-center gap-2">
       <% @allowed_status_targets.each do |target| %>
         <%= button_to status_labels.fetch(target, target.humanize), admin_user_path(@user),
               method: :patch, params: { user: { status: target } },
               form: (target == "terminated" ? { data: { turbo_confirm: "Terminate #{@user.name}? This revokes all access." } } : {}),
-              class: "px-3 py-1.5 text-sm rounded #{target == 'terminated' ? 'bg-gray-800 text-white hover:bg-gray-900' : 'border border-gray-300 text-gray-700 hover:bg-gray-100'}" %>
+              class: "btn btn-sm #{target == 'terminated' ? 'btn-danger' : 'btn-secondary'}" %>
       <% end %>
     </div>
   </div>
@@ -23,7 +23,7 @@
   </p>
 
   <section class="mb-10">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Profile</h2>
+    <h2 class="section-label mb-3">Profile</h2>
     <dl class="grid grid-cols-2 gap-y-2 text-sm max-w-lg">
       <dt class="text-gray-500">Department</dt><dd><%= @user.department.presence || "—" %></dd>
       <dt class="text-gray-500">Title</dt><dd><%= @user.title.presence || "—" %></dd>
@@ -33,7 +33,7 @@
   </section>
 
   <section class="mb-10">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Granted roles</h2>
+    <h2 class="section-label mb-3">Granted roles</h2>
     <% if @approved.empty? %>
       <p class="text-sm text-gray-500">None.</p>
     <% else %>
@@ -46,7 +46,7 @@
             </span>
             <%= button_to "Revoke", admin_access_path(access), method: :delete,
                   form: { data: { turbo_confirm: "Revoke #{access.role.name} from #{@user.name}?" } },
-                  class: "text-xs text-gray-500 hover:underline" %>
+                  class: "btn-quiet text-xs" %>
           </li>
         <% end %>
       </ul>
@@ -55,7 +55,7 @@
 
   <% if @pending.any? %>
     <section class="mb-10">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Pending requests</h2>
+      <h2 class="section-label mb-3">Pending requests</h2>
       <ul class="divide-y divide-gray-100 border-t border-gray-200 text-sm">
         <% @pending.each do |access| %>
           <li class="py-2">
@@ -69,7 +69,7 @@
   <% end %>
 
   <section class="mb-10">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">HRIS identities</h2>
+    <h2 class="section-label mb-3">HRIS identities</h2>
     <% if @external_identities.empty? %>
       <p class="text-sm text-gray-500">None.</p>
     <% else %>
@@ -82,7 +82,7 @@
   </section>
 
   <section>
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Linked OIDC identities</h2>
+    <h2 class="section-label mb-3">Linked OIDC identities</h2>
     <% if @omniauth_identities.any? %>
       <ul class="divide-y divide-gray-100 border-t border-gray-200 text-sm mb-4">
         <% @omniauth_identities.each do |identity| %>
@@ -94,7 +94,7 @@
             </span>
             <%= button_to "Unlink", admin_omniauth_identity_path(identity), method: :delete,
                   form: { data: { turbo_confirm: "Unlink this identity? The user will lose OIDC login via it." } },
-                  class: "text-xs text-gray-500 hover:underline" %>
+                  class: "btn-quiet text-xs" %>
           </li>
         <% end %>
       </ul>
@@ -106,14 +106,14 @@
       <%= form_with url: admin_user_omniauth_identities_path(@user), scope: :omniauth_identity, local: true,
             class: "flex flex-wrap items-end gap-3 max-w-2xl" do |f| %>
         <div>
-          <%= f.label :auth_provider_id, "Provider", class: "block text-xs text-gray-500 mb-1" %>
+          <%= f.label :auth_provider_id, "Provider", class: "field-label text-xs" %>
           <%= f.collection_select :auth_provider_id, @providers, :id, :name, {}, class: "#{input_class} w-48" %>
         </div>
         <div class="flex-1 min-w-[12rem]">
-          <%= f.label :subject, "Subject claim", class: "block text-xs text-gray-500 mb-1" %>
+          <%= f.label :subject, "Subject claim", class: "field-label text-xs" %>
           <%= f.text_field :subject, required: true, placeholder: "sub value from the IdP", class: "#{input_class} font-mono" %>
         </div>
-        <%= f.submit "Link identity", class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
+        <%= f.submit "Link identity", class: "btn btn-primary" %>
       <% end %>
     <% else %>
       <p class="text-xs text-gray-500">Configure an enabled OIDC provider first.</p>

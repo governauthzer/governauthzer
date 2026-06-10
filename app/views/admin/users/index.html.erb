@@ -1,46 +1,50 @@
 <% content_for :title, "Users — Governauthzer" %>
+<% pill = ->(label, path, active) {
+     link_to label, path,
+       class: "px-3 py-1.5 rounded-md text-sm transition-colors #{active ? 'bg-gray-900 text-white' : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'}"
+   } %>
 
-<div class="w-full max-w-5xl">
+<div class="max-w-5xl mx-auto">
   <%= render "admin/nav" %>
   <%= render "shared/flash" %>
 
-  <h1 class="text-2xl font-semibold mb-6">Users</h1>
+  <h1 class="page-title mb-6">Users</h1>
 
-  <div class="flex flex-wrap gap-2 mb-6 text-sm">
-    <%= link_to "All", admin_users_path,
-          class: "px-3 py-1 rounded #{@status.blank? ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+  <div class="flex flex-wrap gap-2 mb-6">
+    <%= pill.("All", admin_users_path, @status.blank?) %>
     <% User::STATUSES.each do |status| %>
-      <%= link_to status.humanize, admin_users_path(status: status),
-            class: "px-3 py-1 rounded #{@status == status ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <%= pill.(status.humanize, admin_users_path(status: status), @status == status) %>
     <% end %>
   </div>
 
   <% if @users.empty? %>
     <p class="text-sm text-gray-600">No users.</p>
   <% else %>
-    <table class="w-full text-sm border-t border-gray-200">
-      <thead>
-        <tr class="text-left text-gray-500">
-          <th class="py-2 pr-4 font-medium">Name</th>
-          <th class="py-2 pr-4 font-medium">Email</th>
-          <th class="py-2 pr-4 font-medium">Status</th>
-          <th class="py-2 pr-4 font-medium">Manager</th>
-          <th class="py-2 pr-4 font-medium"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @users.each do |user| %>
-          <tr class="border-t border-gray-100">
-            <td class="py-3 pr-4 font-medium"><%= user.name %></td>
-            <td class="py-3 pr-4 text-gray-600"><%= user.email %></td>
-            <td class="py-3 pr-4"><%= status_pill(user.status) %></td>
-            <td class="py-3 pr-4 text-gray-600"><%= user.manager&.name %></td>
-            <td class="py-3 pr-4 text-right">
-              <%= link_to "View", admin_user_path(user), class: "text-copper-700 hover:underline" %>
-            </td>
+    <div class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Manager</th>
+            <th></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @users.each do |user| %>
+            <tr class="row-hover">
+              <td class="font-medium text-gray-900"><%= user.name %></td>
+              <td class="text-gray-600"><%= user.email %></td>
+              <td><%= status_pill(user.status) %></td>
+              <td class="text-gray-600"><%= user.manager&.name || "—" %></td>
+              <td class="text-right">
+                <%= link_to "View", admin_user_path(user), class: "text-copper-700 hover:underline" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% end %>
 </div>

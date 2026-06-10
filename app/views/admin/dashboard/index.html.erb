@@ -1,38 +1,38 @@
 <% content_for :title, "Dashboard — Governauthzer" %>
 
-<div class="w-full max-w-6xl">
+<div class="max-w-5xl mx-auto">
   <%= render "admin/nav" %>
   <%= render "shared/flash" %>
 
-  <h1 class="text-2xl font-semibold mb-6">Dashboard</h1>
+  <h1 class="page-title mb-6">Dashboard</h1>
 
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-    <div class="border border-gray-200 rounded p-4">
+    <div class="card p-5">
       <div class="text-3xl font-semibold tabular-nums"><%= @pending_approvals %></div>
-      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Pending approvals</div>
+      <div class="text-xs text-gray-500 mt-1.5 uppercase tracking-wide">Pending approvals</div>
     </div>
-    <%= link_to admin_users_path, class: "border border-gray-200 rounded p-4 hover:border-gray-400 transition-colors" do %>
+    <%= link_to admin_users_path, class: "card card-hover p-5 block" do %>
       <div class="text-3xl font-semibold tabular-nums"><%= @users_total %></div>
-      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Users</div>
+      <div class="text-xs text-gray-500 mt-1.5 uppercase tracking-wide">Users</div>
     <% end %>
-    <%= link_to admin_applications_path, class: "border border-gray-200 rounded p-4 hover:border-gray-400 transition-colors" do %>
+    <%= link_to admin_applications_path, class: "card card-hover p-5 block" do %>
       <div class="text-3xl font-semibold tabular-nums"><%= @applications_count %></div>
-      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Applications</div>
+      <div class="text-xs text-gray-500 mt-1.5 uppercase tracking-wide">Applications</div>
     <% end %>
-    <div class="border border-gray-200 rounded p-4">
+    <div class="card p-5">
       <div class="text-3xl font-semibold tabular-nums"><%= @roles_count %></div>
-      <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Roles</div>
+      <div class="text-xs text-gray-500 mt-1.5 uppercase tracking-wide">Roles</div>
     </div>
   </div>
 
   <section class="mb-10">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Users by status</h2>
-    <div class="flex flex-wrap gap-3">
+    <h2 class="section-label mb-3">Users by status</h2>
+    <div class="flex flex-wrap gap-2">
       <% User::STATUSES.each do |status| %>
         <%= link_to admin_users_path(status: status),
-              class: "flex items-center gap-2 border border-gray-200 rounded px-3 py-2 text-sm hover:border-gray-400 transition-colors" do %>
+              class: "card card-hover flex items-center gap-2.5 px-3.5 py-2 text-sm" do %>
           <%= status_pill(status) %>
-          <span class="tabular-nums font-medium"><%= @users_by_status.fetch(status, 0) %></span>
+          <span class="tabular-nums font-semibold text-gray-900"><%= @users_by_status.fetch(status, 0) %></span>
         <% end %>
       <% end %>
     </div>
@@ -40,40 +40,42 @@
 
   <section>
     <div class="flex items-center justify-between mb-3">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Recent activity</h2>
-      <%= link_to "View all →", admin_audit_events_path, class: "text-sm text-copper-700 hover:underline" %>
+      <h2 class="section-label">Recent activity</h2>
+      <%= link_to "View all →", admin_audit_events_path, class: "text-sm text-copper-700 font-medium hover:underline" %>
     </div>
     <% if @recent_events.empty? %>
       <p class="text-sm text-gray-600">No activity yet.</p>
     <% else %>
-      <table class="w-full text-sm border-t border-gray-200">
-        <thead>
-          <tr class="text-left text-gray-500">
-            <th class="py-2 pr-4 font-medium">Time (UTC)</th>
-            <th class="py-2 pr-4 font-medium">Event</th>
-            <th class="py-2 pr-4 font-medium">Actor</th>
-            <th class="py-2 pr-4 font-medium">Targets</th>
-            <th class="py-2 pr-4 font-medium"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @recent_events.each do |event| %>
-            <tr class="border-t border-gray-100 align-top">
-              <td class="py-2 pr-4 whitespace-nowrap text-gray-600 font-mono text-xs">
-                <%= event.occurred_at.utc.strftime("%Y-%m-%d %H:%M:%S") %>
-              </td>
-              <td class="py-2 pr-4 font-mono"><%= event.event_type %></td>
-              <td class="py-2 pr-4"><%= event.actor_display || "system" %></td>
-              <td class="py-2 pr-4 text-gray-600 truncate max-w-xs">
-                <%= event.targets.map { |t| t["display"] }.compact.join(", ").presence || "—" %>
-              </td>
-              <td class="py-2 pr-4 text-right">
-                <%= link_to "Details", admin_audit_event_path(event), class: "text-copper-700 hover:underline" %>
-              </td>
+      <div class="panel">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="whitespace-nowrap">Time (UTC)</th>
+              <th>Event</th>
+              <th>Actor</th>
+              <th>Targets</th>
+              <th></th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% @recent_events.each do |event| %>
+              <tr class="row-hover">
+                <td class="whitespace-nowrap text-gray-500 font-mono text-xs">
+                  <%= event.occurred_at.utc.strftime("%Y-%m-%d %H:%M:%S") %>
+                </td>
+                <td class="font-mono text-gray-900"><%= event.event_type %></td>
+                <td class="text-gray-700"><%= event.actor_display || "system" %></td>
+                <td class="text-gray-500 truncate max-w-xs">
+                  <%= event.targets.map { |t| t["display"] }.compact.join(", ").presence || "—" %>
+                </td>
+                <td class="text-right">
+                  <%= link_to "Details", admin_audit_event_path(event), class: "text-copper-700 hover:underline" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     <% end %>
   </section>
 </div>

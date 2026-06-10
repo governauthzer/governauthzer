@@ -1,7 +1,7 @@
 <% active_users = User.where(status: "active").order(:name) %>
 <%= form_with model: step, url: url, scope: :approval_step, local: true, class: "space-y-5 max-w-xl" do |f| %>
   <% if step.errors.any? %>
-    <div class="p-3 rounded bg-gray-200 text-gray-800 text-sm space-y-1">
+    <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm space-y-1">
       <% step.errors.full_messages.each do |msg| %>
         <div>• <%= msg %></div>
       <% end %>
@@ -9,30 +9,30 @@
   <% end %>
 
   <div>
-    <%= f.label :strategy, class: "block text-sm font-medium mb-1" %>
+    <%= f.label :strategy, class: "field-label" %>
     <%= f.select :strategy, ApprovalStep::STRATEGIES.map { |s| [ s.humanize, s ] }, {}, class: input_class %>
-    <p class="text-xs text-gray-500 mt-1">
+    <p class="field-hint">
       <strong>Manager of requester</strong> routes to the requester's manager.
       <strong>Named user</strong> routes to a specific approver below.
     </p>
   </div>
 
   <div>
-    <%= f.label :approver_user_id, "Named approver", class: "block text-sm font-medium mb-1" %>
+    <%= f.label :approver_user_id, "Named approver", class: "field-label" %>
     <%= f.collection_select :approver_user_id, active_users, :id, :name,
                             { include_blank: "— none —" }, class: input_class %>
-    <p class="text-xs text-gray-500 mt-1">Required for the “Named user” strategy; ignored otherwise.</p>
+    <p class="field-hint">Required for the “Named user” strategy; ignored otherwise.</p>
   </div>
 
   <div>
-    <%= f.label :fallback_user_id, "Fallback approver", class: "block text-sm font-medium mb-1" %>
+    <%= f.label :fallback_user_id, "Fallback approver", class: "field-label" %>
     <%= f.collection_select :fallback_user_id, active_users, :id, :name,
                             { include_blank: "— select —" }, required: true, class: input_class %>
-    <p class="text-xs text-gray-500 mt-1">Used when the primary approver can't be resolved or would be the requester.</p>
+    <p class="field-hint">Used when the primary approver can't be resolved or would be the requester.</p>
   </div>
 
   <div class="flex items-center gap-3 pt-2">
-    <%= f.submit class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
-    <%= link_to "Cancel", admin_approval_workflow_path(step.approval_workflow), class: "text-sm underline" %>
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_approval_workflow_path(step.approval_workflow), class: "btn-quiet" %>
   </div>
 <% end %>

@@ -1,8 +1,8 @@
 <% content_for :title, "Edit step — Governauthzer" %>
 
-<div class="w-full max-w-5xl">
+<div class="max-w-5xl mx-auto">
   <%= render "admin/nav" %>
-  <h1 class="text-2xl font-semibold mb-6">
+  <h1 class="page-title mb-6">
     Edit step in <span class="text-gray-500"><%= @step.approval_workflow.name %></span>
   </h1>
   <%= render "form", step: @step, url: admin_approval_step_path(@step) %>

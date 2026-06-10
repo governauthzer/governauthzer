@@ -1,12 +1,12 @@
 <% content_for :title, "Developer sign-in — Governauthzer" %>
 
 <div class="w-full max-w-sm">
-  <div class="mb-4 p-3 rounded bg-yellow-100 text-yellow-800 text-xs">
+  <div class="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
     Development only — one-click impersonation of a seeded user.
   </div>
   <%= render "shared/flash" %>
 
-  <h1 class="text-2xl font-semibold mb-6">Developer sign-in</h1>
+  <h1 class="page-title mb-6">Developer sign-in</h1>
 
   <% if @users.empty? %>
     <p class="text-sm text-gray-600">No active users. Run <code>bin/rails db:seed</code>.</p>
@@ -14,7 +14,7 @@
     <div class="space-y-2">
       <% @users.each do |user| %>
         <%= button_to dev_sign_in_path, method: :post, params: { email: user.email },
-                      class: "w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded text-sm hover:bg-gray-50" do %>
+                      class: "w-full flex items-center justify-between px-4 py-3 card card-hover text-sm" do %>
           <span class="font-medium"><%= user.name %></span>
           <span class="text-gray-500"><%= user.email %><%= " · operator" if user.operator? %></span>
         <% end %>

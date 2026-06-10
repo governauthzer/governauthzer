@@ -1,28 +1,35 @@
 <% content_for :title, "Sign in — Governauthzer" %>
 
-<div class="w-full max-w-sm">
-  <h1 class="text-2xl font-semibold mb-6">Sign in</h1>
+<div class="w-full max-w-sm mx-auto mt-12">
+  <div class="flex flex-col items-center text-center mb-8">
+    <span class="flex items-center justify-center w-11 h-11 rounded-lg bg-gray-900 text-white text-lg font-semibold mb-4">G</span>
+    <h1 class="page-title">Sign in to Governauthzer</h1>
+    <p class="page-subtitle mt-1">Access governance, decided.</p>
+  </div>
 
-  <% if @auth_providers.any? %>
-    <div class="space-y-3">
-      <% @auth_providers.each do |provider| %>
-        <%= button_to "Sign in with #{provider.name}",
-                      "/auth/#{provider.slug}",
-                      method: :post,
-                      data: { turbo: false },
-                      class: "w-full px-4 py-3 bg-gray-900 text-white rounded text-sm hover:bg-gray-700" %>
-      <% end %>
-    </div>
-  <% else %>
-    <p class="text-sm text-gray-600">
-      No identity providers are configured. If you are an operator without IdP access,
-      use the <code>bin/governauthzer emergency-login</code> CLI to obtain a one-time login URL.
-    </p>
-  <% end %>
+  <div class="card p-6">
+    <% if @auth_providers.any? %>
+      <div class="space-y-3">
+        <% @auth_providers.each do |provider| %>
+          <%= button_to "Continue with #{provider.name}",
+                        "/auth/#{provider.slug}",
+                        method: :post,
+                        data: { turbo: false },
+                        class: "btn btn-primary w-full" %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-600">
+        No identity providers are configured. If you are an operator without IdP access,
+        use the <code class="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">bin/governauthzer emergency-login</code>
+        CLI to obtain a one-time login URL.
+      </p>
+    <% end %>
 
-  <% if Rails.env.development? %>
-    <div class="mt-6 pt-6 border-t border-gray-200">
-      <%= link_to "Developer sign-in →", dev_sign_in_path, class: "text-sm text-copper-700 hover:underline" %>
-    </div>
-  <% end %>
+    <% if Rails.env.development? %>
+      <div class="mt-5 pt-5 border-t border-gray-200 text-center">
+        <%= link_to "Developer sign-in →", dev_sign_in_path, class: "text-sm text-copper-700 font-medium hover:underline" %>
+      </div>
+    <% end %>
+  </div>
 </div>

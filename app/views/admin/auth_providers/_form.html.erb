@@ -1,6 +1,6 @@
 <%= form_with model: [ :admin, auth_provider ], local: true, class: "space-y-5 max-w-xl" do |f| %>
   <% if auth_provider.errors.any? %>
-    <div class="p-3 rounded bg-gray-200 text-gray-800 text-sm space-y-1">
+    <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm space-y-1">
       <% auth_provider.errors.full_messages.each do |msg| %>
         <div>• <%= msg %></div>
       <% end %>
@@ -8,14 +8,14 @@
   <% end %>
 
   <div>
-    <%= f.label :name, class: "block text-sm font-medium mb-1" %>
+    <%= f.label :name, class: "field-label" %>
     <%= f.text_field :name, required: true, class: input_class %>
   </div>
 
   <div>
-    <%= f.label :slug, class: "block text-sm font-medium mb-1" %>
+    <%= f.label :slug, class: "field-label" %>
     <%= f.text_field :slug, required: true, class: "#{input_class} font-mono" %>
-    <p class="text-xs text-gray-500 mt-1">Used in login URL (<code>/auth/&lt;slug&gt;</code>). Normalized to lowercase with dashes.</p>
+    <p class="field-hint">Used in login URL (<code>/auth/&lt;slug&gt;</code>). Normalized to lowercase with dashes.</p>
   </div>
 
   <div class="flex items-center gap-2">
@@ -26,20 +26,20 @@
   <hr class="border-gray-200" />
 
   <div>
-    <%= f.label :oidc_issuer_url, "Issuer URL", class: "block text-sm font-medium mb-1" %>
+    <%= f.label :oidc_issuer_url, "Issuer URL", class: "field-label" %>
     <%= f.url_field :oidc_issuer_url, required: true, class: input_class %>
-    <p class="text-xs text-gray-500 mt-1">
+    <p class="field-hint">
       Discovery endpoint resolved as <code>&lt;issuer&gt;/.well-known/openid-configuration</code>.
     </p>
   </div>
 
   <div>
-    <%= f.label :oidc_client_id, "Client ID", class: "block text-sm font-medium mb-1" %>
+    <%= f.label :oidc_client_id, "Client ID", class: "field-label" %>
     <%= f.text_field :oidc_client_id, required: true, class: input_class %>
   </div>
 
   <div>
-    <%= f.label :oidc_client_secret, "Client secret", class: "block text-sm font-medium mb-1" %>
+    <%= f.label :oidc_client_secret, "Client secret", class: "field-label" %>
     <%= f.password_field :oidc_client_secret,
                          placeholder: (auth_provider.persisted? ? "Leave blank to keep current" : nil),
                          required: !auth_provider.persisted?,
@@ -47,24 +47,24 @@
   </div>
 
   <div>
-    <%= f.label :oidc_scope, "Scope", class: "block text-sm font-medium mb-1" %>
+    <%= f.label :oidc_scope, "Scope", class: "field-label" %>
     <%= f.text_field :oidc_scope, class: input_class %>
-    <p class="text-xs text-gray-500 mt-1">Space-separated. <code>openid</code> required.</p>
+    <p class="field-hint">Space-separated. <code>openid</code> required.</p>
   </div>
 
   <div>
-    <%= f.label :claim_mappings, "Claim → role mappings (JSON)", class: "block text-sm font-medium mb-1" %>
+    <%= f.label :claim_mappings, "Claim → role mappings (JSON)", class: "field-label" %>
     <%= f.text_area :claim_mappings,
                     value: claim_mappings_value(auth_provider),
                     rows: 8,
                     class: "#{input_class} font-mono text-xs" %>
-    <p class="text-xs text-gray-500 mt-1">
+    <p class="field-hint">
       JSON array of rule objects. Leave as <code>[]</code> to disable automatic role assignment.
     </p>
   </div>
 
   <div class="flex items-center gap-3 pt-2">
-    <%= f.submit class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
-    <%= link_to "Cancel", admin_auth_providers_path, class: "text-sm underline" %>
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_auth_providers_path, class: "btn-quiet" %>
   </div>
 <% end %>

@@ -1,44 +1,46 @@
 <% content_for :title, "Applications — Governauthzer" %>
 
-<div class="w-full max-w-5xl">
+<div class="max-w-5xl mx-auto">
   <%= render "admin/nav" %>
   <%= render "shared/flash" %>
 
   <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-semibold">Applications</h1>
+    <h1 class="page-title">Applications</h1>
     <%= link_to "Add application", new_admin_application_path,
-                class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
+                class: "btn btn-primary" %>
   </div>
 
   <% if @applications.empty? %>
     <p class="text-sm text-gray-600">No applications yet.</p>
   <% else %>
-    <table class="w-full text-sm border-t border-gray-200">
-      <thead>
-        <tr class="text-left text-gray-500">
-          <th class="py-2 pr-4 font-medium">Name</th>
-          <th class="py-2 pr-4 font-medium">Slug</th>
-          <th class="py-2 pr-4 font-medium">Roles</th>
-          <th class="py-2 pr-4 font-medium"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @applications.each do |application| %>
-          <tr class="border-t border-gray-100">
-            <td class="py-3 pr-4 font-medium">
-              <%= application.name %>
-              <% if application.itself? %>
-                <span class="ml-1 text-xs text-gray-400">(system)</span>
-              <% end %>
-            </td>
-            <td class="py-3 pr-4 font-mono text-gray-700"><%= application.slug %></td>
-            <td class="py-3 pr-4 text-gray-600"><%= application.roles_count %></td>
-            <td class="py-3 pr-4 text-right">
-              <%= link_to "View", admin_application_path(application), class: "text-copper-700 hover:underline" %>
-            </td>
+    <div class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Roles</th>
+            <th></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @applications.each do |application| %>
+            <tr class="row-hover">
+              <td class="font-medium text-gray-900">
+                <%= application.name %>
+                <% if application.itself? %>
+                  <span class="ml-1 text-xs text-gray-400">(system)</span>
+                <% end %>
+              </td>
+              <td class="font-mono text-gray-700"><%= application.slug %></td>
+              <td class="text-gray-600"><%= application.roles_count %></td>
+              <td class="text-right">
+                <%= link_to "View", admin_application_path(application), class: "text-copper-700 hover:underline" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% end %>
 </div>

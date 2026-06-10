@@ -1,23 +1,115 @@
 @import "tailwindcss";
 
 @theme {
-  /* Neutrals */
-  --color-gray-950: #111111;
-  --color-gray-900: #1c1c1c;
+  /* Type */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+
+  /* Neutrals — pure monochrome scale */
+  --color-gray-950: #0f0f0f;
+  --color-gray-900: #1a1a1a;
   --color-gray-800: #2a2a2a;
   --color-gray-700: #3d3d3d;
+  --color-gray-600: #525252;
   --color-gray-500: #6b6b6b;
   --color-gray-400: #8a8a8a;
-  --color-gray-300: #b0b0b0;
-  --color-gray-200: #d4d4d4;
-  --color-gray-100: #ebebeb;
-  --color-gray-50:  #f8f8f8;
+  --color-gray-300: #c2c2c2;
+  --color-gray-200: #e2e2e2;
+  --color-gray-100: #efefef;
+  --color-gray-50:  #f7f7f7;
 
-  /* Copper — single accent */
+  /* Copper — single brand accent */
+  --color-copper-800: #6f3719;
   --color-copper-700: #8a4520;
   --color-copper-600: #a35228;
   --color-copper-500: #b85e2a;
   --color-copper-400: #c46e3a;
   --color-copper-300: #d4854f;
+  --color-copper-200: #ecc8b0;
   --color-copper-100: #f5e6dc;
+  --color-copper-50:  #fbf3ed;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    /* Always reserve the scrollbar gutter so the viewport width is constant
+       whether or not the page scrolls — prevents centered content + the fixed
+       nav from jumping horizontally between short and long pages. */
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply bg-white text-gray-900 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Tabular figures for data-heavy surfaces (counts, dates, ids). */
+  table, .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Typography ---------------------------------------------------------- */
+  .page-title    { @apply text-2xl font-semibold tracking-tight text-gray-900; }
+  .page-subtitle { @apply text-sm text-gray-500; }
+  .section-label { @apply text-xs font-semibold uppercase tracking-wider text-gray-500; }
+
+  /* Surfaces ------------------------------------------------------------ */
+  .card {
+    @apply bg-white border border-gray-200 rounded-lg;
+  }
+  .card-hover {
+    @apply transition-colors hover:border-gray-300;
+  }
+
+  /* A bordered, rounded shell around a data table. Use:
+     <div class="panel"><table class="data-table">…</table></div> */
+  .panel {
+    @apply bg-white border border-gray-200 rounded-lg overflow-hidden;
+  }
+
+  /* Buttons ------------------------------------------------------------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md
+           text-sm font-medium px-4 py-2 cursor-pointer transition-colors
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/15
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary   { @apply bg-gray-900 text-white hover:bg-gray-800; }
+  .btn-secondary { @apply bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400; }
+  .btn-danger    { @apply bg-white border border-gray-300 text-red-700 hover:bg-red-50 hover:border-red-300; }
+  .btn-sm        { @apply px-3 py-1.5 text-sm rounded; }
+  .btn-xs        { @apply px-2.5 py-1 text-xs rounded gap-1; }
+
+  /* A plain text/link button (used for inline destructive actions in tables). */
+  .btn-link  { @apply text-copper-700 font-medium hover:underline bg-transparent cursor-pointer; }
+  .btn-quiet { @apply text-gray-500 hover:text-gray-900 hover:underline bg-transparent cursor-pointer text-sm; }
+
+  /* Forms --------------------------------------------------------------- */
+  .input {
+    @apply w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900
+           placeholder:text-gray-400
+           focus:outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10
+           transition;
+  }
+  .field-label { @apply block text-sm font-medium text-gray-700 mb-1; }
+  .field-hint  { @apply text-xs text-gray-500 mt-1; }
+
+  /* Data tables --------------------------------------------------------- */
+  .data-table { @apply w-full text-sm; }
+  .data-table thead th {
+    @apply text-left font-medium text-xs uppercase tracking-wide text-gray-500
+           bg-gray-50 px-4 py-2.5 border-b border-gray-200;
+  }
+  .data-table tbody td   { @apply px-4 py-3 align-middle; }
+  .data-table tbody tr   { @apply border-b border-gray-100; }
+  .data-table tbody tr:last-child { @apply border-b-0; }
+  .data-table tbody tr.row-hover:hover { @apply bg-gray-50; }
+
+  /* Pills / badges ------------------------------------------------------ */
+  .pill {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium;
+  }
 }

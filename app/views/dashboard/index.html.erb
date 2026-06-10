@@ -1,17 +1,17 @@
 <% content_for :title, "Governauthzer" %>
 
-<div class="w-full max-w-3xl mx-auto">
+<div class="max-w-5xl mx-auto">
   <%= render "shared/topbar" %>
   <%= render "shared/flash" %>
 
   <section class="mb-10">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Awaiting your approval</h2>
+    <h2 class="section-label mb-3">Awaiting your approval</h2>
     <% if @inbox.empty? %>
       <p class="text-sm text-gray-500">Nothing to review.</p>
     <% else %>
       <ul class="space-y-3">
         <% @inbox.each do |access| %>
-          <li class="border border-gray-200 rounded p-4">
+          <li class="card p-4">
             <div class="flex items-baseline justify-between mb-2">
               <div>
                 <span class="font-medium"><%= access.user.name %></span>
@@ -24,13 +24,12 @@
               <p class="text-sm text-gray-600 mb-3">“<%= access.justification %>”</p>
             <% end %>
             <%= form_with url: approve_access_path(access), method: :post do %>
-              <%= text_field_tag :comment, nil, placeholder: "Comment (optional)",
-                    class: "w-full text-sm border border-gray-300 rounded px-2 py-1 mb-2" %>
+              <%= text_field_tag :comment, nil, placeholder: "Comment (optional)", class: "input mb-2" %>
               <div class="flex gap-2">
                 <%= submit_tag "Approve",
-                      class: "px-3 py-1.5 bg-gray-900 text-white text-sm rounded hover:bg-gray-700 cursor-pointer" %>
+                      class: "btn btn-primary btn-sm" %>
                 <%= submit_tag "Deny", formaction: deny_access_path(access),
-                      class: "px-3 py-1.5 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-100 cursor-pointer" %>
+                      class: "btn btn-secondary btn-sm" %>
               </div>
             <% end %>
           </li>
@@ -40,7 +39,7 @@
   </section>
 
   <section class="mb-10">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Your pending requests</h2>
+    <h2 class="section-label mb-3">Your pending requests</h2>
     <% if @my_requests.empty? %>
       <p class="text-sm text-gray-500">No requests in flight. <%= link_to "Request access", catalog_path, class: "text-copper-700 hover:underline" %>.</p>
     <% else %>
@@ -55,7 +54,7 @@
               <% end %>
             </div>
             <%= button_to "Withdraw", access_request_path(access), method: :delete,
-                  class: "text-xs text-gray-500 hover:underline", form_class: "inline" %>
+                  class: "btn-quiet text-xs", form_class: "inline" %>
           </li>
         <% end %>
       </ul>
@@ -63,7 +62,7 @@
   </section>
 
   <section>
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Your access</h2>
+    <h2 class="section-label mb-3">Your access</h2>
     <% if @my_roles.empty? %>
       <p class="text-sm text-gray-500">No roles granted yet.</p>
     <% else %>

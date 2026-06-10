@@ -1,56 +1,53 @@
 <% content_for :title, "OIDC providers — Governauthzer" %>
 
-<div class="w-full max-w-5xl">
+<div class="max-w-5xl mx-auto">
   <%= render "admin/nav" %>
-  <% if notice %>
-    <div class="mb-4 p-3 rounded bg-copper-100 text-copper-700 text-sm"><%= notice %></div>
-  <% end %>
-  <% if alert %>
-    <div class="mb-4 p-3 rounded bg-gray-200 text-gray-800 text-sm"><%= alert %></div>
-  <% end %>
+  <%= render "shared/flash" %>
 
   <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-semibold">OIDC providers</h1>
+    <h1 class="page-title">OIDC providers</h1>
     <%= link_to "Add provider", new_admin_auth_provider_path,
-                class: "px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700" %>
+                class: "btn btn-primary" %>
   </div>
 
   <% if @auth_providers.empty? %>
     <p class="text-sm text-gray-600">No identity providers configured yet.</p>
   <% else %>
-    <table class="w-full text-sm border-t border-gray-200">
-      <thead>
-        <tr class="text-left text-gray-500">
-          <th class="py-2 pr-4 font-medium">Name</th>
-          <th class="py-2 pr-4 font-medium">Slug</th>
-          <th class="py-2 pr-4 font-medium">Issuer</th>
-          <th class="py-2 pr-4 font-medium">Status</th>
-          <th class="py-2 pr-4 font-medium"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @auth_providers.each do |provider| %>
-          <tr class="border-t border-gray-100">
-            <td class="py-3 pr-4 font-medium"><%= provider.name %></td>
-            <td class="py-3 pr-4 font-mono text-gray-700"><%= provider.slug %></td>
-            <td class="py-3 pr-4 text-gray-600 truncate max-w-xs"><%= provider.oidc_issuer_url %></td>
-            <td class="py-3 pr-4">
-              <% if provider.enabled %>
-                <span class="text-copper-700">enabled</span>
-              <% else %>
-                <span class="text-gray-500">disabled</span>
-              <% end %>
-            </td>
-            <td class="py-3 pr-4 text-right space-x-3">
-              <%= link_to "Edit", edit_admin_auth_provider_path(provider), class: "underline" %>
-              <%= button_to "Delete", admin_auth_provider_path(provider),
-                            method: :delete,
-                            form: { data: { turbo_confirm: "Delete #{provider.name}?" } },
-                            class: "underline text-gray-700 bg-transparent" %>
-            </td>
+    <div class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Issuer</th>
+            <th>Status</th>
+            <th></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @auth_providers.each do |provider| %>
+            <tr class="row-hover">
+              <td class="font-medium text-gray-900"><%= provider.name %></td>
+              <td class="font-mono text-gray-700"><%= provider.slug %></td>
+              <td class="text-gray-600 truncate max-w-xs"><%= provider.oidc_issuer_url %></td>
+              <td>
+                <% if provider.enabled %>
+                  <span class="pill bg-gray-100 text-gray-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Enabled</span>
+                <% else %>
+                  <span class="pill bg-gray-100 text-gray-500"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Disabled</span>
+                <% end %>
+              </td>
+              <td class="text-right space-x-3">
+                <%= link_to "Edit", edit_admin_auth_provider_path(provider), class: "text-copper-700 hover:underline" %>
+                <%= button_to "Delete", admin_auth_provider_path(provider),
+                              method: :delete,
+                              form: { data: { turbo_confirm: "Delete #{provider.name}?" } },
+                              class: "btn-quiet" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% end %>
 </div>
