@@ -41,6 +41,26 @@ class AdminApplicationsTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "renaming a role slug warns when it has active grants (provisioning contract key)" do
+    app = Application.create!(name: "Slack", slug: "slack")
+    role = app.roles.create!(name: "Member", slug: "member")
+    grantee = User.create!(email: "grantee@example.com", name: "Grantee")
+    Access.create!(user: grantee, role: role, status: "approved", source: "manual")
+
+    patch "/admin/roles/#{role.id}", params: { role: { name: "Member", slug: "member-v2" } }
+    assert_equal "member-v2", role.reload.slug
+    assert_match(/provisioning key/i, flash[:alert])
+  end
+
+  test "renaming a role slug does not warn without active grants" do
+    app = Application.create!(name: "Slack", slug: "slack")
+    role = app.roles.create!(name: "Member", slug: "member")
+
+    patch "/admin/roles/#{role.id}", params: { role: { name: "Member", slug: "member-v2" } }
+    assert_equal "member-v2", role.reload.slug
+    assert_nil flash[:alert]
+  end
+
   test "the system application is read-only" do
     patch "/admin/applications/#{@self_app.id}", params: { application: { name: "Hacked" } }
     assert_redirected_to "/admin/applications"

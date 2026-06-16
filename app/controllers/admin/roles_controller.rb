@@ -25,6 +25,7 @@ class Admin::RolesController < Admin::BaseController
     changes = @role.changes
     if @role.save
       record_admin_audit("role.updated", @role, attribute_changes: changes)
+      warn_slug_contract_break if @role.saved_change_to_slug? && @role.accesses.approved.exists?
       redirect_to admin_application_path(@role.application), notice: "Role updated."
     else
       render :edit, status: :unprocessable_content
@@ -60,6 +61,16 @@ class Admin::RolesController < Admin::BaseController
     return unless @application&.itself?
     redirect_to admin_applications_path,
                 alert: "Roles on the governauthzer application are system-managed."
+  end
+
+  # `role.slug` is the provisioning contract key the outbound CloudEvents carry
+  # and the bridge maps on (see [[Decision-Plane]] role→entitlement boundary).
+  # Renaming it on a role with approved (already-provisioned) grants breaks that
+  # mapping until the provisioner config is updated — soft-warn, don't block.
+  def warn_slug_contract_break
+    flash[:alert] = "Heads up: ‘slug’ is the provisioning key your provisioner maps on. " \
+                    "You changed it on a role with active grants — update your provisioner " \
+                    "config to match, or its events will fail to apply."
   end
 
   def role_params
