@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -208,6 +208,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_100000) do
     t.index ["status"], name: "index_users_on_status"
   end
 
+  create_table "webhook_deliveries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.integer "attempt_count", default: 0, null: false
+    t.uuid "audit_event_id", null: false
+    t.string "cloud_event_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "delivered_at"
+    t.text "last_error"
+    t.integer "last_response_code"
+    t.datetime "next_retry_at"
+    t.jsonb "payload", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "webhook_subscription_id", null: false
+    t.index ["audit_event_id"], name: "index_webhook_deliveries_on_audit_event_id"
+    t.index ["status", "next_retry_at"], name: "index_webhook_deliveries_on_status_and_next_retry_at"
+    t.index ["webhook_subscription_id", "audit_event_id"], name: "index_webhook_deliveries_on_subscription_and_event", unique: true
+    t.index ["webhook_subscription_id"], name: "index_webhook_deliveries_on_webhook_subscription_id"
+  end
+
+  create_table "webhook_subscriptions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.uuid "application_ids", default: [], null: false, array: true
+    t.datetime "created_at", null: false
+    t.string "endpoint_url", null: false
+    t.string "event_types", default: [], null: false, array: true
+    t.string "name", null: false
+    t.string "signing_secret", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_webhook_subscriptions_on_active"
+  end
+
   add_foreign_key "accesses", "roles"
   add_foreign_key "accesses", "users"
   add_foreign_key "accesses", "users", column: "requested_by_id"
@@ -227,4 +258,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_100000) do
   add_foreign_key "roles", "approval_workflows"
   add_foreign_key "snapshot_runs", "api_tokens"
   add_foreign_key "users", "users", column: "manager_id"
+  add_foreign_key "webhook_deliveries", "audit_events"
+  add_foreign_key "webhook_deliveries", "webhook_subscriptions"
 end
