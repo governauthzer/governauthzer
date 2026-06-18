@@ -49,6 +49,12 @@ gem "omniauth-rails_csrf_protection"
 # config/initializers/rack_attack.rb). Backed by Rails.cache (Solid Cache in prod).
 gem "rack-attack"
 
+# Opt-in error tracking. The SDK is a no-op unless SENTRY_DSN is set (see
+# config/initializers/sentry.rb) — nothing leaves the box without it. Point it at a
+# self-hosted Sentry or a Sentry.io tenant of the operator's choosing.
+gem "sentry-ruby"
+gem "sentry-rails"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
