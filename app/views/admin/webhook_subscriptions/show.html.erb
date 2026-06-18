@@ -1,0 +1,61 @@
+<% content_for :title, "#{@subscription.name} — Webhooks" %>
+
+<div class="max-w-5xl mx-auto space-y-8">
+  <div class="flex items-center justify-between">
+    <h1 class="page-title"><%= @subscription.name %></h1>
+    <div class="flex gap-2">
+      <%= link_to "Edit", edit_admin_webhook_subscription_path(@subscription), class: "btn btn-secondary" %>
+      <%= button_to "Delete", admin_webhook_subscription_path(@subscription), method: :delete,
+            form: { data: { turbo_confirm: "Delete #{@subscription.name}? Its delivery history will be removed." } },
+            class: "btn btn-danger" %>
+    </div>
+  </div>
+
+  <section class="card space-y-2 text-sm">
+    <div><span class="text-gray-500">Endpoint:</span> <span class="font-mono break-all"><%= @subscription.endpoint_url %></span></div>
+    <div><span class="text-gray-500">Status:</span> <%= @subscription.active? ? "Active" : "Disabled" %></div>
+    <div><span class="text-gray-500">Event types:</span> <%= @subscription.event_types.empty? ? "all published types" : @subscription.event_types.join(", ") %></div>
+    <div>
+      <span class="text-gray-500">Applications:</span>
+      <%= @subscription.application_ids.empty? ? "all applications" : Application.where(id: @subscription.application_ids).order(:name).pluck(:name).join(", ") %>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="section-label mb-2">Signing secret</h2>
+    <p class="field-hint mb-2">
+      Configure your provisioner to verify the <code>X-Governauthzer-Signature</code> header
+      (HMAC-SHA256 over <code>timestamp.body</code>) with this secret.
+    </p>
+    <code class="block font-mono text-xs bg-gray-50 border border-gray-200 rounded p-2 break-all"><%= @subscription.signing_secret %></code>
+    <%= button_to "Rotate secret", rotate_secret_admin_webhook_subscription_path(@subscription),
+          form: { data: { turbo_confirm: "Rotate the signing secret? Your provisioner must be updated to the new value." } },
+          class: "btn-quiet text-xs mt-2" %>
+  </section>
+
+  <section>
+    <h2 class="section-label mb-3">Recent deliveries</h2>
+    <% if @recent_deliveries.empty? %>
+      <p class="text-sm text-gray-500">No deliveries yet.</p>
+    <% else %>
+      <div class="panel">
+        <table class="data-table">
+          <thead>
+            <tr><th>Event type</th><th>Status</th><th>Attempts</th><th>Last code</th><th>When</th></tr>
+          </thead>
+          <tbody>
+            <% @recent_deliveries.each do |d| %>
+              <tr>
+                <td class="font-mono text-xs"><%= d.cloud_event_type %></td>
+                <td><%= d.status %></td>
+                <td><%= d.attempt_count %></td>
+                <td><%= d.last_response_code || "—" %></td>
+                <td class="text-xs text-gray-500"><%= d.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+</div>

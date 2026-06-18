@@ -1,0 +1,35 @@
+<% content_for :title, "Webhooks — Governauthzer" %>
+
+<div class="max-w-5xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="page-title">Webhook subscriptions</h1>
+    <%= link_to "New subscription", new_admin_webhook_subscription_path, class: "btn btn-primary" %>
+  </div>
+
+  <% if @subscriptions.empty? %>
+    <p class="text-sm text-gray-500">
+      No subscriptions yet. Create one to deliver outbound events to a provisioner / bridge.
+    </p>
+  <% else %>
+    <div class="panel">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Endpoint</th><th>Events</th><th>Apps</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @subscriptions.each do |sub| %>
+            <tr class="row-hover">
+              <td><%= link_to sub.name, admin_webhook_subscription_path(sub), class: "btn-link" %></td>
+              <td class="font-mono text-xs text-gray-500"><%= sub.endpoint_url %></td>
+              <td class="text-xs text-gray-500"><%= sub.event_types.empty? ? "all" : sub.event_types.size %></td>
+              <td class="text-xs text-gray-500"><%= sub.application_ids.empty? ? "all" : sub.application_ids.size %></td>
+              <td><%= sub.active? ? "Active" : "Disabled" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

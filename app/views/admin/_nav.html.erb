@@ -23,6 +23,7 @@
         <%= nav_link.("Audit log", admin_audit_events_path, controller_name == "audit_events") %>
         <%= nav_link.("OIDC", admin_auth_providers_path, controller_name == "auth_providers") %>
         <%= nav_link.("API tokens", admin_api_tokens_path, controller_name == "api_tokens") %>
+        <%= nav_link.("Webhooks", admin_webhook_subscriptions_path, controller_name == "webhook_subscriptions") %>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <span class="hidden lg:inline text-sm text-gray-400"><%= current_user.name %></span>

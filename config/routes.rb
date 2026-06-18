@@ -31,6 +31,9 @@ Rails.application.routes.draw do
     resources :audit_events, only: %i[index show]
     resources :auth_providers, except: :show
     resources :api_tokens, only: %i[index new create destroy]
+    resources :webhook_subscriptions do
+      member { post :rotate_secret }
+    end
     root to: "dashboard#index"
   end
 

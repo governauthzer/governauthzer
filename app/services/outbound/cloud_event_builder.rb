@@ -50,6 +50,11 @@ module Outbound
       TYPE_MAP.key?(audit_event_type)
     end
 
+    # The CloudEvent types a subscription can filter on (the published contract).
+    def self.published_types
+      TYPE_MAP.values
+    end
+
     def initialize(audit_event)
       @audit_event = audit_event
     end
