@@ -1,6 +1,8 @@
 <% content_for :title, "#{@subscription.name} — Webhooks" %>
 
 <div class="max-w-5xl mx-auto space-y-8">
+  <%= render "admin/nav" %>
+
   <div class="flex items-center justify-between">
     <h1 class="page-title"><%= @subscription.name %></h1>
     <div class="flex gap-2">
