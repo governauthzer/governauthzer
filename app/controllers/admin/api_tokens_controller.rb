@@ -17,6 +17,7 @@ class Admin::ApiTokensController < Admin::BaseController
       name:         token_params[:name],
       expires_at:   parse_expires_at(token_params[:expires_at]),
       source:       token_params[:source],
+      scope:        token_params[:scope].presence || "full",
       token_digest: ApiToken.digest(raw_token)
     )
     if @api_token.save
@@ -53,7 +54,7 @@ class Admin::ApiTokensController < Admin::BaseController
   end
 
   def token_params
-    params.require(:api_token).permit(:name, :expires_at, :source)
+    params.require(:api_token).permit(:name, :expires_at, :source, :scope)
   end
 
   def parse_expires_at(raw)

@@ -42,6 +42,8 @@ Rails.application.routes.draw do
             as: :user_by_external_id,
             constraints: { external_id: %r{[^/]+} }
       post "sync/snapshots" => "sync/snapshots#create", as: :sync_snapshots
+      post "applications/:application_id/reconciliations" => "reconciliations#create",
+           as: :application_reconciliations
     end
   end
 

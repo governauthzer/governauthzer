@@ -77,6 +77,22 @@ module Api::ServiceFailureRendering
       status: :unprocessable_content,
       code: "mass_termination_blocked",
       message: "Computed orphans exceed the safety threshold; resend with override_circuit_breaker=true to proceed."
+    },
+    # --- Reconciliation ---
+    invalid_status: {
+      status: :unprocessable_content,
+      code: "invalid_status",
+      message: "status must be 'applied' or 'failed'."
+    },
+    unknown_event: {
+      status: :unprocessable_content,
+      code: "unknown_event",
+      message: "event_id does not match a known outbound event."
+    },
+    event_application_mismatch: {
+      status: :unprocessable_content,
+      code: "event_application_mismatch",
+      message: "The event does not belong to this application."
     }
   }.freeze
 

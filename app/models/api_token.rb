@@ -1,8 +1,14 @@
 class ApiToken < ApplicationRecord
   PREFIX = "gva_".freeze
+  # Action-scope, orthogonal to the source-scope below. `full` = management token
+  # (all endpoints); `reconcile` = may ONLY post reconciliation status. The
+  # management API enforces `full` by default (Api::V1::BaseController); only the
+  # reconciliation + whoami endpoints accept a `reconcile` token.
+  SCOPES = %w[full reconcile].freeze
 
   validates :name, presence: true
   validates :token_digest, presence: true, uniqueness: true
+  validates :scope, inclusion: { in: SCOPES }
 
   # Source is normalized identically to ExternalIdentity#source so the snapshot
   # diff can match `external_identities WHERE source = token.source` directly.
@@ -38,6 +44,14 @@ class ApiToken < ApplicationRecord
   # True when this token is scoped to a single HRIS source (sync agent token).
   def sync_scoped?
     source.present?
+  end
+
+  def full_access?
+    scope == "full"
+  end
+
+  def reconcile_scoped?
+    scope == "reconcile"
   end
 
   private

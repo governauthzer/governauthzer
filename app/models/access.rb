@@ -3,6 +3,10 @@ class Access < ApplicationRecord
   # `birthright` and `claim_mapping` are reserved for Phase 7 features — included
   # in the enum now so adding them later doesn't require a migration or model change.
   SOURCES = %w[manual self_request birthright claim_mapping].freeze
+  # not_required = no provisioner expected (standalone core / no subscription);
+  # pending = sent to a provisioner, awaiting reconciliation; applied/failed =
+  # provisioner reported via POST /applications/:id/reconciliations.
+  PROVISIONING_STATUSES = %w[not_required pending applied failed].freeze
 
   belongs_to :user
   belongs_to :role
@@ -11,6 +15,7 @@ class Access < ApplicationRecord
 
   validates :status, inclusion: { in: STATUSES }
   validates :source, inclusion: { in: SOURCES }
+  validates :provisioning_status, inclusion: { in: PROVISIONING_STATUSES }
   validates :user_id, uniqueness: { scope: :role_id }
 
   scope :pending, -> { where(status: "pending") }

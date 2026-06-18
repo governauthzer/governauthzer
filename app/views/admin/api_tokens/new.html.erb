@@ -19,6 +19,18 @@
     </div>
 
     <div>
+      <%= f.label :scope, "Token scope", class: "field-label" %>
+      <%= f.select :scope,
+            [ [ "Full access (management API)", "full" ], [ "Reconcile only (provisioner)", "reconcile" ] ],
+            {}, class: input_class %>
+      <p class="field-hint">
+        <strong>Full access</strong> reaches the management API (HRIS sync, etc.).
+        <strong>Reconcile only</strong> may post nothing but provisioning reconciliation —
+        the safe scope to hand a bridge / provisioner.
+      </p>
+    </div>
+
+    <div>
       <%= f.label :source, "HRIS source scope", class: "field-label" %>
       <%= f.text_field :source, class: "#{input_class} font-mono", placeholder: "workday, bamboohr, ..." %>
       <p class="field-hint">

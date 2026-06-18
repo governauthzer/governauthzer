@@ -404,6 +404,39 @@ components:
           nullable: true
           description: The persisted snapshot_runs row; null for dry runs.
 
+    ReconciliationCreate:
+      type: object
+      required: [event_id, status]
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          description: The CloudEvent `id` (= the audit event id) the provisioner applied.
+        status:
+          type: string
+          enum: [applied, failed]
+          description: Whether the provisioner applied the access change to the target system.
+        detail:
+          type: string
+          nullable: true
+          description: Optional human-readable context, especially on failure.
+
+    ReconciliationResponse:
+      type: object
+      required: [event_id, provisioning_status, access_present]
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        provisioning_status:
+          type: string
+          enum: [applied, failed]
+        access_present:
+          type: boolean
+          description: |
+            false when the event was a revoke (the access row no longer exists);
+            the report is still recorded in the audit log.
+
   responses:
     Unauthorized:
       description: Missing or invalid API token.
@@ -777,3 +810,50 @@ paths:
           $ref: "#/components/responses/Conflict"
         "422":
           $ref: "#/components/responses/ValidationFailed"
+
+  /applications/{application_id}/reconciliations:
+    post:
+      summary: Report provisioning reconciliation for an emitted event
+      description: |
+        Provisioner → core feedback. After applying (or failing to apply) an
+        outbound CloudEvent, the bridge reports back here, echoing the event `id`
+        it processed. For a grant the corresponding access's `provisioning_status`
+        is set to applied/failed; for a revoke (the access row is gone) the report
+        is recorded in the audit log only (`access_present` is false).
+
+        Accepts a reconcile-scoped token (or a full token). A full-scope token is
+        required for every other endpoint; a reconcile-scoped token may reach only
+        this one (403 `scope_insufficient` elsewhere).
+      operationId: reportReconciliation
+      security:
+        - BearerToken: []
+      parameters:
+        - name: application_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReconciliationCreate"
+      responses:
+        "200":
+          description: Reconciliation recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReconciliationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/RateLimited"

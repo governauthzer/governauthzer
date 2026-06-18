@@ -60,6 +60,18 @@ class Outbound::FanoutJobTest < ActiveJob::TestCase
       Outbound::FanoutJob.perform_now(other.id)
     end
   end
+
+  test "flips an approved grant to provisioning pending when a subscriber matches" do
+    WebhookSubscription.create!(name: "Bridge", endpoint_url: "https://b/h")
+    assert_equal "not_required", @access.provisioning_status
+    Outbound::FanoutJob.perform_now(@event.id)
+    assert_equal "pending", @access.reload.provisioning_status
+  end
+
+  test "leaves provisioning_status not_required when no subscriber matches" do
+    Outbound::FanoutJob.perform_now(@event.id)
+    assert_equal "not_required", @access.reload.provisioning_status
+  end
 end
 
 # The after_create_commit hook itself is exercised by calling the gated method
