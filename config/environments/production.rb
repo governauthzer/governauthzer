@@ -24,14 +24,20 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  # Assume access happens through a TLS-terminating reverse proxy. Enable when the
+  # proxy forwards plain HTTP without an `X-Forwarded-Proto: https` header (otherwise
+  # force_ssl can't tell the original request was secure and will redirect-loop).
+  config.assume_ssl = ENV["ASSUME_SSL"] == "true"
 
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  # Force all access over SSL, enable HSTS, and use secure cookies. Default-secure:
+  # Bearer API tokens and session cookies over plain HTTP are trivially MITM'd. Can be
+  # disabled with FORCE_SSL=false for the rare deployment that terminates AND enforces
+  # TLS entirely upstream — a loud boot warning fires in that case (see
+  # config/initializers/ssl_enforcement.rb).
+  config.force_ssl = ENV.fetch("FORCE_SSL", "true") != "false"
 
-  # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  # Skip the http-to-https redirect for the health check endpoint (probes hit it over HTTP).
+  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
