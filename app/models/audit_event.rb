@@ -9,6 +9,12 @@ class AuditEvent < ApplicationRecord
   validates :correlation_id, presence: true
   validate :actor_id_matches_actor_type
 
+  # Outbound projection: fan out published lifecycle events to webhook
+  # subscribers. after_commit (not after_create) so a rolled-back transaction
+  # never emits a phantom event to a provisioner; gated on the allowlist so the
+  # common audit write (logins, admin CRUD) enqueues nothing.
+  after_create_commit :enqueue_outbound_projection
+
   # Canonical write path for the audit log. Do not call `create!` directly.
   #
   # `metadata` convention:
@@ -50,5 +56,10 @@ class AuditEvent < ApplicationRecord
     when "system"
       errors.add(:actor_id, "must be blank when actor_type is system") if actor_id.present?
     end
+  end
+
+  def enqueue_outbound_projection
+    return unless Outbound::CloudEventBuilder.publishable_type?(event_type)
+    Outbound::FanoutJob.perform_later(id)
   end
 end

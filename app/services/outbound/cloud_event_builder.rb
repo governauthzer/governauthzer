@@ -15,6 +15,19 @@ module Outbound
   # Access row, which is already destroyed by the time a revoke is projected
   # (emit-before-destroy). Only the access id (a correlation handle) is read from
   # the audit targets.
+  #
+  # User identity contract (decided 2026-06-17): `data.user` carries `id` (our
+  # immutable UUID), `email` (the conventional cross-system match key), and
+  # `name`. Bridge authors: KEY YOUR PERSISTENT USER→TARGET-ACCOUNT MAPPING ON
+  # `id` — it never changes; `email` is mutable (a rename makes a later revoke
+  # carry the new email) so use it only for the FIRST resolution. We deliberately
+  # do NOT send `external_identities` (HRIS namespace — wrong identity space for
+  # target provisioning) nor any target-account id (that would be target *state*
+  # in the decision plane — the same boundary violation as an entitlement `ref`
+  # on Role). Resolving our user to a target account is the bridge's job, exactly
+  # like role→entitlement. Adding identifiers later is additive (non-breaking per
+  # the dataschema versioning policy), so this stays minimal until a real bridge
+  # for a non-email-keyed system (AWS/GitHub/AD) needs more.
   class CloudEventBuilder
     SPEC_VERSION = "1.0".freeze
     SCHEMA_HOST = "https://schemas.governauthzer.dev".freeze
