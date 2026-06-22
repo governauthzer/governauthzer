@@ -78,7 +78,13 @@ production:
   primary: &primary_production
     <<: *default
     database: governauthzer_production
-    username: governauthzer
+    # Role separation for audit-log tamper protection (see db/grants.sql). The app
+    # should SERVE as the restricted runtime role (GOVERNAUTHZER_DATABASE_USER=
+    # governauthzer_app) which cannot UPDATE/DELETE audit_events, and MIGRATE as the
+    # privileged owner (GOVERNAUTHZER_DATABASE_USER=governauthzer). Default is the
+    # owner so single-role installs keep booting out of the box; the app warns at boot
+    # when it connected as an over-privileged role.
+    username: <%= ENV.fetch("GOVERNAUTHZER_DATABASE_USER", "governauthzer") %>
     password: <%= ENV["GOVERNAUTHZER_DATABASE_PASSWORD"] %>
   cache:
     <<: *primary_production
