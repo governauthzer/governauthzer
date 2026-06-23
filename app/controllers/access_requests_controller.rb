@@ -6,7 +6,9 @@ class AccessRequestsController < ApplicationController
   before_action :require_login!
 
   def create
-    role = Role.find(params[:role_id])
+    role = Role.find_by(id: params[:role_id])
+    return redirect_to catalog_path, alert: "Select a role to request." if role.nil?
+
     result = Accesses::Requester.call(
       user: current_user, role: role, actor: current_user,
       justification: params[:justification].presence

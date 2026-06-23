@@ -2,18 +2,18 @@
   <div class="container mx-auto px-5">
     <header class="max-w-5xl mx-auto flex items-center justify-between gap-3
                    h-12 pl-2 pr-2 rounded-lg bg-white/90 backdrop-blur shadow-md">
-      <%= link_to root_path, class: "shrink-0 flex items-center gap-1.5 group" do %>
-        <svg class="w-7 h-7 shrink-0" viewBox="0 0 48 48" aria-hidden="true">
-          <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"></polygon>
-          <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"></polygon>
-          <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"></polygon>
-          <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"></polygon>
-        </svg>
-        <span class="text-sm font-semibold tracking-tight pr-1 group-hover:text-gray-600">Governauthzer</span>
-      <% end %>
+      <div class="flex items-center gap-2 min-w-0">
+        <%= link_to root_path, class: "shrink-0 flex items-center justify-center w-7 h-7", title: "Home" do %>
+          <svg class="w-7 h-7" viewBox="0 0 48 48" aria-hidden="true">
+            <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"></polygon>
+            <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"></polygon>
+            <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"></polygon>
+            <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"></polygon>
+          </svg>
+        <% end %>
+        <%= link_to "Request access", catalog_path, class: "btn btn-primary btn-sm shrink-0" %>
+      </div>
       <nav class="flex items-center gap-1 shrink-0">
-        <%= link_to "Request access", catalog_path,
-              class: "shrink-0 px-3 py-1.5 rounded-md text-sm #{controller_name == 'catalog' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}" %>
         <% if current_user.operator? %>
           <%= link_to "Admin", admin_root_path, class: "shrink-0 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100" %>
         <% end %>

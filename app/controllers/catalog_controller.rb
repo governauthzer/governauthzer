@@ -10,5 +10,6 @@ class CatalogController < ApplicationController
                  .where(protected: false)
                  .where.not(id: held_role_ids)
                  .order(:name)
+    @applications = @roles.map(&:application).uniq.sort_by(&:name)
   end
 end
