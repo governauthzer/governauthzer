@@ -49,3 +49,10 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore the documentation site (built and published separately to GitHub Pages).
+/docs/
+
+# Ignore tests and coverage reports (not needed in the production image).
+/test/
+/coverage/

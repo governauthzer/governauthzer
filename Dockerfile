@@ -1,9 +1,17 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-# This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
-# docker build -t governauthzer .
-# docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name governauthzer governauthzer
+# This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand.
+# governauthzer uses ENV-based secrets (no Rails master.key / credentials in production):
+#   docker build -t governauthzer .
+#   docker run -d -p 80:80 \
+#     -e SECRET_KEY_BASE=$(bin/rails secret) \
+#     -e GOVERNAUTHZER_ENCRYPTION_PRIMARY_KEY=... \
+#     -e GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY=... \
+#     -e GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT=... \
+#     -e DATABASE_URL=... -e GOVERNAUTHZER_HOST=https://... \
+#     --name governauthzer governauthzer
+# Full environment reference: docs/deployment.md.
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
@@ -74,4 +82,10 @@ ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # Start server via Thruster by default, this can be overwritten at runtime
 EXPOSE 80
+
+# Liveness via the Rails health endpoint (excluded from the TLS redirect, so it
+# answers over plain HTTP inside the container).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -fsS http://localhost:80/up || exit 1
+
 CMD ["./bin/thrust", "./bin/rails", "server"]

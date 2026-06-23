@@ -30,10 +30,11 @@ everything is environment variables.
 
 ### Required in production
 
-The app **fails to boot** without the three encryption keys.
+The app **fails to boot** without `SECRET_KEY_BASE` and the three encryption keys.
 
 | Variable | Purpose |
 | --- | --- |
+| `SECRET_KEY_BASE` | Signs/encrypts session cookies and other signed data. Generate with `bin/rails secret`. governauthzer uses ENV keys in production, not Rails credentials, so this must be provided. |
 | `GOVERNAUTHZER_ENCRYPTION_PRIMARY_KEY` | Active Record Encryption primary key |
 | `GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY` | deterministic encryption key |
 | `GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT` | key-derivation salt |
@@ -61,6 +62,7 @@ The app **fails to boot** without the three encryption keys.
 | `SENTRY_SEND_PII` | `false` | Opt-in PII in Sentry events (off by default for an identity app). |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.0` | Sentry performance tracing sample rate. |
 | `GOVERNAUTHZER_RELEASE` | — | Release identifier reported to Sentry. |
+| `SKIP_DB_PREPARE` | `false` | Set `true` to stop the container entrypoint auto-migrating on boot — required when serving under the restricted DB role (it can't run DDL). Run migrations as the owner separately. |
 
 Operational tuning (`RAILS_MAX_THREADS`, `WEB_CONCURRENCY`, `JOB_CONCURRENCY`,
 `SOLID_QUEUE_IN_PUMA`, `PORT`, `RAILS_LOG_LEVEL`) follows the Rails 8 defaults.
@@ -85,6 +87,11 @@ data** (currently the OIDC client secrets) — back them up.
    layer, not merely in app code.
 
 The runbook is its own page: **[Audit-log protection](audit-log-protection.md)**.
+
+> The container entrypoint runs `db:prepare` on server start by default — convenient
+> for single-role installs. For a **role-separated** deploy, set `SKIP_DB_PREPARE=true`
+> and run `bin/rails db:migrate` as the **owner** role at release time; the restricted
+> runtime role cannot run DDL.
 
 ## TLS
 

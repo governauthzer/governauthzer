@@ -1,7 +1,10 @@
 #!/bin/bash -e
 
-# If running the rails server then create or migrate existing database
-if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+# Auto-create/migrate the database when starting the server, UNLESS disabled.
+# Set SKIP_DB_PREPARE=true for deployments that run migrations as a separate
+# privileged step — REQUIRED when the app serves under the restricted runtime DB
+# role (audit-log protection), which cannot run DDL. See docs/deployment.md.
+if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ] && [ "${SKIP_DB_PREPARE:-false}" != "true" ]; then
   ./bin/rails db:prepare
 fi
 
