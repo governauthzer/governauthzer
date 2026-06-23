@@ -30,7 +30,10 @@ module Outbound
   # for a non-email-keyed system (AWS/GitHub/AD) needs more.
   class CloudEventBuilder
     SPEC_VERSION = "1.0".freeze
-    SCHEMA_HOST = "https://schemas.governauthzer.dev".freeze
+    # The canonical project schema registry. Served as static files from the docs
+    # site (a path under the docs domain, not a separate subdomain — one repo, one
+    # GitHub Pages deploy). The JSON Schemas live at docs/schemas/<event>/<n>.json.
+    SCHEMA_HOST = "https://governauthzer.dev/schemas".freeze
     DATASCHEMA_VERSION = 1
 
     # internal audit event_type → published CloudEvent type

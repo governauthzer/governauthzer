@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governauthzer.dev/schemas/access.revoked/1.json",
+  "title": "access.revoked data (v1)",
+  "description": "CloudEvents `data` payload for `com.governauthzer.access.revoked`. Means: REMOVE this grant — deprovision the user from the role on the target application. Emitted whatever the cause (manual revoke, expiry, termination cascade, orphan cascade) — the connector action is identical. This schema describes the `data` member only. Additive fields may appear in future without a version bump, so consumers MUST ignore unknown properties.",
+  "type": "object",
+  "required": ["access_id", "user", "role", "application"],
+  "properties": {
+    "access_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The governauthzer access (grant) being revoked. A correlation handle; by the time this event is built the access row is already destroyed, so the payload is rebuilt from the live user/role/application."
+    },
+    "user": {
+      "type": "object",
+      "description": "The subject losing the grant.",
+      "required": ["id", "email", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Immutable governauthzer user id. Match against the user->target-account mapping you keyed at grant time."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Conventional cross-system match key. Mutable — prefer `id`."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name."
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "description": "The role being removed.",
+      "required": ["id", "slug", "name"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid", "description": "Immutable governauthzer role id." },
+        "slug": { "type": "string", "description": "Stable, application-scoped role slug (e.g. `slack-admin`)." },
+        "name": { "type": "string", "description": "Human-readable role name." }
+      }
+    },
+    "application": {
+      "type": "object",
+      "description": "The target system the role belongs to.",
+      "required": ["id", "slug", "name"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid", "description": "Immutable governauthzer application id." },
+        "slug": { "type": "string", "description": "Stable application slug (e.g. `slack`)." },
+        "name": { "type": "string", "description": "Human-readable application name." }
+      }
+    },
+    "reason": {
+      "type": "string",
+      "description": "Optional machine-readable cause of the revocation (e.g. `grant_expired`). Present when the revoke carried one; absent otherwise. Informational — the connector action (remove the grant) does not depend on it."
+    }
+  },
+  "examples": [
+    {
+      "access_id": "0f8b8c1e-3a2d-4c1a-9b7e-1d2c3b4a5f60",
+      "user": {
+        "id": "a1b2c3d4-e5f6-4711-8899-aabbccddeeff",
+        "email": "ada@example.com",
+        "name": "Ada Lovelace"
+      },
+      "role": {
+        "id": "11112222-3333-4444-5555-666677778888",
+        "slug": "slack-admin",
+        "name": "Slack Admin"
+      },
+      "application": {
+        "id": "99990000-1111-2222-3333-444455556666",
+        "slug": "slack",
+        "name": "Slack"
+      },
+      "reason": "grant_expired"
+    }
+  ]
+}

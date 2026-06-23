@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governauthzer.dev/schemas/access.approved/1.json",
+  "title": "access.approved data (v1)",
+  "description": "CloudEvents `data` payload for `com.governauthzer.access.approved`. Means: ADD this grant — provision the user into the role on the target application. This schema describes the `data` member only; the surrounding CloudEvents envelope is fixed by the CloudEvents 1.0 spec. Additive fields may appear in future without a version bump, so consumers MUST ignore unknown properties.",
+  "type": "object",
+  "required": ["access_id", "user", "role", "application"],
+  "properties": {
+    "access_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The governauthzer access (grant) this event concerns. A correlation handle; the access row itself is not part of the contract."
+    },
+    "user": {
+      "type": "object",
+      "description": "The subject of the grant. Resolving this to a target-system account is the bridge's job.",
+      "required": ["id", "email", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Immutable governauthzer user id. KEY YOUR PERSISTENT USER -> TARGET-ACCOUNT MAPPING ON THIS."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Conventional cross-system match key. Mutable (a rename surfaces on a later event) — use only for FIRST resolution, never as the persistent key."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name."
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "description": "The role being granted. One target-system entitlement/group, resolved by the bridge from `slug`.",
+      "required": ["id", "slug", "name"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid", "description": "Immutable governauthzer role id." },
+        "slug": { "type": "string", "description": "Stable, application-scoped role slug (e.g. `slack-admin`). The bridge maps this to the target entitlement." },
+        "name": { "type": "string", "description": "Human-readable role name." }
+      }
+    },
+    "application": {
+      "type": "object",
+      "description": "The target system the role belongs to. Connectors partition by application.",
+      "required": ["id", "slug", "name"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid", "description": "Immutable governauthzer application id." },
+        "slug": { "type": "string", "description": "Stable application slug (e.g. `slack`)." },
+        "name": { "type": "string", "description": "Human-readable application name." }
+      }
+    }
+  },
+  "examples": [
+    {
+      "access_id": "0f8b8c1e-3a2d-4c1a-9b7e-1d2c3b4a5f60",
+      "user": {
+        "id": "a1b2c3d4-e5f6-4711-8899-aabbccddeeff",
+        "email": "ada@example.com",
+        "name": "Ada Lovelace"
+      },
+      "role": {
+        "id": "11112222-3333-4444-5555-666677778888",
+        "slug": "slack-admin",
+        "name": "Slack Admin"
+      },
+      "application": {
+        "id": "99990000-1111-2222-3333-444455556666",
+        "slug": "slack",
+        "name": "Slack"
+      }
+    }
+  ]
+}

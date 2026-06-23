@@ -22,7 +22,7 @@ class Outbound::CloudEventBuilderTest < ActiveSupport::TestCase
 
     assert_equal "1.0", ce["specversion"]
     assert_equal "com.governauthzer.access.approved", ce["type"]
-    assert_equal "https://schemas.governauthzer.dev/access.approved/1.json", ce["dataschema"]
+    assert_equal "https://governauthzer.dev/schemas/access.approved/1.json", ce["dataschema"]
     assert_equal "application/json", ce["datacontenttype"]
     assert_equal "access/#{@access.id}", ce["subject"]
     assert_equal "ada@example.com", ce.dig("data", "user", "email")
