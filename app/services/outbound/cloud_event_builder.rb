@@ -30,10 +30,6 @@ module Outbound
   # for a non-email-keyed system (AWS/GitHub/AD) needs more.
   class CloudEventBuilder
     SPEC_VERSION = "1.0".freeze
-    # The canonical project schema registry. Served as static files from the docs
-    # site (a path under the docs domain, not a separate subdomain — one repo, one
-    # GitHub Pages deploy). The JSON Schemas live at docs/schemas/<event>/<n>.json.
-    SCHEMA_HOST = "https://governauthzer.dev/schemas".freeze
     DATASCHEMA_VERSION = 1
 
     # internal audit event_type → published CloudEvent type
@@ -47,6 +43,16 @@ module Outbound
     # registry (identical for every install of a given version).
     def self.event_source
       ENV.fetch("GOVERNAUTHZER_EVENT_SOURCE", "https://governauthzer.dev")
+    end
+
+    # Host the emitted `dataschema` URLs point at — the schema registry where the
+    # versioned JSON Schemas are served. Configurable per deployment; the default
+    # is the canonical project registry (the docs site, under /schemas), so a
+    # consumer can dereference a known stable URL. Self-hosters who mirror the
+    # schemas point this at their own host. Not hardcoded — overridable via ENV,
+    # same pattern as `event_source`.
+    def self.schema_host
+      ENV.fetch("GOVERNAUTHZER_SCHEMA_HOST", "https://governauthzer.dev/schemas")
     end
 
     def self.publishable_type?(audit_event_type)
@@ -94,7 +100,7 @@ module Outbound
     end
 
     def dataschema
-      "#{SCHEMA_HOST}/#{@audit_event.event_type}/#{DATASCHEMA_VERSION}.json"
+      "#{self.class.schema_host}/#{@audit_event.event_type}/#{DATASCHEMA_VERSION}.json"
     end
 
     def data(user, role, application)
