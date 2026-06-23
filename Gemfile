@@ -84,4 +84,8 @@ group :test do
 
   # OpenAPI contract enforcement — validates requests/responses against openapi/v1.yaml
   gem "committee-rails"
+
+  # Test coverage measurement. Opt-in via COVERAGE=1 (see test/test_helper.rb) so
+  # the default run is unaffected; report written to coverage/.
+  gem "simplecov", require: false
 end
