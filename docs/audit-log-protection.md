@@ -1,3 +1,9 @@
+---
+title: Audit-log protection
+parent: Deployment
+nav_order: 1
+---
+
 # Audit-log tamper protection (Postgres role separation)
 
 governauthzer's audit log (`audit_events`) is append-only by design. The enforcement

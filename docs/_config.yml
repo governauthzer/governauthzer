@@ -1,0 +1,60 @@
+title: governauthzer
+description: >-
+  Decision-plane IGA — govern access, bring any provisioner (or use ours).
+  Documentation: the management API contract, the outbound webhook / CloudEvents
+  contract, and the deployment guide.
+
+# No hardcoded site URL or custom domain here. Asset/link paths are relative;
+# `baseurl` is injected at build time from the GitHub Pages config (empty for a
+# custom domain, "/<repo>" for project pages) — see .github/workflows/pages.yml.
+# A custom domain, if any, is set in the repo's Pages settings, not in source.
+baseurl: ""
+
+theme: just-the-docs
+color_scheme: governauthzer
+
+# Every page uses the themed layout by default; index.md overrides with `home`.
+# Without this, pages that omit `layout:` render as bare, unstyled HTML.
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+plugins:
+  - jekyll-relative-links
+
+# jekyll-relative-links: convert .md cross-links to .html, keep them relative.
+relative_links:
+  enabled: true
+  collections: false
+
+# Full-text search (Just the Docs lunr index).
+search_enabled: true
+search:
+  heading_level: 3
+
+# Repo / edit links in the page chrome.
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/governauthzer/governauthzer"
+gh_edit_branch: "main"
+gh_edit_source: docs
+gh_edit_view_mode: "tree"
+
+aux_links:
+  "GitHub":
+    - "https://github.com/governauthzer/governauthzer"
+aux_links_new_tab: true
+
+# Footer.
+last_edit_timestamp: true
+last_edit_time_format: "%Y-%m-%d"
+
+# Static JSON Schemas (docs/schemas/**) and other non-Jekyll assets are copied
+# verbatim. Exclude the toolchain itself from the build output.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - .bundle

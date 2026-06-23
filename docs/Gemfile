@@ -1,0 +1,22 @@
+# Toolchain for the governauthzer documentation site.
+# Ruby-native (Jekyll), built and deployed to GitHub Pages by
+# .github/workflows/pages.yml. This is intentionally separate from the
+# application Gemfile — the docs site has its own dependency closure.
+source "https://rubygems.org"
+
+gem "jekyll", "~> 4.3"
+gem "just-the-docs", "~> 0.10"
+
+# Rewrites inline [text](page.md) links to .html at build time (the same plugin
+# GitHub Pages enables by default), so cross-page links work both in these source
+# files (viewed on GitHub) and on the built site.
+gem "jekyll-relative-links", "~> 0.7"
+
+# Local preview server (`bundle exec jekyll serve`).
+gem "webrick", "~> 1.9"
+
+# Formerly-default gems that Ruby 4.0 no longer bundles but Jekyll/its deps load.
+gem "csv"
+gem "base64"
+gem "bigdecimal"
+gem "logger"

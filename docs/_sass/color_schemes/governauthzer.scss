@@ -1,0 +1,29 @@
+// governauthzer docs color scheme.
+//
+// Mirrors the application's brand: a strict monochrome gray scale on white with
+// a single copper accent (the same tokens as app/assets/tailwind/application.css)
+// and Inter / JetBrains Mono. Just-the-Docs always imports `light` as the base
+// (so the github-light pygments theme and any unset variables come from there);
+// this file is loaded AFTER it and overrides only what makes the brand.
+
+$color-scheme: light;
+
+// Fonts — loaded in _includes/head_custom.html.
+$body-font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+$mono-font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", menlo, consolas, monospace;
+
+// Palette (hex values from the app's @theme tokens).
+$body-background-color:       #ffffff;
+$body-heading-color:          #0f0f0f; // gray-950
+$body-text-color:             #1a1a1a; // gray-900
+$link-color:                  #8a4520; // copper-700 (matches the app's .btn-link)
+$nav-child-link-color:        #525252; // gray-600
+$sidebar-color:               #f7f7f7; // gray-50
+$base-button-color:           #f7f7f7; // gray-50
+$btn-primary-color:           #b85e2a; // copper-500 (the brand accent)
+$code-background-color:       #f7f7f7; // gray-50
+$feedback-color:              #efefef; // gray-100
+$table-background-color:      #ffffff;
+$search-background-color:     #ffffff;
+$search-result-preview-color: #6b6b6b; // gray-500
+$border-color:                #e2e2e2; // gray-200
