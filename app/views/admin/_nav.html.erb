@@ -2,34 +2,77 @@
      link_to label, path,
        class: "shrink-0 px-3 py-1.5 rounded-md text-sm transition-colors #{active ? 'text-gray-900 font-medium underline underline-offset-4 decoration-2 decoration-copper-500' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}"
    } %>
+<% menu_link = ->(label, path, active) {
+     link_to label, path,
+       class: "block px-2 py-2 rounded-md text-sm #{active ? 'text-gray-900 font-medium bg-copper-50' : 'text-gray-700 hover:bg-gray-100'}"
+   } %>
+<% sections = [
+     ["Dashboard",    admin_root_path,                    controller_name == "dashboard"],
+     ["Applications", admin_applications_path,            controller_name.in?(%w[applications roles])],
+     ["Workflows",    admin_approval_workflows_path,      controller_name.in?(%w[approval_workflows approval_steps])],
+     ["Users",        admin_users_path,                   controller_name.in?(%w[users omniauth_identities])],
+     ["Audit log",    admin_audit_events_path,            controller_name == "audit_events"],
+     ["OIDC",         admin_auth_providers_path,          controller_name == "auth_providers"],
+     ["API tokens",   admin_api_tokens_path,              controller_name == "api_tokens"],
+     ["Webhooks",     admin_webhook_subscriptions_path,   controller_name == "webhook_subscriptions"],
+   ] %>
 
-<div class="fixed top-3 inset-x-0 z-40">
+<div class="fixed top-3 inset-x-0 z-40" data-controller="menu">
   <div class="container mx-auto px-5">
-    <header class="max-w-5xl mx-auto flex items-center justify-between gap-3
-                   h-12 pl-2 pr-2 rounded-lg bg-white/90 backdrop-blur shadow-md">
-      <div class="flex items-center gap-1 min-w-0 overflow-x-auto">
-        <%= link_to admin_root_path, class: "shrink-0 flex items-center justify-center w-7 h-7 mr-0.5" do %>
-          <svg class="w-7 h-7" viewBox="0 0 48 48" aria-hidden="true">
-            <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"></polygon>
-            <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"></polygon>
-            <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"></polygon>
-            <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"></polygon>
-          </svg>
-        <% end %>
-        <%= nav_link.("Dashboard", admin_root_path, controller_name == "dashboard") %>
-        <%= nav_link.("Applications", admin_applications_path, controller_name.in?(%w[applications roles])) %>
-        <%= nav_link.("Workflows", admin_approval_workflows_path, controller_name.in?(%w[approval_workflows approval_steps])) %>
-        <%= nav_link.("Users", admin_users_path, controller_name.in?(%w[users omniauth_identities])) %>
-        <%= nav_link.("Audit log", admin_audit_events_path, controller_name == "audit_events") %>
-        <%= nav_link.("OIDC", admin_auth_providers_path, controller_name == "auth_providers") %>
-        <%= nav_link.("API tokens", admin_api_tokens_path, controller_name == "api_tokens") %>
-        <%= nav_link.("Webhooks", admin_webhook_subscriptions_path, controller_name == "webhook_subscriptions") %>
+    <div class="max-w-5xl mx-auto relative">
+      <header class="flex items-center justify-between gap-3
+                     h-12 pl-2 pr-2 rounded-lg bg-white/90 backdrop-blur shadow-md">
+        <div class="flex items-center gap-1 min-w-0">
+          <%= link_to admin_root_path, class: "shrink-0 flex items-center justify-center w-7 h-7 mr-0.5" do %>
+            <svg class="w-7 h-7" viewBox="0 0 48 48" aria-hidden="true">
+              <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"></polygon>
+              <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"></polygon>
+              <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"></polygon>
+              <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"></polygon>
+            </svg>
+          <% end %>
+          <%# Desktop: inline nav (≥ lg, where all eight links fit) %>
+          <nav class="hidden lg:flex items-center gap-1">
+            <% sections.each do |label, path, active| %>
+              <%= nav_link.(label, path, active) %>
+            <% end %>
+          </nav>
+          <%# Mobile/tablet: current-section label next to the hamburger %>
+          <span class="lg:hidden text-sm font-medium text-gray-900 truncate">
+            <%= (sections.find { |_, _, active| active } || sections.first)[0] %>
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="hidden lg:inline text-sm text-gray-400"><%= current_user.name %></span>
+          <%= link_to "App ↗", root_path, class: "hidden sm:inline-block shrink-0 px-3 py-1.5 rounded-md text-sm text-copper-700 font-medium hover:bg-copper-50" %>
+          <%# Mobile/tablet: hamburger %>
+          <button type="button" class="lg:hidden shrink-0 flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  data-action="menu#toggle" data-menu-target="button"
+                  aria-label="Menu" aria-expanded="false" aria-haspopup="true">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <line x1="4" y1="7" x2="20" y2="7"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="17" x2="20" y2="17"></line>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <%# Mobile/tablet: dropdown panel %>
+      <div data-menu-target="panel"
+           class="lg:hidden hidden absolute top-full right-0 mt-2 w-60 origin-top-right
+                  rounded-lg bg-white shadow-lg border border-gray-200 p-1.5">
+        <nav class="flex flex-col">
+          <% sections.each do |label, path, active| %>
+            <%= menu_link.(label, path, active) %>
+          <% end %>
+        </nav>
+        <div class="mt-1.5 pt-1.5 border-t border-gray-100">
+          <%= link_to "App ↗", root_path, class: "block px-2 py-2 rounded-md text-sm text-copper-700 font-medium hover:bg-copper-50" %>
+        </div>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <span class="hidden lg:inline text-sm text-gray-400"><%= current_user.name %></span>
-        <%= link_to "App ↗", root_path, class: "shrink-0 px-3 py-1.5 rounded-md text-sm text-copper-700 font-medium hover:bg-copper-50" %>
-      </div>
-    </header>
+    </div>
   </div>
 </div>
 <div class="h-12" aria-hidden="true"></div>

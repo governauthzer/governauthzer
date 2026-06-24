@@ -1,28 +1,56 @@
-<div class="fixed top-3 inset-x-0 z-40">
+<div class="fixed top-3 inset-x-0 z-40" data-controller="menu">
   <div class="container mx-auto px-5">
-    <header class="max-w-5xl mx-auto flex items-center justify-between gap-3
-                   h-12 pl-2 pr-2 rounded-lg bg-white/90 backdrop-blur shadow-md">
-      <div class="flex items-center gap-2 min-w-0">
-        <%= link_to root_path, class: "shrink-0 flex items-center justify-center w-7 h-7", title: "Home" do %>
-          <svg class="w-7 h-7" viewBox="0 0 48 48" aria-hidden="true">
-            <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"></polygon>
-            <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"></polygon>
-            <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"></polygon>
-            <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"></polygon>
+    <div class="max-w-5xl mx-auto relative">
+      <header class="flex items-center justify-between gap-3
+                     h-12 pl-2 pr-2 rounded-lg bg-white/90 backdrop-blur shadow-md">
+        <div class="flex items-center gap-2 min-w-0">
+          <%= link_to root_path, class: "shrink-0 flex items-center justify-center w-7 h-7", title: "Home" do %>
+            <svg class="w-7 h-7" viewBox="0 0 48 48" aria-hidden="true">
+              <polygon points="12,10 36,10 27,19 21,19" fill="#b85e2a"></polygon>
+              <polygon points="38,12 38,36 29,27 29,21" fill="#0f0f0f"></polygon>
+              <polygon points="36,38 12,38 21,29 27,29" fill="#0f0f0f"></polygon>
+              <polygon points="10,36 10,12 19,21 19,27" fill="#0f0f0f"></polygon>
+            </svg>
+          <% end %>
+          <%= link_to "Request access", catalog_path, class: "btn btn-primary btn-sm shrink-0" %>
+        </div>
+
+        <%# Desktop: inline nav %>
+        <nav class="hidden sm:flex items-center gap-1 shrink-0">
+          <% if current_user.operator? %>
+            <%= link_to "Admin", admin_root_path, class: "shrink-0 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100" %>
+          <% end %>
+          <span class="shrink-0 w-px h-5 bg-gray-200 mx-1"></span>
+          <%= button_to "Sign out", logout_path, method: :delete,
+                class: "shrink-0 px-3 py-1.5 rounded-md text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100",
+                form_class: "inline shrink-0" %>
+        </nav>
+
+        <%# Mobile: hamburger %>
+        <button type="button" class="sm:hidden shrink-0 flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                data-action="menu#toggle" data-menu-target="button"
+                aria-label="Menu" aria-expanded="false" aria-haspopup="true">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="4" y1="7" x2="20" y2="7"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="17" x2="20" y2="17"></line>
           </svg>
-        <% end %>
-        <%= link_to "Request access", catalog_path, class: "btn btn-primary btn-sm shrink-0" %>
-      </div>
-      <nav class="flex items-center gap-1 shrink-0">
+        </button>
+      </header>
+
+      <%# Mobile: dropdown panel %>
+      <div data-menu-target="panel"
+           class="sm:hidden hidden absolute top-full right-0 mt-2 w-52 origin-top-right
+                  rounded-lg bg-white shadow-lg border border-gray-200 p-1.5">
+        <div class="px-2 py-1.5 text-xs text-gray-400 truncate"><%= current_user.name %></div>
         <% if current_user.operator? %>
-          <%= link_to "Admin", admin_root_path, class: "shrink-0 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100" %>
+          <%= link_to "Admin", admin_root_path, class: "block px-2 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100" %>
         <% end %>
-        <span class="shrink-0 w-px h-5 bg-gray-200 mx-1"></span>
         <%= button_to "Sign out", logout_path, method: :delete,
-              class: "shrink-0 px-3 py-1.5 rounded-md text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100",
-              form_class: "inline shrink-0" %>
-      </nav>
-    </header>
+              class: "w-full text-left px-2 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
+              form_class: "block" %>
+      </div>
+    </div>
   </div>
 </div>
 <div class="h-12" aria-hidden="true"></div>
