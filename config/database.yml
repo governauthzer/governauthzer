@@ -84,6 +84,7 @@ production:
     # privileged owner (GOVERNAUTHZER_DATABASE_USER=governauthzer). Default is the
     # owner so single-role installs keep booting out of the box; the app warns at boot
     # when it connected as an over-privileged role.
+    host: <%= ENV.fetch("GOVERNAUTHZER_DATABASE_HOST", "localhost") %>
     username: <%= ENV.fetch("GOVERNAUTHZER_DATABASE_USER", "governauthzer") %>
     password: <%= ENV["GOVERNAUTHZER_DATABASE_PASSWORD"] %>
   cache:
