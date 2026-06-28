@@ -21,6 +21,15 @@ never locked in.
 
 ## What's in these docs
 
+New here? Start with **[How it works](how-it-works.md)**, then
+**[Getting started](getting-started.md)** to run the whole loop locally.
+
+- **[How it works](how-it-works.md)** — the mental model, the objects, and the
+  request → approve → grant → provision loop, in plain language (with diagrams).
+- **[Getting started](getting-started.md)** — run it locally and click through the core
+  loop in ~10 minutes, no OIDC/HRIS wiring needed.
+- **[Admin guide](admin-guide.md)** — the operator's surface: configure OIDC login, build
+  the catalog (apps/roles/workflows), manage users & identities, tokens, webhooks, audit.
 - **[Management API](api.md)** — the HTTP contract your HRIS / onboarding system
   integrates against (identity axis: users + their identities + roster sync).
 - **[Webhooks & CloudEvents](webhooks.md)** — the outbound contract a provisioner

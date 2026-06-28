@@ -13,6 +13,10 @@ baseurl: ""
 theme: just-the-docs
 color_scheme: governauthzer
 
+# Mermaid diagrams in ```mermaid fenced blocks (loaded from CDN by Just the Docs).
+mermaid:
+  version: "10.9.3"
+
 # Every page uses the themed layout by default; index.md overrides with `home`.
 # Without this, pages that omit `layout:` render as bare, unstyled HTML.
 defaults:
