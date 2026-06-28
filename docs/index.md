@@ -50,9 +50,11 @@ audited manual tasks for the apps that have no API.
 
 - **New here?** Read **[How it works](how-it-works.md)**, then
   **[Getting started](getting-started.md)** to run the whole loop locally in ~10 minutes.
-- **Operating it?** The **[Admin guide](admin-guide.md)** covers the operator surface.
+- **Operating it?** The **[Admin guide](admin-guide.md)** covers the operator surface;
+  **[Fulfillment](fulfillment.md)** explains how access reaches your target systems.
 - **Integrating?** **[Management API](api.md)**, **[Webhooks & CloudEvents](webhooks.md)**,
   and **[Deployment](deployment.md)**.
+- **Lost in a term?** The **[Glossary](glossary.md)** defines everything.
 
 ## What's in these docs
 
@@ -62,6 +64,8 @@ audited manual tasks for the apps that have no API.
   loop in ~10 minutes, no OIDC/HRIS wiring needed.
 - **[Admin guide](admin-guide.md)** — the operator's surface: configure OIDC login, build
   the catalog (apps/roles/workflows), manage users & identities, tokens, webhooks, audit.
+- **[Fulfillment](fulfillment.md)** — how access decisions actually reach target systems:
+  webhook handlers, the Baton bridge, audited manual tasks, and reconciliation.
 - **[Management API](api.md)** — the HTTP contract your HRIS / onboarding system
   integrates against (identity axis: users + their identities + roster sync).
 - **[Webhooks & CloudEvents](webhooks.md)** — the outbound contract a provisioner
@@ -70,6 +74,7 @@ audited manual tasks for the apps that have no API.
   under [`/schemas`](#published-schemas).
 - **[Deployment](deployment.md)** — environment variables, encryption keys, TLS,
   and the Postgres role separation that makes the audit log append-only.
+- **[Glossary](glossary.md)** — every term used across these docs, defined in one place.
 
 ## Published schemas
 

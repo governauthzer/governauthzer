@@ -130,6 +130,8 @@ Fulfillment is the **open plane** — pick per system, mix freely:
 governauthzer ships the **contract** (signed events + reconciliation), not the connectors
 themselves — that's what keeps you un-locked-in.
 
+→ The operator's guide to wiring it up: **[Fulfillment](fulfillment.md)**.
+
 ## Where each thing lives
 
 | Concern | Surface | Reference |
