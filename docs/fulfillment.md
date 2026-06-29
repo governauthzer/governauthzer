@@ -23,12 +23,16 @@ fulfilled.
 ```mermaid
 flowchart TD
   G["governauthzer — decision plane"]
-  G -->|"signed event"| M1["1 · Webhook handler / Baton bridge"]
-  G -->|"signed event"| M2["2 · Audited manual task"]
-  G --> M3["3 · No subscription (standalone)"]
-  M1 --> T1["Apps with an API<br/>Slack, GitHub, AWS, …"]
+  G -->|"signed event"| M0["1 · Directory / IdP group bridge"]
+  G -->|"signed event"| M1["2 · Webhook handler / Baton bridge"]
+  G -->|"signed event"| M2["3 · Audited manual task"]
+  G --> M3["4 · No subscription (standalone)"]
+  M0 --> D["Central directory<br/>Google Workspace, Entra/AD, Okta"]
+  D --> TD["Every app it federates<br/>(SCIM / SAML groups)"]
+  M1 --> T1["Apps with their own API<br/>not federated"]
   M2 --> T2["Apps with no API"]
   M3 --> T3["status stays not_required"]
+  M0 -.->|"reconcile applied/failed"| G
   M1 -.->|"reconcile applied/failed"| G
   M2 -.->|"reconcile applied/failed"| G
 ```
@@ -37,9 +41,35 @@ Every approved grant and every revoke is published as an `access.approved` /
 `access.revoked` [CloudEvent](webhooks.md) to each matching webhook subscription. What
 consumes it is your choice — and you can mix modes across applications.
 
-## Mode 1 — a webhook handler (apps with an API)
+## Mode 1 — a directory / IdP group bridge (recommended for federated apps)
 
-For any target system with an API, run a small service that receives the signed
+Most companies already run a central directory — Google Workspace, Microsoft
+Entra / Active Directory, Okta — that provisions downstream SaaS by **group
+membership** (SCIM push or SAML group claims). When an app is wired to your
+directory that way, you don't need a connector for *that app at all*. You run one
+bridge that manages **group membership in the directory**, and the directory fans
+the change out to every app it federates.
+
+So you tie a `role` to a directory group; the bridge does one thing — on
+`access.approved` add the user to the group, on `access.revoked` remove them. One
+integration, to the directory's group API, covers your whole federated estate.
+
+- **Mapping** lives in the bridge config, keyed on `(application.slug, role.slug)`
+  → a group (DN / id / email). Convention: name `role.slug` to match the group;
+  override for composite roles.
+- **One credential, not one per app.** The bridge holds a single directory-admin
+  credential; the core still holds none.
+- **Reconciliation boundary:** the bridge confirms *"added to group"* and reports
+  `applied`. The app's own provisioning (driven by the directory's SCIM) is
+  eventually-consistent — the directory's job, not faked here.
+
+Use this for everything your directory federates; fall back to the per-app modes
+below only for apps that aren't wired to it.
+
+## Mode 2 — a webhook handler (apps with their own API)
+
+For a target system with an API that **isn't** fulfilled through your directory, run
+a small service that receives the signed
 CloudEvent and calls that API to add/remove the grant. Two flavors:
 
 - **Your own handler.** A few lines in whatever language you like: verify the HMAC
@@ -62,7 +92,7 @@ Either way, the handler maps **our** identifiers to the target's:
 That mapping is the connector's job — governauthzer is the system of record for *intent*,
 never for target *state*. See [Webhooks → The `data` payload](webhooks.md#the-data-payload).
 
-## Mode 2 — an audited manual task (apps with no API)
+## Mode 3 — an audited manual task (apps with no API)
 
 Roughly 40% of enterprise apps can't be auto-integrated. Instead of pretending a connector
 exists, close the loop honestly: a handler (or a person watching a queue) receives the
@@ -71,7 +101,7 @@ event, **does the change by hand**, and reports the outcome back through
 `failed`), visible to operators on the user's page. The audit trail stays complete either
 way.
 
-## Mode 3 — standalone (no fulfillment)
+## Mode 4 — standalone (no fulfillment)
 
 governauthzer runs perfectly well with **no** subscription at all — as the record of
 *intent* plus the audit trail, while provisioning happens out of band. A grant that
@@ -110,8 +140,8 @@ Full request/response shape: [Webhooks → Reconciliation](webhooks.md#reconcili
    [Admin guide → Webhooks](admin-guide.md#webhooks).
 2. **Mint a `reconcile` API token** (Admin → API tokens) for the consumer to report back.
    See [Admin guide → API tokens](admin-guide.md#api-tokens).
-3. **Run your consumer** — handler, Baton bridge, or manual-task runner. Verify signatures,
-   apply, reconcile.
+3. **Run your consumer** — a directory bridge, a webhook handler / Baton bridge, or a
+   manual-task runner. Verify signatures, apply, reconcile.
 
 The full technical contract — envelope, signing, retries, delivery semantics, versioning —
 is in **[Webhooks & CloudEvents](webhooks.md)**.

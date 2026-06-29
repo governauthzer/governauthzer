@@ -41,8 +41,9 @@ flowchart LR
 ```
 
 So the governance *is* the product, and connecting to target systems is an **open plane**
-you're never locked into — the recommended Baton bridge, your own webhook handler, or
-audited manual tasks for the apps that have no API.
+you're never locked into — a directory bridge (tie a role to a group in Google Workspace /
+Entra / Okta and let it fan out), a Baton bridge or your own webhook handler, or audited
+manual tasks for the apps that have no API.
 
 → The full mental model and the request → approve → grant loop: **[How it works](how-it-works.md)**.
 
@@ -65,7 +66,8 @@ audited manual tasks for the apps that have no API.
 - **[Admin guide](admin-guide.md)** — the operator's surface: configure OIDC login, build
   the catalog (apps/roles/workflows), manage users & identities, tokens, webhooks, audit.
 - **[Fulfillment](fulfillment.md)** — how access decisions actually reach target systems:
-  webhook handlers, the Baton bridge, audited manual tasks, and reconciliation.
+  directory/IdP group bridges, webhook handlers, the Baton bridge, audited manual tasks,
+  and reconciliation.
 - **[Management API](api.md)** — the HTTP contract your HRIS / onboarding system
   integrates against (identity axis: users + their identities + roster sync).
 - **[Webhooks & CloudEvents](webhooks.md)** — the outbound contract a provisioner

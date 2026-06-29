@@ -120,11 +120,15 @@ You can try this whole loop locally in about ten minutes — see
 
 Fulfillment is the **open plane** — pick per system, mix freely:
 
-1. **Recommended Baton bridge** — for any system with an API, stand on the open-source
-   connector layer instead of rebuilding it.
-2. **Your own webhook handler** — receive the signed CloudEvent and call the target's API
+1. **Directory / IdP group bridge** — tie a role to a group in your central directory
+   (Google Workspace, Entra/AD, Okta) and manage one membership; the directory's own
+   SCIM/SAML provisioning fans it out to every app it federates. One bridge covers your
+   whole federated estate — no connector per app.
+2. **Baton bridge** — for an API'd app *not* fulfilled through your directory, stand on
+   the open-source connector layer instead of rebuilding it.
+3. **Your own webhook handler** — receive the signed CloudEvent and call the target's API
    yourself (a small service; see [Webhooks & CloudEvents](webhooks.md)).
-3. **Audited manual task** — for the apps with no API at all, a human does it and marks it
+4. **Audited manual task** — for the apps with no API at all, a human does it and marks it
    done; reconciliation records `applied` / `failed`. No pretending a connector exists.
 
 governauthzer ships the **contract** (signed events + reconciliation), not the connectors

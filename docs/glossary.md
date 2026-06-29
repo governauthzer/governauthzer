@@ -51,9 +51,16 @@ Decision plane
 : governauthzer itself — the layer that owns the *intent* of access (who should have what,
   and the approve/audit around it). Contrast with fulfillment.
 
+Directory bridge (group-based fulfillment)
+: A fulfillment consumer that maps a `role.slug` to a group in a central directory
+  (Google Workspace, Entra/AD, Okta) and manages membership there. The directory's own
+  SCIM/SAML provisioning fans access out to every app it federates — one integration
+  instead of a connector per app. See [Fulfillment](fulfillment.md).
+
 Entitlement
 : A permission inside a target system (a group, a scope, an IAM policy). governauthzer has
-  **no** entitlement entity — a connector maps our `role.slug` → a target entitlement.
+  **no** entitlement entity — a connector maps our `role.slug` → a target entitlement,
+  most often a **directory group** (see directory bridge).
 
 External identity
 : How an HRIS identifies a user: `(source, external_id)` (e.g. Workday `employee_id`).
@@ -61,7 +68,7 @@ External identity
 
 Fulfillment
 : Making a target system match a decision (add/remove the grant). An **open plane**: a
-  webhook handler, a Baton bridge, or an audited manual task. See
+  directory bridge, a webhook handler, a Baton bridge, or an audited manual task. See
   [Fulfillment](fulfillment.md).
 
 HRIS
