@@ -29,7 +29,7 @@ Audit log / audit event
   [Audit-log protection](audit-log-protection.md).
 
 Baton / bridge
-: [Baton](https://github.com/conductorone/baton) is ConductorOne's open-source
+: [Baton](https://www.conductorone.com/docs/baton/intro/) is ConductorOne's open-source
   (Apache-2.0) connector framework. A *bridge* is a thin service that translates
   governauthzer events into Baton connector calls. See [Fulfillment](fulfillment.md).
 

@@ -47,7 +47,7 @@ CloudEvent and calls that API to add/remove the grant. Two flavors:
   API, return `2xx`. Best when you want full control or the target isn't covered by an
   off-the-shelf connector.
 - **A Baton bridge.** Rather than write a connector per system, stand on
-  [Baton](https://github.com/conductorone/baton) — ConductorOne's open-source
+  [Baton](https://github.com/conductorone/baton-sdk) — ConductorOne's open-source
   (Apache-2.0) connector framework, which already implements `grant` / `revoke` for many
   SaaS targets. The recommended pattern is a thin bridge that translates governauthzer's
   events into Baton connector calls. (The bridge is a separate component, not bundled in
