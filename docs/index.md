@@ -42,7 +42,7 @@ flowchart LR
 
 So the governance *is* the product, and connecting to target systems is an **open plane**
 you're never locked into — a directory bridge (tie a role to a group in Google Workspace /
-Entra / Okta and let it fan out), a Baton bridge or your own webhook handler, or audited
+Entra/AD / Okta and let it fan out), a Baton bridge or your own webhook handler, or audited
 manual tasks for the apps that have no API.
 
 → The full mental model and the request → approve → grant loop: **[How it works](how-it-works.md)**.

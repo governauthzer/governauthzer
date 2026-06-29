@@ -124,11 +124,11 @@ Fulfillment is the **open plane** — pick per system, mix freely:
    (Google Workspace, Entra/AD, Okta) and manage one membership; the directory's own
    SCIM/SAML provisioning fans it out to every app it federates. One bridge covers your
    whole federated estate — no connector per app.
-2. **Baton bridge** — for an API'd app *not* fulfilled through your directory, stand on
-   the open-source connector layer instead of rebuilding it.
-3. **Your own webhook handler** — receive the signed CloudEvent and call the target's API
-   yourself (a small service; see [Webhooks & CloudEvents](webhooks.md)).
-4. **Audited manual task** — for the apps with no API at all, a human does it and marks it
+2. **Webhook handler** — for an API'd app *not* fulfilled through your directory, receive
+   the signed CloudEvent and call the target's API. Write it yourself (a small service;
+   see [Webhooks & CloudEvents](webhooks.md)), or stand on the open-source connector layer
+   with a **Baton bridge** instead of rebuilding it.
+3. **Audited manual task** — for the apps with no API at all, a human does it and marks it
    done; reconciliation records `applied` / `failed`. No pretending a connector exists.
 
 governauthzer ships the **contract** (signed events + reconciliation), not the connectors
