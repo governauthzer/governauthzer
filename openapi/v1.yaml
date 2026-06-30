@@ -112,6 +112,38 @@ components:
         application_slug:
           type: string
 
+    Grant:
+      type: object
+      required: [application, role, user]
+      description: |
+        An active grant — a user who should hold a role. The bulk twin of the
+        outbound access events: same coordinates, minimal fields. `application.slug`
+        only namespaces the role (role slugs are unique per application). The
+        self/operator application is never included.
+      properties:
+        application:
+          type: object
+          required: [slug]
+          properties:
+            slug:
+              type: string
+        role:
+          type: object
+          required: [slug]
+          properties:
+            slug:
+              type: string
+        user:
+          type: object
+          required: [id, email]
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+
     User:
       type: object
       required: [id, email, name, status, created_at, updated_at, external_identities, omniauth_identities, roles]
@@ -537,6 +569,59 @@ paths:
                     type: string
                     format: date-time
                     nullable: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /grants:
+    get:
+      summary: List active grants (membership for reconciliation)
+      operationId: listGrants
+      description: |
+        Bulk read of active grants — who should hold which role — for a fulfilment
+        bridge to reconcile the target system against. Core is the source of truth;
+        a bridge pulls this fresh and never caches it. Accepts a reconcile-scoped
+        token (the bridge's token) or a full token. The self/operator application
+        is excluded. The unit is the grant; `application.slug` only namespaces the
+        role.
+      security:
+        - BearerToken: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+      responses:
+        "200":
+          description: Paginated grant list. Total count in `X-Total-Count` header; pagination links in `Link` header.
+          headers:
+            X-Total-Count:
+              description: Total number of records matching the filter (HTTP header — string-encoded integer).
+              schema:
+                type: string
+                pattern: "^[0-9]+$"
+            Link:
+              description: |
+                Pagination links per RFC 5988. Includes `rel="first"`, `rel="last"`,
+                and (when applicable) `rel="prev"` / `rel="next"`.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Grant"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "429":

@@ -47,6 +47,7 @@ Rails.application.routes.draw do
       post "sync/snapshots" => "sync/snapshots#create", as: :sync_snapshots
       post "applications/:application_id/reconciliations" => "reconciliations#create",
            as: :application_reconciliations
+      get "grants" => "grants#index", as: :grants
     end
   end
 

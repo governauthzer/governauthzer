@@ -1,9 +1,11 @@
 class ApiToken < ApplicationRecord
   PREFIX = "gva_".freeze
   # Action-scope, orthogonal to the source-scope below. `full` = management token
-  # (all endpoints); `reconcile` = may ONLY post reconciliation status. The
-  # management API enforces `full` by default (Api::V1::BaseController); only the
-  # reconciliation + whoami endpoints accept a `reconcile` token.
+  # (all endpoints); `reconcile` = the fulfilment-bridge token: it may post
+  # reconciliation status, read the grants list (GET /grants — desired membership
+  # to reconcile against), and call whoami — but nothing else in the management
+  # API. The management API enforces `full` by default (Api::V1::BaseController);
+  # endpoints that also accept a `reconcile` token opt out via skip_before_action.
   SCOPES = %w[full reconcile].freeze
 
   validates :name, presence: true
