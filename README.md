@@ -1,9 +1,6 @@
 # governauthzer
 
-**Govern access. Bring any provisioner – or use ours.**
-
-A self-hosted open source decision-plane IGA: request, approve, audit. Provision access however you like – never
-locked into a vendor.
+A self-hosted open source IGA: request, approve, audit. Provision access however you like – never locked into a vendor.
 
 > **Early stage – not production-ready.** Great for evaluation and feedback, not yet for governing real access.
 
@@ -14,8 +11,7 @@ locked into a vendor.
 
 ## What it is
 
-governauthzer owns access *intent* – who should have what, who approved it, why – with an
-append-only audit trail. It is **not** a provisioner and **not** an IdP. Every grant and
+governauthzer owns access *intent* – who should have what, who approved it, why – with an append-only audit trail. It is **not** a provisioner and **not** an IdP. Every grant and
 revoke is published as a signed webhook event, so you fulfill access with whatever you
 already use.
 
