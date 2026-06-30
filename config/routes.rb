@@ -48,6 +48,7 @@ Rails.application.routes.draw do
       post "applications/:application_id/reconciliations" => "reconciliations#create",
            as: :application_reconciliations
       get "grants" => "grants#index", as: :grants
+      post "drift-reports" => "drift_reports#create", as: :drift_reports
     end
   end
 

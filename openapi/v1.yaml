@@ -469,6 +469,71 @@ components:
             false when the event was a revoke (the access row no longer exists);
             the report is still recorded in the audit log.
 
+    DriftReportCreate:
+      type: object
+      required: [reports]
+      description: |
+        A fulfilment bridge's drift sweep: per group, members that are missing (in
+        core, not in the target) or extra (in the target, not in core). Sent only
+        when drift was found. Audit-only on the server — no state changes.
+      properties:
+        observed_at:
+          type: string
+          format: date-time
+          description: When the bridge observed the target state.
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriftReportEntry"
+
+    DriftReportEntry:
+      type: object
+      required: [application_slug, role_slug]
+      properties:
+        application_slug:
+          type: string
+        role_slug:
+          type: string
+        missing:
+          type: array
+          description: In core (should be a member) but absent from the target.
+          items:
+            type: object
+            required: [email]
+            properties:
+              user_id:
+                type: string
+                format: uuid
+              email:
+                type: string
+                format: email
+        extra:
+          type: array
+          description: Present in the target but not in core (no matching grant).
+          items:
+            type: object
+            required: [email]
+            properties:
+              email:
+                type: string
+                format: email
+
+    DriftReportResponse:
+      type: object
+      required: [recorded, group_count, missing_total, extra_total, audit_event_id]
+      properties:
+        recorded:
+          type: boolean
+        group_count:
+          type: integer
+        missing_total:
+          type: integer
+        extra_total:
+          type: integer
+        audit_event_id:
+          type: string
+          format: uuid
+
   responses:
     Unauthorized:
       description: Missing or invalid API token.
@@ -938,6 +1003,39 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /drift-reports:
+    post:
+      summary: Report a drift sweep (target diverged from intent)
+      operationId: reportDrift
+      description: |
+        A fulfilment bridge reports out-of-band drift — group membership in the
+        target diverged from core's active grants — so it lands in the tamper-proof
+        audit log. Sent only when drift is found. Audit-only: one
+        `provisioning.drift_detected` event per sweep; no Access state changes.
+
+        Accepts a reconcile-scoped token (the bridge's token) or a full token.
+      security:
+        - BearerToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriftReportCreate"
+      responses:
+        "200":
+          description: Drift sweep recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriftReportResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "422":
           $ref: "#/components/responses/ValidationFailed"
         "429":

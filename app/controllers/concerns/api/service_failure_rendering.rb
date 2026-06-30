@@ -93,6 +93,12 @@ module Api::ServiceFailureRendering
       status: :unprocessable_content,
       code: "event_application_mismatch",
       message: "The event does not belong to this application."
+    },
+    # --- Drift reporting ---
+    invalid_drift_report: {
+      status: :unprocessable_content,
+      code: "invalid_drift_report",
+      message: "reports must be a non-empty array; each entry needs application_slug and role_slug."
     }
   }.freeze
 
