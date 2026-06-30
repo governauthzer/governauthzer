@@ -2,15 +2,15 @@
 
 **Govern access. Bring any provisioner – or use ours.**
 
-A decision-plane IGA: request, approve, audit. Provision access however you like – never
+A self-hosted open source decision-plane IGA: request, approve, audit. Provision access however you like – never
 locked into a vendor.
+
+> **Early stage – not production-ready.** Great for evaluation and feedback, not yet for governing real access.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![Rails 8.1](https://img.shields.io/badge/Rails-8.1-CC0000.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13%2B-336791.svg)
 
-> **Self-hosted open source (AGPL-3.0).** Ships the full governance loop — request,
-> approve, audit, and signed outbound events.
 
 ## What it is
 
