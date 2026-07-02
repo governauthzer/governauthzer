@@ -140,6 +140,21 @@ class Api::V1::Sync::SnapshotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "count_mismatch", JSON.parse(response.body).dig("error", "code")
   end
 
+  test "missing expected_count is rejected explicitly, not as count_mismatch" do
+    post_snapshot({ as_of: 1.hour.ago.utc.iso8601, users: [ alice_payload, bob_payload ] })
+
+    assert_response :bad_request
+    assert_response_schema_confirm(400)
+    assert_equal "expected_count_missing", JSON.parse(response.body).dig("error", "code")
+  end
+
+  test "non-integer expected_count is rejected explicitly" do
+    post_snapshot({ as_of: 1.hour.ago.utc.iso8601, expected_count: "two", users: [ alice_payload, bob_payload ] })
+
+    assert_response :bad_request
+    assert_equal "expected_count_missing", JSON.parse(response.body).dig("error", "code")
+  end
+
   test "terminated status in payload is rejected" do
     post_snapshot({ as_of: 1.hour.ago.utc.iso8601, expected_count: 2, users: [ alice_payload(status: "terminated"), bob_payload ] })
 

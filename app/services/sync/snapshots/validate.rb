@@ -52,11 +52,18 @@ module Sync
       end
 
       def check_count
+        # Committee enforces the schema only in test env; a missing/malformed
+        # expected_count must not fall through to the drift math (nil.to_i == 0
+        # would read as a 100% drift and blame the agent's count).
+        unless @expected_count.is_a?(Integer) && @expected_count >= 0
+          return failure(:expected_count_missing, expected_count: @expected_count)
+        end
+
         size = @users.size
-        denom = [ @expected_count.to_i, 1 ].max
-        drift = (size - @expected_count.to_i).abs.to_f / denom
+        denom = [ @expected_count, 1 ].max
+        drift = (size - @expected_count).abs.to_f / denom
         return nil if drift <= COUNT_DRIFT_THRESHOLD
-        failure(:count_mismatch, expected_count: @expected_count.to_i, actual_count: size)
+        failure(:count_mismatch, expected_count: @expected_count, actual_count: size)
       end
 
       def check_users
