@@ -19,8 +19,12 @@ class AuditEvent < ApplicationRecord
   #
   # `metadata` convention:
   #   - "source"  → the write CHANNEL the operation entered through:
-  #                 "api" | "admin-ui" | "job" | "*-cli" (auth.* events use the
-  #                 auth method here, e.g. "oidc"). Keep channel queries honest —
+  #                 "api" | "admin-ui" (operator UI, behind the operator gate) |
+  #                 "web-ui" (end-user portal: self-service requests + approver
+  #                 decisions) | "job" | "*-cli" (auth.* events use the auth
+  #                 method here, e.g. "oidc"). The admin-ui/web-ui split mirrors
+  #                 the privilege boundary, so "all privileged-surface activity"
+  #                 stays a one-clause query. Keep channel queries honest —
   #                 do NOT put a domain value (e.g. an HRIS source) under "source".
   #   - "via"     → the trigger sub-flow when one channel has several, e.g.
   #                 "snapshot" / "orphaned_sweeper" / "termination".

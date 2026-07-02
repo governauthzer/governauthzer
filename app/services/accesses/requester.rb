@@ -61,7 +61,7 @@ module Accesses
         actor: @actor,
         targets: [ access.user, access, access.role ],
         justification: @justification,
-        metadata: { "source" => "admin-ui", "via" => "self_request", "decision_method" => "workflow" }
+        metadata: { "source" => "web-ui", "via" => "self_request", "decision_method" => "workflow" }
       )
     end
 
@@ -71,7 +71,7 @@ module Accesses
         actor: @actor,
         targets: [ access.user, access, access.role ],
         justification: @justification,
-        metadata: { "source" => "admin-ui", "via" => "self_request" }
+        metadata: { "source" => "web-ui", "via" => "self_request" }
       )
     end
   end

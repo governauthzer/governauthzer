@@ -44,7 +44,7 @@ module Accesses
         actor: @actor,
         targets: [ @access.user, @access, @access.role ],
         justification: @comment,
-        metadata: { "source" => "admin-ui", "via" => "approval", "decision_method" => "workflow" }
+        metadata: { "source" => "web-ui", "via" => "approval", "decision_method" => "workflow" }
       )
     end
 
@@ -54,7 +54,7 @@ module Accesses
         actor: @actor,
         targets: [ @access.user, @access, @access.role ],
         justification: @comment,
-        metadata: { "source" => "admin-ui", "via" => "approval", "step_position" => step.position }
+        metadata: { "source" => "web-ui", "via" => "approval", "step_position" => step.position }
       )
     end
   end
