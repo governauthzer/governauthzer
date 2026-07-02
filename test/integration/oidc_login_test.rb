@@ -44,8 +44,33 @@ class OidcLoginTest < ActionDispatch::IntegrationTest
     assert_difference("AuditEvent.where(event_type: 'auth.login.succeeded').count", 1) do
       get "/auth/#{@provider.slug}/callback"
     end
-    assert_redirected_to admin_root_path
+    assert_redirected_to root_path
     assert cookies[:session].present?, "a session cookie is set"
+  end
+
+  test "a non-operator lands on the end-user dashboard, not the admin UI" do
+    user = User.create!(email: "eve@example.com", name: "Eve Enduser")
+    @provider.omniauth_identities.create!(user: user, subject: "sub-eve")
+    mock_oidc(uid: "sub-eve")
+
+    get "/auth/#{@provider.slug}/callback"
+    assert_redirected_to root_path
+    follow_redirect!
+    assert_response :success, "the landing page must not be the admin 403"
+  end
+
+  test "an operator also lands on the dashboard and can reach the admin UI from there" do
+    user = User.create!(email: "opal@example.com", name: "Opal Operator")
+    app = Application.create!(name: "governauthzer", slug: Application::SELF_SLUG)
+    role = app.roles.create!(name: "Operator", slug: "operator", protected: true)
+    Access.create!(user: user, role: role, status: "approved", source: "manual")
+    @provider.omniauth_identities.create!(user: user, subject: "sub-opal")
+    mock_oidc(uid: "sub-opal")
+
+    get "/auth/#{@provider.slug}/callback"
+    assert_redirected_to root_path
+    get admin_root_path
+    assert_response :success, "the operator gate must accept the session"
   end
 
   test "an inactive user is refused even with a linked identity" do
