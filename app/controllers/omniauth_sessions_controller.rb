@@ -41,7 +41,7 @@ class OmniauthSessionsController < ApplicationController
       )
     end
 
-    redirect_to admin_root_path, notice: "Signed in as #{user.name}."
+    redirect_to root_path, notice: "Signed in as #{user.name}."
   end
 
   def failure

@@ -9,11 +9,16 @@ class WebhookDelivery < ApplicationRecord
   validates :payload, presence: true
   validates :status, inclusion: { in: STATUSES }
 
-  # Rows ready for a (re)delivery attempt: never-delivered or transiently-failed,
-  # and past their scheduled retry time (NULL = due now).
-  scope :deliverable, lambda {
-    where(status: %w[pending failed])
-      .where("next_retry_at IS NULL OR next_retry_at <= ?", Time.current)
+  # Rows whose (re)delivery job is presumed lost. The primary retry path is
+  # DeliveryJob's self-re-enqueue, so anything still pending/failed well past its
+  # due time has no live job behind it (worker died between the row update and the
+  # enqueue, or the queue DB was purged/restored). `grace` keeps the sweeper from
+  # racing a healthy-but-slightly-late scheduled retry into a duplicate POST.
+  # Pending rows carry no next_retry_at — their due time is creation.
+  scope :stuck, lambda { |grace:|
+    cutoff = grace.ago
+    where(status: "pending", created_at: ..cutoff)
+      .or(where(status: "failed", next_retry_at: ..cutoff))
   }
 
   def delivered?

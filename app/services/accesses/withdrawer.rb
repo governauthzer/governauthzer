@@ -16,7 +16,7 @@ module Accesses
           event_type: "access.withdrawn",
           actor: @actor,
           targets: [ @access.user, @access, @access.role ],
-          metadata: { "source" => "admin-ui", "via" => "self_withdraw" }
+          metadata: { "source" => "web-ui", "via" => "self_withdraw" }
         )
         @access.destroy!
         success(@access)

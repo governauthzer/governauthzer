@@ -23,6 +23,7 @@ class Accesses::WorkflowTest < ActiveSupport::TestCase
     assert_equal "pending", access.status
     assert_equal @requester, access.requested_by
     assert_equal @manager, access.current_approver
+    assert_audit_channel "access.requested", "web-ui"
   end
 
   test "request for a protected role is refused (no self-request escalation)" do
@@ -79,6 +80,7 @@ class Accesses::WorkflowTest < ActiveSupport::TestCase
 
     assert_equal "approved", access.reload.status
     assert_equal 1, access.approval_decisions.approvals.count
+    assert_audit_channel "access.approved", "web-ui"
   end
 
   test "approval of a multi-step request advances rather than granting" do
@@ -91,6 +93,7 @@ class Accesses::WorkflowTest < ActiveSupport::TestCase
     end
     assert_equal "pending", access.reload.status
     assert_equal second, access.current_approver
+    assert_audit_channel "access.approval_recorded", "web-ui"
 
     assert_difference("AuditEvent.where(event_type: 'access.approved').count", 1) do
       Accesses::Approver.call(access: access, approver: second, actor: second)
@@ -113,6 +116,7 @@ class Accesses::WorkflowTest < ActiveSupport::TestCase
       assert result.success
     end
     assert_not Access.exists?(access.id)
+    assert_audit_channel "access.denied", "web-ui"
   end
 
   # ----- withdraw ------------------------------------------------------------
@@ -125,6 +129,7 @@ class Accesses::WorkflowTest < ActiveSupport::TestCase
       assert result.success
     end
     assert_not Access.exists?(access.id)
+    assert_audit_channel "access.withdrawn", "web-ui"
   end
 
   # ----- policy --------------------------------------------------------------
@@ -140,6 +145,13 @@ class Accesses::WorkflowTest < ActiveSupport::TestCase
   end
 
   private
+
+  # The end-user portal channel ("web-ui") must never be recorded as "admin-ui" —
+  # the channel split mirrors the privilege boundary (see AuditEvent.record! docs).
+  def assert_audit_channel(event_type, expected)
+    event = AuditEvent.where(event_type: event_type).order(:occurred_at).last
+    assert_equal expected, event.metadata["source"], "audit channel for #{event_type}"
+  end
 
   def manager_workflow
     wf = ApprovalWorkflow.create!(name: "Manager", slug: "mgr-flow")

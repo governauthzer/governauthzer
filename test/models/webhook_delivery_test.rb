@@ -24,17 +24,21 @@ class WebhookDeliveryTest < ActiveSupport::TestCase
     assert_equal 0, d.attempt_count
   end
 
-  test "deliverable scope picks pending/failed rows past their next_retry_at" do
-    due_pending = build_delivery(status: "pending")
-    due_failed  = build_delivery(status: "failed", next_retry_at: 1.minute.ago)
-    not_due     = build_delivery(status: "failed", next_retry_at: 1.hour.from_now)
-    delivered   = build_delivery(status: "delivered")
-    dead        = build_delivery(status: "dead")
+  test "stuck scope picks only rows overdue past the grace window" do
+    stale_pending  = build_delivery(status: "pending", created_at: 30.minutes.ago)
+    fresh_pending  = build_delivery(status: "pending")
+    overdue_failed = build_delivery(status: "failed", next_retry_at: 30.minutes.ago)
+    barely_failed  = build_delivery(status: "failed", next_retry_at: 1.minute.ago)
+    scheduled      = build_delivery(status: "failed", next_retry_at: 1.hour.from_now)
+    delivered      = build_delivery(status: "delivered")
+    dead           = build_delivery(status: "dead")
 
-    ids = WebhookDelivery.deliverable.pluck(:id)
-    assert_includes ids, due_pending.id
-    assert_includes ids, due_failed.id
-    assert_not_includes ids, not_due.id
+    ids = WebhookDelivery.stuck(grace: 10.minutes).pluck(:id)
+    assert_includes ids, stale_pending.id
+    assert_includes ids, overdue_failed.id
+    assert_not_includes ids, fresh_pending.id, "a fresh pending row still has its fanout-enqueued job"
+    assert_not_includes ids, barely_failed.id, "a recently-due failed row may still have a live retry job"
+    assert_not_includes ids, scheduled.id
     assert_not_includes ids, delivered.id
     assert_not_includes ids, dead.id
   end

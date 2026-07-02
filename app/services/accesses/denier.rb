@@ -23,7 +23,7 @@ module Accesses
           actor: @actor,
           targets: [ @access.user, @access, @access.role ],
           justification: @comment,
-          metadata: { "source" => "admin-ui", "via" => "approval", "step_position" => @access.current_step&.position }
+          metadata: { "source" => "web-ui", "via" => "approval", "step_position" => @access.current_step&.position }
         )
         notify_denied(@access, @comment)
         @access.destroy!
