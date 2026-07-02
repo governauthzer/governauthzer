@@ -7,9 +7,11 @@ class ExternalIdentity < ApplicationRecord
 
   before_validation :apply_source_normalization
 
+  # `source` is slug-shaped by convention (so it stays comparable with role and
+  # application slugs); the actual rule lives in Sluggable.normalize. This method
+  # stays as the public entry point — ApiToken and the sync/user services call it.
   def self.normalize_source(raw)
-    return nil if raw.blank?
-    raw.downcase.gsub(/[^a-z0-9-]/, "-").squeeze("-")
+    Sluggable.normalize(raw)
   end
 
   def audit_display

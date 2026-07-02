@@ -1,22 +1,15 @@
 class Role < ApplicationRecord
+  include Sluggable
+
   belongs_to :application
   belongs_to :approval_workflow, optional: true
   has_many :accesses, dependent: :restrict_with_error
   has_many :users, through: :accesses
 
   validates :name, presence: true
-  validates :slug, presence: true, uniqueness: { scope: :application_id }
-
-  before_validation :normalize_slug
+  validates :slug, uniqueness: { scope: :application_id }
 
   def operator_role?
     application.itself?
-  end
-
-  private
-
-  def normalize_slug
-    return if slug.blank?
-    self.slug = slug.downcase.gsub(/[^a-z0-9-]/, "-").squeeze("-")
   end
 end
