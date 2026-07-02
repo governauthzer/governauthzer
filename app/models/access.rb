@@ -29,10 +29,6 @@ class Access < ApplicationRecord
     status == "approved"
   end
 
-  def expired?
-    expires_at.present? && expires_at <= Time.current
-  end
-
   def approved_by
     final_approval_decision&.approver
   end
