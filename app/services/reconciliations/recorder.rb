@@ -26,10 +26,10 @@ module Reconciliations
       return failure(:unknown_event) if event.nil?
       return failure(:unknown_event) unless Outbound::CloudEventBuilder.publishable_type?(event.event_type)
 
-      role = Role.find_by(id: target_id(event, "Role"))
+      role = Role.find_by(id: event.target_id("Role"))
       return failure(:event_application_mismatch) if role.nil? || role.application_id != @application.id
 
-      access = Access.find_by(id: target_id(event, "Access"))
+      access = Access.find_by(id: event.target_id("Access"))
 
       ActiveRecord::Base.transaction do
         access&.update!(provisioning_status: @status)
@@ -50,12 +50,6 @@ module Reconciliations
       end
 
       success(event_id: @event_id, provisioning_status: @status, access_present: access.present?)
-    end
-
-    private
-
-    def target_id(event, type)
-      event.targets.find { |t| t["type"] == type }&.dig("id")
     end
   end
 end

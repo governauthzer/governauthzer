@@ -6,8 +6,6 @@ module Api
     class ReconciliationsController < Api::V1::BaseController
       skip_before_action :require_full_access!
 
-      UUID_FORMAT = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
-
       # POST /api/v1/applications/:application_id/reconciliations
       def create
         application = find_application
@@ -32,7 +30,7 @@ module Api
 
       def find_application
         id = params[:application_id].to_s
-        application = Application.find_by(id: id) if id.match?(UUID_FORMAT)
+        application = Application.find_by(id: id) if id.match?(Reconciliations::Recorder::UUID_FORMAT)
         return application if application
 
         render_error(code: "not_found", status: :not_found, message: "Application not found.")
