@@ -78,7 +78,7 @@ module Outbound
       role = Role.find_by(id: @audit_event.target_id("Role"))
       user = User.find_by(id: @audit_event.target_id("User"))
       return nil if role.nil? || user.nil?
-      return nil if role.application.itself?
+      return nil if role.application.self_app?
 
       {
         "specversion" => SPEC_VERSION,

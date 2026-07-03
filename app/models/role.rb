@@ -10,6 +10,6 @@ class Role < ApplicationRecord
   validates :slug, uniqueness: { scope: :application_id }
 
   def operator_role?
-    application.itself?
+    application.self_app?
   end
 end

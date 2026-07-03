@@ -61,7 +61,7 @@ class Admin::ApplicationsController < Admin::BaseController
   # The governauthzer-itself application underpins operator authorization (operator?
   # resolves roles by its slug), so it is system-managed and read-only in the UI.
   def block_system_application!
-    return unless @application.itself?
+    return unless @application.self_app?
     redirect_to admin_applications_path,
                 alert: "The governauthzer application is system-managed and cannot be modified."
   end

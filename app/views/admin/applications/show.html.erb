@@ -7,9 +7,9 @@
   <div class="flex items-center justify-between mb-1">
     <h1 class="page-title">
       <%= @application.name %>
-      <% if @application.itself? %><span class="ml-1 text-sm text-gray-400">(system)</span><% end %>
+      <% if @application.self_app? %><span class="ml-1 text-sm text-gray-400">(system)</span><% end %>
     </h1>
-    <% unless @application.itself? %>
+    <% unless @application.self_app? %>
       <div class="flex items-center gap-2">
         <%= link_to "Edit", edit_admin_application_path(@application), class: "btn btn-secondary btn-sm" %>
         <%= button_to "Delete", admin_application_path(@application), method: :delete,
@@ -22,7 +22,7 @@
 
   <div class="flex items-center justify-between mb-4">
     <h2 class="section-label">Roles</h2>
-    <% unless @application.itself? %>
+    <% unless @application.self_app? %>
       <%= link_to "Add role", new_admin_application_role_path(@application),
                   class: "btn btn-primary btn-sm" %>
     <% end %>
@@ -55,7 +55,7 @@
               <td class="text-gray-600">
                 <%= role.approval_workflow&.name || "Default (manager approval)" %>
               </td>
-              <% if @application.itself? %>
+              <% if @application.self_app? %>
                 <td class="text-gray-400 text-xs" colspan="2">system-managed</td>
               <% else %>
                 <td class="text-right">
