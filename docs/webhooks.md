@@ -158,7 +158,9 @@ Content-Type: application/json
 - `status` is `applied` or `failed`.
 - `event_id` is the CloudEvent `id` you received (= the AuditEvent id).
 - The token must be **`reconcile`-scoped** (see [API → Token scopes](api.md#token-scopes)).
-  A reconcile token cannot touch the rest of the management API.
+  Besides reconciliation it can read `GET /api/v1/grants` and post
+  `POST /api/v1/drift-reports` (the [drift-detection loop](fulfillment.md#drift-detection)),
+  but nothing else in the management API.
 
 Core resolves `event_id` → the role/application (validating the role belongs to
 `:application_id`) → the access. If the access still exists (a grant) its

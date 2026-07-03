@@ -65,7 +65,7 @@ curl -sS https://<your-host>/api/v1/whoami \
 | Scope | Can call | Use |
 | --- | --- | --- |
 | `full` (default) | the whole management API | HRIS sync, bootstrap tooling |
-| `reconcile` | only `whoami` + the [reconciliation endpoint](webhooks.md#reconciliation) | a provisioner bridge reporting status |
+| `reconcile` | `whoami` + the [bridge-facing endpoints](#fulfillment-plane-bridge-facing): reconciliation, grants read, drift reports | a provisioner bridge |
 
 A `reconcile` token hitting a management endpoint gets `403 scope_insufficient`.
 Enforcement is fail-safe: every endpoint requires `full` unless it explicitly opts out.
@@ -118,14 +118,17 @@ orphan ⇒ access freeze + cascade), with guardrails: a circuit breaker rejects 
 snapshot that would terminate more than a threshold of active users, plus
 `expected_count` and `dry_run`. It requires a **source-scoped** token.
 
-### Reconciliation
+### Fulfillment plane (bridge-facing)
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| `POST` | `/api/v1/applications/:application_id/reconciliations` | A bridge reports `applied` / `failed` for a delivered event. Needs a `reconcile`-scoped token. |
+| `POST` | `/api/v1/applications/:application_id/reconciliations` | A bridge reports `applied` / `failed` for a delivered event. |
+| `GET` | `/api/v1/grants` | Bulk read of active grants — the desired membership a bridge reconciles the target against. Paginated; the self/operator application is excluded. |
+| `POST` | `/api/v1/drift-reports` | A bridge records an out-of-band drift sweep as one `provisioning.drift_detected` audit event. Audit-only, no state change. |
 
-Documented with the outbound flow it closes — see
-[Webhooks → Reconciliation](webhooks.md#reconciliation).
+All three accept a **`reconcile`-scoped token** (or `full`). Documented with the
+outbound flow they close — see [Webhooks → Reconciliation](webhooks.md#reconciliation)
+and [Fulfillment → Drift detection](fulfillment.md#drift-detection).
 
 ## What the API does *not* do
 

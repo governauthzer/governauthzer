@@ -46,6 +46,7 @@ The app **fails to boot** without `SECRET_KEY_BASE` and the three encryption key
 | `GOVERNAUTHZER_HOST` | `http://localhost:3000` | Base URL for generated links and emails. Set to your public URL. |
 | `GOVERNAUTHZER_EVENT_SOURCE` | `https://governauthzer.dev` | CloudEvents `source` identifying this instance. Set to your instance URL. |
 | `GOVERNAUTHZER_SCHEMA_HOST` | `https://governauthzer.dev/schemas` | Registry host the outbound `dataschema` URLs point at. Defaults to the canonical project registry; override only if you mirror the JSON Schemas yourself. |
+| `GOVERNAUTHZER_DATABASE_HOST` | `localhost` | PostgreSQL host. |
 | `GOVERNAUTHZER_DATABASE_USER` | `governauthzer` (owner) | DB role the app connects as. Set to the restricted runtime role for [audit protection](audit-log-protection.md). |
 | `GOVERNAUTHZER_DATABASE_PASSWORD` | — | password for that role |
 | `FORCE_SSL` | `true` | Enforce HTTPS (redirect + HSTS + secure cookies). Set `false` only behind upstream TLS — logs a loud warning. |
@@ -136,6 +137,7 @@ Solid Queue runs the recurring sweepers in production (`config/recurring.yml`):
 | `Sync::OrphanedSweeper` | hourly | promotes past-grace orphaned users to terminated |
 | `Users::ActivationSweeper` | hourly | flips `pending_start` users to `active` on their start date |
 | `Accesses::ExpirySweeper` | hourly | revokes time-bounded grants past `expires_at` |
+| `Outbound::RedeliverySweeper` | every 15 min | re-enqueues webhook deliveries whose retry job was lost (crashed worker, purged queue DB) |
 
 Run a Solid Queue worker (e.g. `SOLID_QUEUE_IN_PUMA=true` to run it inside Puma, or a
 separate `bin/jobs` process).

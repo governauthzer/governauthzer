@@ -126,12 +126,30 @@ POST /api/v1/applications/:application_id/reconciliations
 
 Full request/response shape: [Webhooks → Reconciliation](webhooks.md#reconciliation).
 
+## Drift detection
+
+Events cover changes that flow *through* governauthzer. A change made directly in the
+target — someone removes a group member by hand — is **out-of-band drift**, and no event
+exists to catch it. The contract closes this with a pull-and-compare loop the consumer
+runs on a schedule:
+
+1. **Pull intent**: `GET /api/v1/grants` — the full active-grant list (who should hold
+   which role). Core is the source of truth; pull it fresh, never cache it.
+2. **List reality** in the target system and diff.
+3. **Report findings**: `POST /api/v1/drift-reports` — sent only when drift is found.
+   Each sweep lands as one `provisioning.drift_detected` event in the tamper-proof
+   audit log.
+
+Drift reporting is **detect + audit only**: core records that reality diverged from
+intent, it does not auto-remediate the target. Both endpoints accept the same
+`reconcile`-scoped token as reconciliation.
+
 ## Two directions, two secrets
 
 | Direction | Mechanism |
 | --- | --- |
 | **core → consumer** (events out) | **HMAC-SHA256** signature on every delivery (the subscription's `signing_secret`). |
-| **consumer → core** (reconcile back) | a **`reconcile`-scoped [API token](admin-guide.md#api-tokens)** — it can *only* post reconciliation, nothing else. |
+| **consumer → core** (reconcile / grants / drift) | a **`reconcile`-scoped [API token](admin-guide.md#api-tokens)** — limited to the bridge-facing endpoints (reconciliation, grants read, drift reports), nothing else in the management API. |
 
 ## Setting it up
 
