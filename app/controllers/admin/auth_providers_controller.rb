@@ -12,12 +12,7 @@ class Admin::AuthProvidersController < Admin::BaseController
   def create
     @auth_provider = AuthProvider.new(create_attrs)
     if @auth_provider.save
-      AuditEvent.record!(
-        event_type: "auth_provider.created",
-        actor: current_user,
-        targets: @auth_provider,
-        metadata: { "source" => "admin-ui" }
-      )
+      record_admin_audit("auth_provider.created", @auth_provider)
       redirect_to admin_auth_providers_path, notice: "Provider created."
     else
       render :new, status: :unprocessable_content
@@ -31,13 +26,7 @@ class Admin::AuthProvidersController < Admin::BaseController
     @auth_provider.assign_attributes(update_attrs)
     changed = @auth_provider.changes
     if @auth_provider.save
-      AuditEvent.record!(
-        event_type: "auth_provider.updated",
-        actor: current_user,
-        targets: @auth_provider,
-        attribute_changes: redact_secret_diff(changed),
-        metadata: { "source" => "admin-ui" }
-      )
+      record_admin_audit("auth_provider.updated", @auth_provider, attribute_changes: redact_secret_diff(changed))
       redirect_to admin_auth_providers_path, notice: "Provider updated."
     else
       render :edit, status: :unprocessable_content
@@ -47,12 +36,7 @@ class Admin::AuthProvidersController < Admin::BaseController
   def destroy
     snapshot = { "id" => @auth_provider.id, "slug" => @auth_provider.slug, "name" => @auth_provider.name }
     if @auth_provider.destroy
-      AuditEvent.record!(
-        event_type: "auth_provider.deleted",
-        actor: current_user,
-        targets: @auth_provider,
-        metadata: { "source" => "admin-ui", "snapshot" => snapshot }
-      )
+      record_admin_audit("auth_provider.deleted", @auth_provider, snapshot: snapshot)
       redirect_to admin_auth_providers_path, notice: "Provider deleted."
     else
       redirect_to admin_auth_providers_path,

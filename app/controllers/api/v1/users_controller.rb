@@ -1,4 +1,6 @@
 class Api::V1::UsersController < Api::V1::BaseController
+  include Api::UserParams
+
   before_action :find_user, only: %i[show update destroy]
 
   SORT_WHITELIST = %w[created_at updated_at email name status].freeze
@@ -79,29 +81,15 @@ class Api::V1::UsersController < Api::V1::BaseController
 
   def create_params
     params.require(:user).permit(
-      :email, :name, :status, :manager_id, :department, :title, :start_date, :end_date,
+      *Api::UserParams::UPDATABLE_ATTRS,
       external_identities: %i[source external_id],
       omniauth_identities: %i[auth_provider_slug subject],
       manager_external_id: %i[source external_id]
     )
   end
 
-  def update_params
-    params.require(:user).permit(
-      :email, :name, :status, :manager_id, :department, :title, :start_date, :end_date,
-      manager_external_id: %i[source external_id]
-    )
-  end
-
   def extract_attrs(permitted)
     permitted.except(:external_identities, :omniauth_identities, :manager_external_id).to_h
-  end
-
-  def extract_manager_external_id(permitted)
-    return ApplicationService::NOT_PROVIDED unless params[:user].key?(:manager_external_id)
-    raw = permitted[:manager_external_id]
-    return nil if raw.nil?
-    raw.to_h.symbolize_keys
   end
 
   def nested_array(param)

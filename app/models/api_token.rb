@@ -18,8 +18,6 @@ class ApiToken < ApplicationRecord
   # exactly one source (Decision 1: token scope is the auth boundary).
   before_validation :normalize_source
 
-  scope :live, -> { where("expires_at IS NULL OR expires_at > ?", Time.current) }
-
   # Token format: `gva_<43 chars>` — 4-char prefix for grepability + secret-scanner
   # detection, plus 256 bits of entropy from urlsafe_base64(32).
   def self.generate_raw_token

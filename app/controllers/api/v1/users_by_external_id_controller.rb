@@ -1,4 +1,6 @@
 class Api::V1::UsersByExternalIdController < Api::V1::BaseController
+  include Api::UserParams
+
   def update
     user = lookup_user
     return render_external_identity_not_found unless user
@@ -32,19 +34,5 @@ class Api::V1::UsersByExternalIdController < Api::V1::BaseController
       message: "No user found for the given (source, external_id).",
       details: { "source" => params[:source], "external_id" => params[:external_id] }
     )
-  end
-
-  def update_params
-    params.require(:user).permit(
-      :email, :name, :status, :manager_id, :department, :title, :start_date, :end_date,
-      manager_external_id: %i[source external_id]
-    )
-  end
-
-  def extract_manager_external_id(permitted)
-    return ApplicationService::NOT_PROVIDED unless params[:user].key?(:manager_external_id)
-    raw = permitted[:manager_external_id]
-    return nil if raw.nil?
-    raw.to_h.symbolize_keys
   end
 end

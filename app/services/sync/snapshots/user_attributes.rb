@@ -14,6 +14,15 @@ module Sync
         attrs.delete(:status) if attrs[:status].blank?
         attrs
       end
+
+      # Assigns the payload onto the (unsaved) user and returns the would-be diff.
+      # The one definition of "does this snapshot row change the user": dry-run
+      # counts these diffs, apply persists them — sharing it keeps the two from
+      # disagreeing.
+      def stage_snapshot_changes(user, payload)
+        user.assign_attributes(assignable_attrs(payload))
+        user.changes
+      end
     end
   end
 end

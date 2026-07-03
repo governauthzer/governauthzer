@@ -25,7 +25,7 @@ module Api
                       .includes(:user, role: :application)
                       .order(:created_at, :id)
 
-        self_app_id = Application.itself_record&.id
+        self_app_id = Application.self_app&.id
         scope = scope.where(role: Role.where.not(application_id: self_app_id)) if self_app_id
         scope
       end

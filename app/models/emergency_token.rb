@@ -8,10 +8,6 @@ class EmergencyToken < ApplicationRecord
   validates :reason, presence: true
   validates :expires_at, presence: true
 
-  scope :unused,  -> { where(used_at: nil) }
-  scope :live,    -> { where("expires_at > ?", Time.current) }
-  scope :active,  -> { unused.live }
-
   def self.digest(raw_token)
     Digest::SHA256.hexdigest(raw_token)
   end

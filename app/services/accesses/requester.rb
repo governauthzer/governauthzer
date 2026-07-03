@@ -11,12 +11,11 @@ module Accesses
   class Requester < ApplicationService
     include AccessNotifications
 
-    def initialize(user:, role:, actor:, justification: nil, expires_at: nil)
+    def initialize(user:, role:, actor:, justification: nil)
       @user = user
       @role = role
       @actor = actor
       @justification = justification
-      @expires_at = expires_at
     end
 
     def call
@@ -26,7 +25,7 @@ module Accesses
       access = Access.new(
         user: @user, role: @role, requested_by: @user,
         source: "self_request", status: "pending",
-        justification: @justification, expires_at: @expires_at
+        justification: @justification
       )
 
       return failure(:no_eligible_approver) if unroutable?(access)

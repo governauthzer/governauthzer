@@ -1,4 +1,6 @@
 class AuthProvider < ApplicationRecord
+  include Sluggable
+
   has_many :omniauth_identities, dependent: :restrict_with_error
 
   encrypts :oidc_client_secret
@@ -9,13 +11,11 @@ class AuthProvider < ApplicationRecord
   attr_reader :claim_mappings_raw
 
   validates :name, presence: true
-  validates :slug, presence: true, uniqueness: true
+  validates :slug, uniqueness: true
   validates :oidc_issuer_url, presence: true
   validates :oidc_client_id, presence: true
   validates :oidc_scope, presence: true
   validate :claim_mappings_valid
-
-  before_validation :normalize_slug
 
   scope :enabled, -> { where(enabled: true) }
 
@@ -53,11 +53,6 @@ class AuthProvider < ApplicationRecord
   end
 
   private
-
-  def normalize_slug
-    return if slug.blank?
-    self.slug = slug.downcase.gsub(/[^a-z0-9-]/, "-").squeeze("-")
-  end
 
   def claim_mappings_valid
     if @claim_mappings_json_error

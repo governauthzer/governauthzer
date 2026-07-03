@@ -51,6 +51,12 @@ class AuditEvent < ApplicationRecord
     { "type" => record.class.name, "id" => record.id, "display" => record.audit_display }
   end
 
+  # Read-side twin of target_descriptor: the id of the first target of the given
+  # type ("Role", "Access", …), or nil if the event carries none.
+  def target_id(type)
+    targets.find { |t| t["type"] == type }&.dig("id")
+  end
+
   private
 
   def actor_id_matches_actor_type

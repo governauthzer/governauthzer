@@ -75,10 +75,10 @@ module Outbound
       ce_type = TYPE_MAP[@audit_event.event_type]
       return nil if ce_type.nil?
 
-      role = Role.find_by(id: target_id("Role"))
-      user = User.find_by(id: target_id("User"))
+      role = Role.find_by(id: @audit_event.target_id("Role"))
+      user = User.find_by(id: @audit_event.target_id("User"))
       return nil if role.nil? || user.nil?
-      return nil if role.application.itself?
+      return nil if role.application.self_app?
 
       {
         "specversion" => SPEC_VERSION,
@@ -86,7 +86,7 @@ module Outbound
         "source" => self.class.event_source,
         "type" => ce_type,
         "time" => @audit_event.occurred_at.utc.iso8601,
-        "subject" => "access/#{target_id('Access')}",
+        "subject" => "access/#{@audit_event.target_id('Access')}",
         "datacontenttype" => "application/json",
         "dataschema" => dataschema,
         "data" => data(user, role, role.application)
@@ -95,17 +95,13 @@ module Outbound
 
     private
 
-    def target_id(type)
-      @audit_event.targets.find { |t| t["type"] == type }&.dig("id")
-    end
-
     def dataschema
       "#{self.class.schema_host}/#{@audit_event.event_type}/#{DATASCHEMA_VERSION}.json"
     end
 
     def data(user, role, application)
       payload = {
-        "access_id" => target_id("Access"),
+        "access_id" => @audit_event.target_id("Access"),
         "user" => { "id" => user.id, "email" => user.email, "name" => user.name },
         "role" => { "id" => role.id, "slug" => role.slug, "name" => role.name },
         "application" => { "id" => application.id, "slug" => application.slug, "name" => application.name }

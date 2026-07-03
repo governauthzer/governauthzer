@@ -58,7 +58,7 @@ class Admin::RolesController < Admin::BaseController
   # Roles on the governauthzer-itself application define operator status and are
   # bootstrap-managed (seed-admin / console), never via the UI.
   def block_system_application_role!
-    return unless @application&.itself?
+    return unless @application&.self_app?
     redirect_to admin_applications_path,
                 alert: "Roles on the governauthzer application are system-managed."
   end

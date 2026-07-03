@@ -48,7 +48,7 @@ class Api::V1::GrantsControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
 
     emails = body.map { |g| g.dig("user", "email") }.sort
-    assert_equal ["ada@example.com", "grace@example.com"], emails
+    assert_equal [ "ada@example.com", "grace@example.com" ], emails
 
     g = body.find { |x| x.dig("user", "email") == "ada@example.com" }
     assert_equal "slack", g.dig("application", "slug")

@@ -38,6 +38,11 @@ module Api::ServiceFailureRendering
       message: "No user found for the given manager_external_id."
     },
     # --- Snapshot sync ---
+    expected_count_missing: {
+      status: :bad_request,
+      code: "expected_count_missing",
+      message: "expected_count is required and must be a non-negative integer."
+    },
     count_mismatch: {
       status: :bad_request,
       code: "count_mismatch",

@@ -1,25 +1,19 @@
 class Application < ApplicationRecord
+  include Sluggable
+
   SELF_SLUG = "governauthzer".freeze
 
   has_many :roles, dependent: :restrict_with_error
 
   validates :name, presence: true
-  validates :slug, presence: true, uniqueness: true
+  validates :slug, uniqueness: true
 
-  before_validation :normalize_slug
-
-  def self.itself_record
+  # The row representing governauthzer itself — operator roles hang off it.
+  def self.self_app
     find_by(slug: SELF_SLUG)
   end
 
-  def itself?
+  def self_app?
     slug == SELF_SLUG
-  end
-
-  private
-
-  def normalize_slug
-    return if slug.blank?
-    self.slug = slug.downcase.gsub(/[^a-z0-9-]/, "-").squeeze("-")
   end
 end

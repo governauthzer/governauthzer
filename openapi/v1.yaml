@@ -361,7 +361,7 @@ components:
         expected_count:
           type: integer
           minimum: 0
-          description: Asserted size of `users`. A drift greater than 5% from the actual array size → 400 `count_mismatch` (truncated-feed guard).
+          description: Asserted size of `users`. A drift greater than 5% from the actual array size → 400 `count_mismatch` (truncated-feed guard). Missing or non-integer → 400 `expected_count_missing`.
         dry_run:
           type: boolean
           default: false
