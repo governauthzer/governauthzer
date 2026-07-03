@@ -108,11 +108,12 @@ module Sync
       end
 
       def preview_summary(diff, as_of)
+        existing_users = User.where(id: diff.existing.map { |e| e[:user_id] }).index_by(&:id)
         updated = diff.existing.count do |entry|
-          user = User.find(entry[:user_id])
-          user.assign_attributes(assignable_attrs(entry[:payload]))
-          user.changed?
+          stage_snapshot_changes(existing_users.fetch(entry[:user_id]), entry[:payload]).any?
         end
+
+        orphan_emails = User.where(id: diff.orphan_user_ids.to_a).pluck(:id, :email).to_h
 
         {
           source: @source,
@@ -126,7 +127,7 @@ module Sync
             "users_orphaned" => diff.orphan_user_ids.size,
             "users_terminated" => 0
           },
-          orphaned: diff.orphan_user_ids.map { |id| { "id" => id, "email" => User.find(id).email } },
+          orphaned: diff.orphan_user_ids.map { |id| { "id" => id, "email" => orphan_emails[id] } },
           warnings: [],
           snapshot_run_id: nil
         }

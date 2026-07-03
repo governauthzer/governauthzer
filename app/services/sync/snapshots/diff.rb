@@ -43,8 +43,12 @@ module Sync
       # A user orphans only if ALL of its external_identities are in the gone set
       # (i.e., it has no identity from any other source surviving the drop).
       def compute_orphans(gone)
-        gone.group_by { |g| g[:user_id] }.filter_map do |user_id, drops|
-          user_id if ExternalIdentity.where(user_id: user_id).count == drops.size
+        drops_by_user = gone.group_by { |g| g[:user_id] }
+        return Set.new if drops_by_user.empty?
+
+        identity_counts = ExternalIdentity.where(user_id: drops_by_user.keys).group(:user_id).count
+        drops_by_user.filter_map do |user_id, drops|
+          user_id if identity_counts[user_id] == drops.size
         end.to_set
       end
     end

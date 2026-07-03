@@ -58,11 +58,11 @@ module Sync
       end
 
       def update_existing
+        users = User.where(id: @diff.existing.map { |e| e[:user_id] }).index_by(&:id)
         count = 0
         @diff.existing.each do |entry|
-          user = User.find(entry[:user_id])
-          user.assign_attributes(assignable_attrs(entry[:payload]))
-          changes = user.changes
+          user = users.fetch(entry[:user_id])
+          changes = stage_snapshot_changes(user, entry[:payload])
           user.save!
           @resolved[entry[:payload][:external_id]] = user
           next if changes.empty?
@@ -82,8 +82,11 @@ module Sync
       # Drop all gone identities first, so a user with several same-source
       # identities is only evaluated for orphaning after every drop is applied.
       def drop_gone
+        identities = ExternalIdentity.includes(:user)
+                                     .where(id: @diff.gone.map { |g| g[:identity_id] })
+                                     .index_by(&:id)
         @diff.gone.each do |g|
-          identity = ExternalIdentity.find(g[:identity_id])
+          identity = identities.fetch(g[:identity_id])
           user = identity.user
           AuditEvent.record!(
             event_type: "external_identity.unlinked",
@@ -97,8 +100,9 @@ module Sync
       end
 
       def orphan_affected
+        users = User.where(id: @diff.orphan_user_ids.to_a).index_by(&:id)
         @diff.orphan_user_ids.map do |user_id|
-          user = User.find(user_id)
+          user = users.fetch(user_id)
           OrphanedCascade.call(user: user, actor: @actor, source: "api", via: "snapshot")
           { "id" => user.id, "email" => user.email }
         end

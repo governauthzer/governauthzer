@@ -130,6 +130,28 @@ class Api::V1::Sync::SnapshotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, json.dig("diff", "users_created")
   end
 
+  test "dry_run query count does not scale with roster size" do
+    roster = [ alice_payload, bob_payload ] + (1..20).map do |i|
+      { external_id: "EMP-#{2000 + i}", email: "user#{i}@example.com", name: "User #{i}" }
+    end
+    post_snapshot({ as_of: 2.hours.ago.utc.iso8601, expected_count: 22, users: roster })
+    assert_response :ok
+
+    selects = 0
+    subscription = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+      selects += 1 if payload[:sql].start_with?("SELECT") && payload[:name] != "SCHEMA"
+    end
+    begin
+      post_snapshot({ as_of: 1.hour.ago.utc.iso8601, expected_count: 22, dry_run: true, users: roster })
+    ensure
+      ActiveSupport::Notifications.unsubscribe(subscription)
+    end
+
+    assert_response :ok
+    assert_equal 22, JSON.parse(response.body).dig("diff", "users_unchanged")
+    assert_operator selects, :<=, 15, "dry-run must preload per bucket, not query per user"
+  end
+
   # --- validation errors -----------------------------------------------------
 
   test "count_mismatch when expected_count drifts more than 5%" do
