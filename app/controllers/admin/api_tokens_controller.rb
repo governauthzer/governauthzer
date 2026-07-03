@@ -21,12 +21,7 @@ class Admin::ApiTokensController < Admin::BaseController
       token_digest: ApiToken.digest(raw_token)
     )
     if @api_token.save
-      AuditEvent.record!(
-        event_type: "api_token.created",
-        actor: current_user,
-        targets: @api_token,
-        metadata: { "source" => "admin-ui" }
-      )
+      record_admin_audit("api_token.created", @api_token)
       flash[:plain_token] = raw_token
       flash[:plain_token_name] = @api_token.name
       redirect_to admin_api_tokens_path, notice: "Token created."
@@ -38,12 +33,7 @@ class Admin::ApiTokensController < Admin::BaseController
   def destroy
     snapshot = { "id" => @api_token.id, "name" => @api_token.name }
     @api_token.destroy!
-    AuditEvent.record!(
-      event_type: "api_token.deleted",
-      actor: current_user,
-      targets: @api_token,
-      metadata: { "source" => "admin-ui", "snapshot" => snapshot }
-    )
+    record_admin_audit("api_token.deleted", @api_token, snapshot: snapshot)
     redirect_to admin_api_tokens_path, notice: "Token revoked."
   end
 
