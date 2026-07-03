@@ -48,9 +48,13 @@ class User < ApplicationRecord
     external_identities.find_by(source: source)&.external_id
   end
 
+  # Memoized per model instance — i.e. per request, since controllers load the
+  # user fresh each time. Authorization stays live from the DB on every request;
+  # this only collapses the 3+ calls a single page render makes into one query.
   def operator?
-    accesses.approved.joins(role: :application)
-            .where(applications: { slug: Application::SELF_SLUG }).exists?
+    return @operator if defined?(@operator)
+    @operator = accesses.approved.joins(role: :application)
+                        .where(applications: { slug: Application::SELF_SLUG }).exists?
   end
 
   private
