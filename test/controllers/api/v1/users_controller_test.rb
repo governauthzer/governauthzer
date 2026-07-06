@@ -86,6 +86,23 @@ class Api::V1::UsersControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal "carol@example.com", body["email"]
     assert_equal "active", body["status"]
+
+    created = AuditEvent.where(event_type: "user.created").order(occurred_at: :desc).first
+    assert_equal @token.id, created.metadata["api_token_id"], "API writes must be attributable to the consumer token"
+    assert_equal "test-consumer", created.metadata["api_token_name"]
+  end
+
+  test "termination cascade events carry the consumer token attribution" do
+    user = User.create!(email: "eve@example.com", name: "Eve", status: "active")
+
+    patch "/api/v1/users/#{user.id}",
+          params: { user: { status: "terminated" } }.to_json,
+          headers: @headers
+    assert_response :ok
+
+    terminated = AuditEvent.find_by(event_type: "user.terminated")
+    assert_equal @token.id, terminated.metadata["api_token_id"]
+    assert_equal "test-consumer", terminated.metadata["api_token_name"]
   end
 
   test "create with future start_date defaults to pending_start" do
