@@ -15,7 +15,11 @@ class Api::V1::BaseController < ActionController::API
   # token (reconciliations, whoami) skip this.
   before_action :require_full_access!
 
-  attr_reader :current_api_token
+  # The authenticated consumer lives in Current (single source of truth) so audit
+  # emission deep in services/cascades can attribute events without kwarg-threading.
+  def current_api_token
+    Current.api_token
+  end
 
   private
 
@@ -35,7 +39,7 @@ class Api::V1::BaseController < ActionController::API
       raw = header.sub(/\ABearer\s+/, "").strip
       token = ApiToken.find_by_raw_token(raw)
       if token&.redeemable?
-        @current_api_token = token
+        Current.api_token = token
         return
       end
     end

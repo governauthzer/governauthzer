@@ -43,9 +43,23 @@ class AuditEvent < ApplicationRecord
       ip_address: Current.ip_address,
       user_agent: Current.user_agent,
       correlation_id: Current.correlation_id,
-      metadata: metadata
+      metadata: metadata_with_token_attribution(metadata)
     )
   end
+
+  # Every event emitted during a token-authenticated API request carries the
+  # consumer's identity, uniformly — callers don't pass it (same contract as
+  # correlation_id). reverse_merge: an explicit caller value wins.
+  def self.metadata_with_token_attribution(metadata)
+    token = Current.api_token
+    return metadata if token.nil?
+
+    (metadata || {}).reverse_merge(
+      "api_token_id" => token.id,
+      "api_token_name" => token.name
+    )
+  end
+  private_class_method :metadata_with_token_attribution
 
   def self.target_descriptor(record)
     { "type" => record.class.name, "id" => record.id, "display" => record.audit_display }

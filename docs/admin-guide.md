@@ -162,12 +162,27 @@ reconciliation bridges). Create with:
 | Field | Notes |
 | --- | --- |
 | **Name** | Label for the consumer (e.g. "Workday sync"). |
-| **Scope** | `full` (whole management API) or `reconcile` (only `whoami` + the reconciliation endpoint). |
+| **Scope** | `full` (whole management API) or `reconcile` (only the [bridge-facing endpoints](api.md#fulfillment-plane-bridge-facing): reconciliation, grants read, drift reports + `whoami`). |
 | **Source** *(optional)* | Locks an HRIS-sync token to a single source (required for roster-snapshot sync). |
 | **Expiry** *(optional)* | Leave blank for non-expiring. |
 
 The plaintext token (`gva_…`) is shown **once**, right after creation — copy it then. Only
 a SHA-256 digest is stored. Revoke a token anytime (there is no edit; recreate to change).
+
+### Rotating a token
+
+Rotation is create-new-then-revoke-old — zero downtime, no special server support:
+
+1. **Create** a new token with the same scope/source (names like `workday-sync-2026-07`
+   keep the audit trail readable).
+2. **Swap** it into the consumer's configuration (HRIS agent, bridge).
+3. **Verify** the consumer works — `GET /api/v1/whoami` with the new token should return
+   its name.
+4. **Revoke** the old token.
+
+Between steps 1 and 4 both tokens are valid — that overlap is what makes the swap
+seamless; keep it short. Audit events carry `api_token_id` / `api_token_name` in
+metadata, so activity from old and new tokens stays distinguishable throughout.
 
 ## Webhooks
 
