@@ -52,6 +52,22 @@ Tokens are minted in the admin UI (**Admin → API tokens**). The plaintext valu
 shown **once** at creation; only a SHA-256 digest is stored. The `gva_` prefix makes
 tokens grep-/secret-scanner-friendly.
 
+### What token storage does (and doesn't) protect
+
+- **A database leak — even full read access — yields no usable credential.** Only
+  SHA-256 digests are stored; the digest can't be replayed as a Bearer header and
+  256 bits of entropy put brute force out of reach.
+- **Compromise of the *consumer* (your HRIS agent, bridge) leaks its token.** That's
+  the boundary your secret manager owns: store tokens there, scope each consumer its
+  own token (`reconcile` / source-scoped), set expiry where practical, and
+  [rotate](admin-guide.md#rotating-a-token) on any suspicion — revocation is
+  immediate.
+- **Compromise of the governauthzer host itself is out of scope of token hashing** —
+  an attacker inside the running process doesn't need your tokens. That boundary is
+  owned by TLS, deployment hygiene, and the
+  [audit-log protection](audit-log-protection.md) that keeps the trail intact even
+  then.
+
 Verify a token end-to-end:
 
 ```sh

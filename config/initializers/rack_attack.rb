@@ -33,8 +33,11 @@ class Rack::Attack
     req.ip if req.path.start_with?("/api/v1")
   end
 
-  # Per-consumer (token) limit, higher than per-IP so several consumers can share
-  # an egress IP. Keyed by token digest — never the raw secret in the cache key.
+  # Per-consumer (token) cap across ALL source IPs — bounds a distributed consumer
+  # the per-IP rule can't see. Note the interplay: consumers sharing one egress IP
+  # are jointly capped by api/ip (600/min) first; safelist the egress CIDR via
+  # RATE_LIMIT_SAFELIST if that's too tight. Keyed by token digest — never the raw
+  # secret in the cache key.
   throttle("api/token", limit: 3000, period: 60) do |req|
     next unless req.path.start_with?("/api/v1")
 
