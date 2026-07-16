@@ -37,3 +37,9 @@
 
 # Ignore SimpleCov coverage reports.
 /coverage/
+
+# Maintainer-local staging deploy config (Kamal destination) — real hosts and
+# init scripts stay out of the public repo; the committed deploy.yml is the template.
+/config/deploy.staging.yml
+/.kamal/secrets.staging
+/.kamal/staging/
