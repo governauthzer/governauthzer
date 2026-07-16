@@ -64,6 +64,12 @@ env:
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
 
+    # Outgoing mail — ENV-only, see docs/deployment.md § Email. When SMTP_USER is set,
+    # also list SMTP_PASSWORD under env/secret above and in .kamal/secrets.
+    # SMTP_HOST: smtp.example.com
+    # SMTP_PORT: 587
+    # SMTP_USER: mailer@example.com
+
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal logs -r job" will tail logs from the first server in the job section.
 aliases:

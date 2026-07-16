@@ -52,6 +52,11 @@ The app **fails to boot** without `SECRET_KEY_BASE` and the three encryption key
 | `FORCE_SSL` | `true` | Enforce HTTPS (redirect + HSTS + secure cookies). Set `false` only behind upstream TLS — logs a loud warning. |
 | `ASSUME_SSL` | `false` | Set `true` behind a TLS-terminating proxy that doesn't forward `X-Forwarded-Proto` (avoids a redirect loop). |
 | `MAIL_FROM` | app default | `From:` address on notification emails. |
+| `SMTP_HOST` | — | SMTP server for outgoing mail. Unset ⇒ mail is not configured; deliveries fail inside background jobs and never block approve/revoke. |
+| `SMTP_PORT` | `587` | SMTP port. |
+| `SMTP_USER` | — | SMTP login. Unset ⇒ unauthenticated relay. |
+| `SMTP_PASSWORD` | — | SMTP password (only used with `SMTP_USER`). |
+| `SMTP_TLS` | `true` | STARTTLS. Only the exact string `false` disables it. |
 
 ### Optional
 
@@ -123,10 +128,10 @@ else (their OIDC identity is linked by an operator in the admin UI).
 
 Notifications (review requests, approvals, denials) go through Action Mailer, sent
 asynchronously via Solid Queue (an SMTP outage never blocks approve/revoke). Configure
-`config.action_mailer.smtp_settings` for your provider in
-`config/environments/production.rb` — any SMTP provider works (SES, Postmark, Mailgun,
-corporate Exchange). `MAIL_FROM` sets the `From:` address. In development, mail is
-captured by `letter_opener_web` at `/letter_opener`.
+SMTP entirely via environment variables — `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
+`SMTP_PASSWORD`, `SMTP_TLS` (see the table above). Any SMTP provider works (SES,
+Postmark, Mailgun, corporate Exchange). `MAIL_FROM` sets the `From:` address. In
+development, mail is captured by `letter_opener_web` at `/letter_opener`.
 
 ## Background jobs
 
