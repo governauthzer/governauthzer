@@ -24,6 +24,11 @@ end
 
 if Rails.env.production?
   Rails.application.config.after_initialize do
+    # SECRET_KEY_BASE_DUMMY is Rails' own "booting without real secrets" signal — set
+    # only for assets:precompile during image build (Dockerfile), where secrets must
+    # not exist. Real server boots never set it, so the fail-fast still guards them.
+    next if ENV["SECRET_KEY_BASE_DUMMY"].present?
+
     encryption = Rails.application.config.active_record.encryption
     missing = []
     missing << "GOVERNAUTHZER_ENCRYPTION_PRIMARY_KEY"         if encryption.primary_key.blank?
