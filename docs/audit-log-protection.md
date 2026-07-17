@@ -37,15 +37,19 @@ installs boot out of the box (the app then warns at boot that protection is off)
    CREATE ROLE governauthzer_app LOGIN PASSWORD '<runtime-password>';
    ```
 
-2. **Migrate as the owner**, then **apply grants** as the owner:
+2. **Migrate as the owner**, then **apply grants** as the owner — the same script
+   runs against each of the four databases (the audit lockdown applies only where
+   `audit_events` exists, i.e. the primary):
 
    ```sh
    GOVERNAUTHZER_DATABASE_USER=governauthzer \
    GOVERNAUTHZER_DATABASE_PASSWORD=<owner-password> bin/rails db:migrate
 
-   psql "postgres://governauthzer:<owner-password>@<host>/governauthzer_production" \
-     -v app_role=governauthzer_app -v app_db=governauthzer_production \
-     -f db/grants.sql
+   for db in governauthzer_production governauthzer_production_cache \
+             governauthzer_production_queue governauthzer_production_cable; do
+     psql "postgres://governauthzer:<owner-password>@<host>/$db" \
+       -v app_role=governauthzer_app -v app_db=$db -f db/grants.sql
+   done
    ```
 
 3. **Verify** it took effect (exits non-zero if not):
@@ -70,8 +74,9 @@ installs boot out of the box (the app then warns at boot that protection is off)
 - Re-run `db/grants.sql` after any migration that **renames or replaces** the audit
   table — `ALTER DEFAULT PRIVILEGES` would otherwise hand the new table full DML to the
   app role.
-- The four `_cache` / `_queue` / `_cable` databases (Solid stack) need full DML for the
-  app role and have no audit table; the same grants script's blanket grants cover them
-  if you run it against each, but only the primary needs the `audit_events` REVOKE.
+- The three `_cache` / `_queue` / `_cable` databases (Solid stack) need full DML for
+  the app role and have no audit table; the script detects this and skips the
+  `audit_events` lockdown there, so running it against each database (as in step 2)
+  is safe and expected.
 - This is one layer. For stricter (DBA-level) tamper-evidence, ship each `audit_events`
   row to an external append-only sink (deferred — see the audit-log design notes).

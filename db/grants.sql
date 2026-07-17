@@ -14,13 +14,18 @@
 -- script. The RUNTIME role the app serves as (`governauthzer_app` by convention) gets
 -- full DML everywhere EXCEPT it cannot UPDATE/DELETE the audit log.
 --
--- Run as the owner role, against the PRIMARY database, AFTER migrations. The role
--- named by :app_role must already exist (CREATE ROLE ... LOGIN PASSWORD '...');
--- this script manages privileges only — not role creation or passwords:
+-- Run as the owner role, AFTER migrations, against EACH of the four databases —
+-- primary plus the Solid-stack _cache/_queue/_cable — the aux DBs need the same
+-- blanket grants, and the audit lockdown below auto-skips where audit_events does
+-- not exist. The role named by :app_role must already exist (CREATE ROLE ... LOGIN
+-- PASSWORD '...'); this script manages privileges only — not role creation or
+-- passwords:
 --
---   psql "$PRIMARY_DATABASE_URL" \
---     -v app_role=governauthzer_app -v app_db=governauthzer_production \
---     -f db/grants.sql
+--   for db in governauthzer_production governauthzer_production_cache \
+--             governauthzer_production_queue governauthzer_production_cable; do
+--     psql "postgres://governauthzer:<owner-password>@<host>/$db" \
+--       -v app_role=governauthzer_app -v app_db=$db -f db/grants.sql
+--   done
 --
 -- Verify it actually took effect with:  bin/rails db:audit_protection:verify
 -- (and the app warns at boot if it connected as an over-privileged role).
@@ -45,8 +50,13 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 -- The whole point: the app role can append to and read the audit log, but cannot
 -- rewrite or erase it. Runs AFTER the blanket grant above so the REVOKE wins.
 -- (TRUNCATE is owner-only by default and was never granted; revoked here for clarity.)
+-- Skipped where audit_events doesn't exist (the aux _cache/_queue/_cable DBs), so
+-- the same script runs cleanly against all four databases under ON_ERROR_STOP.
+SELECT (to_regclass('public.audit_events') IS NOT NULL) AS audit_table_exists \gset
+\if :audit_table_exists
 REVOKE UPDATE, DELETE, TRUNCATE ON audit_events FROM :"app_role";
 GRANT SELECT, INSERT ON audit_events TO :"app_role";
+\endif
 
 -- NOTE: if audit_events is ever renamed/replaced by a migration, re-run this script —
 -- ALTER DEFAULT PRIVILEGES would otherwise hand the new table full DML to the app role.
