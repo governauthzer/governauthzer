@@ -11,6 +11,13 @@ workflow dates that section and turns it into the release notes.
 
 ## Unreleased
 
+### Added
+
+- Released images are published to `ghcr.io/governauthzer/governauthzer`, for `linux/amd64`
+  and `linux/arm64`, tagged with the full version, the major and minor series, and `latest`.
+  Deploying no longer means building the image yourself.
+- The operator dashboard shows the running version.
+
 ## 0.5.0 — 2026-07-17
 
 ### Changed

@@ -1,0 +1,140 @@
+name: Release
+
+# One button: Actions → Release → Run workflow → pick the bump. Everything the
+# release needs — version, changelog, tag, image, GitHub Release — happens here,
+# in one job, in an order chosen so a failure never leaves a half-release:
+# the image is built and pushed BEFORE the tag exists, so a broken build means
+# no tag and nothing to clean up.
+#
+# There is deliberately no tag trigger: a tag pushed with GITHUB_TOKEN cannot
+# start another workflow, so splitting this in two would silently never build.
+#
+# ONE-TIME, after the first release: a GHCR package's visibility is its own
+# setting, independent of the repository's. Open the package → Package settings
+# → Change visibility and make it public, or `docker pull` needs a token even
+# though this repo is public.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Which part of the version to bump"
+        type: choice
+        options: [ patch, minor, major ]
+        default: patch
+        required: true
+
+permissions:
+  contents: write # commit the bump, push the tag, create the release
+  packages: write # push the image to GHCR
+
+jobs:
+  # Main is normally green already, but a release is the one moment where
+  # "normally" is not good enough.
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Run tests
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+        run: bin/rails db:test:prepare test
+
+      - name: Lint code for consistent style
+        run: bin/rubocop -f github
+
+      # Static analysis only. bundler-audit deliberately stays in CI and out of
+      # here: it fetches a live advisory database, so it can fail the release
+      # button over a gem advisory published after the code was written — a
+      # thing to fix in a pull request, not a reason a release cannot go out.
+      - name: Scan for common Rails security vulnerabilities using static analysis
+        run: bin/brakeman --no-pager
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # the changelog needs the history since the last tag
+
+      - name: Bump version and roll the changelog
+        id: prep
+        run: ruby .github/scripts/prepare_release.rb "${{ inputs.bump }}" "$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Built from the working tree, which already carries the bumped VERSION.
+      # arm64 is emulated and slow; it is what makes the image usable on Apple
+      # Silicon and ARM VPSs, so it is worth the minutes.
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: APP_VERSION=${{ steps.prep.outputs.version }}
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.prep.outputs.version }}
+            ghcr.io/${{ github.repository }}:${{ steps.prep.outputs.major_minor }}
+            ghcr.io/${{ github.repository }}:${{ steps.prep.outputs.major }}
+            ghcr.io/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Commit, tag and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add VERSION CHANGELOG.md
+          git commit -m "Release ${{ steps.prep.outputs.version }}"
+          # Annotated, not lightweight: --follow-tags silently skips lightweight
+          # tags, so the commit lands and the tag stays behind on the runner.
+          git tag -a "v${{ steps.prep.outputs.version }}" -m "Release ${{ steps.prep.outputs.version }}"
+          git push origin HEAD:${{ github.ref_name }} --follow-tags
+
+      # --prerelease is not a formality: every release so far is one, and the
+      # README still carries the early-stage banner. Drop this flag in the same
+      # change that drops the banner — not before, and not separately.
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.prep.outputs.version }}" \
+            --title "v${{ steps.prep.outputs.version }}" \
+            --prerelease \
+            --notes-file "$RUNNER_TEMP/notes.md"
