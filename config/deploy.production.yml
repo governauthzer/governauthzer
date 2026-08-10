@@ -1,0 +1,128 @@
+# Production destination override — deploy with:
+#   bin/kamal deploy -d production -P --version X.Y.Z    (see the -P warning below)
+#
+# Infra-specific values (domain, server, passwords) live in a gitignored
+# `.env.production` at the repo root — nothing private is committed. This is the
+# per-destination env file (one per Kamal destination: .env.production,
+# .env.staging, …), so names inside need no prefix — the files never load
+# together. The ERB below loads it, so `kamal deploy -d production` just works
+# with no manual exports (an explicit `export` still wins, since Dotenv.load
+# never overrides a set var). Copy `.env.example` to `.env.production` and fill
+# it in. The assertions raise at deploy time, so you cannot ship a placeholder.
+# The values used only through .kamal/secrets.production are asserted here too —
+# a `$VAR` in a secrets file resolves to an empty string rather than failing, and
+# an empty SECRET_KEY_BASE stops the app at boot.
+#
+# To add another destination, copy this file and change the Dotenv.load filename.
+<% require "dotenv"; Dotenv.load(".env.production")
+
+   # Plain Ruby on purpose: this renders inside Kamal, not inside the app, so
+   # nothing here may lean on ActiveSupport being loaded.
+   value = ->(key) { v = ENV[key].to_s; v.empty? ? nil : v }
+   required = ->(key) { value.(key) || raise("Set #{key} in .env.production before deploying") }
+
+   %w[
+     SECRET_KEY_BASE
+     GOVERNAUTHZER_ENCRYPTION_PRIMARY_KEY
+     GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY
+     GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT
+     GOVERNAUTHZER_DATABASE_PASSWORD
+     POSTGRES_PASSWORD
+   ].each { |key| required.(key) }
+
+   domain = required.("DOMAIN")
+   # DNS usually points at the box already; an IP is only needed when it does not.
+   server = value.("SERVER_HOST") || domain
+   smtp_host = value.("SMTP_HOST")
+   smtp_user = value.("SMTP_USER") %>
+
+# Production runs published releases, not local builds — deploying is the last
+# check that what GHCR actually serves boots and migrates. Overrides the
+# localhost:5555 local registry the default (no-destination) deploy uses.
+#
+# ALWAYS deploy this destination as:  bin/kamal deploy -d production -P --version X.Y.Z
+# Without -P Kamal would build the working tree and push it to the *public*
+# package under a git-sha tag.
+image: governauthzer/governauthzer
+
+registry:
+  server: ghcr.io
+  username: <%= required.("GHCR_USER") %>
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+servers:
+  web:
+    - <%= server %>
+
+# Connect with the ed25519 deploy key only. This sidesteps net-ssh signing the
+# default ECDSA key with Ruby's OpenSSL 3 (which fails: "EVP_PKEY_sign … ECDSA
+# sign"), and needs no ssh-agent — ed25519 signs via the pure-Ruby ed25519 gem.
+# keys_only stops net-ssh from trying any other identity.
+ssh:
+  keys: [ "<%= File.expand_path('~/.ssh/kamal_deploy') %>" ]
+  keys_only: true
+
+# TLS via the Kamal proxy (Let's Encrypt). Requires config.force_ssl, which is on
+# by default in production.rb.
+proxy:
+  ssl: true
+  host: <%= domain %>
+
+env:
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    # Every absolute link the app generates — approval emails, CloudEvents source.
+    # Without it the app would build links against the request host.
+    GOVERNAUTHZER_HOST: https://<%= domain %>
+    # Kamal wires the accessory below onto the private Docker network under the
+    # accessory's name: <service>-db.
+    GOVERNAUTHZER_DATABASE_HOST: governauthzer-db
+    # Role-separated posture: the app serves as the restricted role, which cannot
+    # UPDATE or DELETE audit_events. Migrations and db/grants.sql run as the owner
+    # in the pre-deploy hook, which is why the entrypoint must not run db:prepare.
+    GOVERNAUTHZER_DATABASE_USER: governauthzer_app
+    SKIP_DB_PREPARE: true
+<% if smtp_host -%>
+    SMTP_HOST: <%= smtp_host %>
+    SMTP_PORT: <%= ENV.fetch("SMTP_PORT", "587") %>
+    SMTP_TLS: <%= ENV.fetch("SMTP_TLS", "true") %>
+<% if smtp_user -%>
+    SMTP_USER: <%= smtp_user %>
+<% end -%>
+<% else -%>
+    # Mail is off: SMTP_HOST is unset in .env.production, so Action Mailer stays
+    # unconfigured and delivery jobs fail quietly in the background. Nothing in the
+    # approval loop blocks on it — the in-app inbox carries the workflow.
+<% end -%>
+  # NOTE: a destination's env.secret REPLACES the base list (Kamal deep-merge
+  # replaces arrays) — the base secrets are repeated here in full.
+  secret:
+    - SECRET_KEY_BASE
+    - GOVERNAUTHZER_ENCRYPTION_PRIMARY_KEY
+    - GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY
+    - GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT
+    - GOVERNAUTHZER_DATABASE_PASSWORD
+<% if smtp_user -%>
+    - SMTP_PASSWORD
+<% end -%>
+
+# Postgres on the same server, private to the app. The owner role is the
+# in-container superuser; the init script below creates the restricted runtime
+# role and the three Solid-stack databases on the volume's first boot.
+accessories:
+  db:
+    image: postgres:16
+    host: <%= server %>
+    port: "127.0.0.1:5432:5432"    # bound to localhost only — not exposed publicly
+    env:
+      clear:
+        POSTGRES_USER: governauthzer
+        POSTGRES_DB: governauthzer_production
+      secret:
+        - POSTGRES_PASSWORD
+        - GOVERNAUTHZER_APP_DB_PASSWORD
+    files:
+      - .kamal/db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    directories:
+      - data:/var/lib/postgresql/data

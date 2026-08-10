@@ -25,6 +25,19 @@ servers:
 #   host: app.example.com
 
 # Where you keep your container images.
+#
+# This file is the template for deploying your own build. If you would rather run a
+# published release, point image/registry at the packages this project publishes:
+#
+#   image: governauthzer/governauthzer
+#   registry:
+#     server: ghcr.io
+#     username: <your github login>
+#     password: [ KAMAL_REGISTRY_PASSWORD ]
+#
+# and deploy with `kamal deploy -P --version X.Y.Z` so Kamal pulls that version
+# instead of building the working tree. config/deploy.production.yml is a worked
+# example of exactly that, with its values kept out of git. See docs/deployment.md.
 registry:
   # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
   server: localhost:5555

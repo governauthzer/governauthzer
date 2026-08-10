@@ -38,8 +38,14 @@
 # Ignore SimpleCov coverage reports.
 /coverage/
 
-# Maintainer-local staging deploy config (Kamal destination) — real hosts and
-# init scripts stay out of the public repo; the committed deploy.yml is the template.
+# Per-destination deploy values — hosts, passwords and encryption keys. The
+# committed config/deploy.<destination>.yml loads the matching file at deploy time,
+# so the config can live in the repo while none of its values do. See .env.example.
+/.env*
+!/.env.example
+
+# Superseded staging destination, from before the deploy config moved into the repo.
+# Still ignored: the files are on the maintainer's disk and hold real secrets.
 /config/deploy.staging.yml
 /.kamal/secrets.staging
 /.kamal/staging/
