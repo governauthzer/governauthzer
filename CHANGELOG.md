@@ -16,6 +16,7 @@ turns it into the release notes.
 - A worked Kamal deployment, configured through an env file kept out of git.
 - Deploying migrates as the database owner and applies `db/grants.sql`.
 - The operator dashboard shows the running version.
+- Documented backup, restore and upgrades.
 
 ### Changed
 

@@ -99,6 +99,8 @@ data** (currently the OIDC client secrets) — back them up.
    layer, not merely in app code.
 
 The runbook is its own page: **[Audit-log protection](audit-log-protection.md)**.
+What to copy off the machine, and what a restore has to put back:
+**[Backup and restore](backup.md)**.
 
 > The container entrypoint runs `db:prepare` on server start by default — convenient
 > for single-role installs. For a **role-separated** deploy, set `SKIP_DB_PREPARE=true`
@@ -110,6 +112,29 @@ The runbook is its own page: **[Audit-log protection](audit-log-protection.md)**
 > otherwise a migration can quietly leave the audit log rewritable. The Kamal deployment
 > does both in a [pre-deploy hook](kamal.md#what-happens-on-each-deploy), between pulling
 > the new image and starting it.
+
+## Upgrades
+
+Versions follow [Semantic Versioning](https://semver.org/), and the promise behind that is
+specific:
+
+- **A patch or minor release asks nothing of you.** Change the version you deploy and
+  deploy it. Any migration it carries runs as part of the deployment, and configuration
+  that worked before still works — new settings arrive with defaults that preserve current
+  behaviour.
+- **A major release may require manual steps.** They are listed in the
+  [changelog](https://github.com/governauthzer/governauthzer/blob/main/CHANGELOG.md) under
+  the release, and nowhere else. If a release has no upgrade notes, it needs none.
+- **Skipping versions is fine going forward.** Migrations are cumulative, so 1.0.0 → 1.4.0
+  applies everything in between.
+
+Take a [backup](backup.md) before a major upgrade. Downgrading is not supported: an older
+release does not know how to undo a newer one's migrations, so going back means restoring
+the backup you took.
+
+Whoever runs the migrations needs the **owner** role, and must apply `db/grants.sql`
+afterwards — a migration that creates a table hands the app role privileges the audit
+lockdown then has to take back. The Kamal deployment does both on every deploy.
 
 ## TLS
 
