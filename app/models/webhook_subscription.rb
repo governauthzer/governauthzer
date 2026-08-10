@@ -1,6 +1,13 @@
 class WebhookSubscription < ApplicationRecord
   has_many :webhook_deliveries, dependent: :destroy
 
+  # The HMAC key every outbound delivery is signed with. Encrypted at rest for the
+  # same reason as auth_providers.oidc_client_secret: a read-only leak of this
+  # column hands an attacker the ability to forge `access.approved` deliveries to a
+  # customer's provisioner — the signature is the only thing a bridge can trust.
+  # Non-deterministic: nothing looks a subscription up by its secret.
+  encrypts :signing_secret
+
   validates :name, presence: true
   validates :endpoint_url, presence: true
   validates :signing_secret, presence: true

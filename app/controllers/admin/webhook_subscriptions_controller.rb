@@ -38,8 +38,9 @@ class Admin::WebhookSubscriptionsController < Admin::BaseController
     end
   end
 
-  # The signing secret is a shared HMAC key (stored plaintext, like a Stripe webhook
-  # secret) — rotating it requires updating the provisioner's config to match.
+  # The signing secret is a shared HMAC key, encrypted at rest — rotating it requires
+  # updating the provisioner's config to match. No attribute diff is recorded: the
+  # audit log says the secret was rotated, never what it was rotated to.
   def rotate_secret
     @subscription.update!(signing_secret: SecureRandom.hex(32))
     record_admin_audit("webhook_subscription.secret_rotated", @subscription)

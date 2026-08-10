@@ -25,6 +25,12 @@ turns it into the release notes.
 - Approving or denying a request that was just withdrawn says so instead of failing with
   a server error.
 
+### Security
+
+- Webhook signing secrets are encrypted at rest, like OIDC client secrets already were.
+  A read-only leak of the database no longer yields the keys your provisioner trusts.
+  Existing secrets are re-encrypted in place on upgrade; nothing to reconfigure.
+
 ## 0.5.0 — 2026-07-17
 
 ### Changed

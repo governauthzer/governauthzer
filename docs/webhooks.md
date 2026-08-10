@@ -138,6 +138,8 @@ Create subscriptions in the admin UI (**Admin → Webhooks**):
 
 - `endpoint_url` — where events POST.
 - `signing_secret` — generated for you; shown on the subscription page; rotatable.
+  Encrypted at rest, so read access to the database does not yield the key your handler
+  verifies with. Rotating is recorded in the audit log; the secret itself never is.
 - `event_types[]` — filter (empty = all published types).
 - `application_ids[]` — filter (empty = all apps). Routes events to the right consumer;
   the single-bridge reference deployment leaves both filters empty.
