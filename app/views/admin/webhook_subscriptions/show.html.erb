@@ -14,7 +14,16 @@
   </div>
 
   <section class="card space-y-2 text-sm">
-    <div><span class="text-gray-500">Endpoint:</span> <span class="font-mono break-all"><%= @subscription.endpoint_url %></span></div>
+    <div>
+      <span class="text-gray-500">Endpoint:</span>
+      <span class="font-mono break-all"><%= @subscription.endpoint_url %></span>
+      <% if @subscription.insecure_endpoint? %>
+        <span class="pill bg-amber-50 text-amber-800"
+              title="Deliveries carry the subject's name and email. Plain HTTP is fine on a private container network and exposed anywhere else.">
+          plain HTTP
+        </span>
+      <% end %>
+    </div>
     <div><span class="text-gray-500">Status:</span> <%= @subscription.active? ? "Active" : "Disabled" %></div>
     <div><span class="text-gray-500">Event types:</span> <%= @subscription.event_types.empty? ? "all published types" : @subscription.event_types.join(", ") %></div>
     <div>

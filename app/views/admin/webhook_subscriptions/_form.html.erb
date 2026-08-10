@@ -16,6 +16,11 @@
     <%= f.label :endpoint_url, "Endpoint URL", class: "field-label" %>
     <%= f.url_field :endpoint_url, required: true, class: "#{input_class} font-mono", placeholder: "https://bridge.internal/hooks" %>
     <p class="field-hint">
+      An <code>http://</code> or <code>https://</code> address. Plain HTTP is accepted for a
+      bridge on this deployment's private network; anywhere else it puts the subject's name
+      and email on the wire in clear.
+    </p>
+    <p class="field-hint">
       CloudEvents are POSTed here, HMAC-signed over the body. The signing secret is shown on the
       subscription page after you save.
     </p>

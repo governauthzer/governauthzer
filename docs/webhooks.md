@@ -136,7 +136,11 @@ work asynchronously.
 
 Create subscriptions in the admin UI (**Admin → Webhooks**):
 
-- `endpoint_url` — where events POST.
+- `endpoint_url` — where events POST. An `http://` or `https://` address; anything else is
+  refused when you save it, rather than surfacing later as deliveries that never arrive.
+  Plain HTTP is accepted — the recommended bridge sits on the deployment's private network,
+  where the request never leaves the host — and flagged in the admin UI, because deliveries
+  carry the subject's name and email.
 - `signing_secret` — generated for you; shown on the subscription page; rotatable.
   Encrypted at rest, so read access to the database does not yield the key your handler
   verifies with. Rotating is recorded in the audit log; the secret itself never is.

@@ -24,7 +24,12 @@
           <% @subscriptions.each do |sub| %>
             <tr class="row-hover">
               <td><%= link_to sub.name, admin_webhook_subscription_path(sub), class: "btn-link" %></td>
-              <td class="font-mono text-xs text-gray-500"><%= sub.endpoint_url %></td>
+              <td class="font-mono text-xs text-gray-500">
+                <%= sub.endpoint_url %>
+                <% if sub.insecure_endpoint? %>
+                  <span class="pill bg-amber-50 text-amber-800" title="Deliveries cross the network in clear">plain HTTP</span>
+                <% end %>
+              </td>
               <td class="text-xs text-gray-500"><%= sub.event_types.empty? ? "all" : sub.event_types.size %></td>
               <td class="text-xs text-gray-500"><%= sub.application_ids.empty? ? "all" : sub.application_ids.size %></td>
               <td><%= sub.active? ? "Active" : "Disabled" %></td>

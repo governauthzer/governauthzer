@@ -26,6 +26,24 @@ class WebhookSubscriptionTest < ActiveSupport::TestCase
     assert_not_includes recorded, sub.signing_secret
   end
 
+  test "endpoint_url must be a web address" do
+    %w[ftp://bridge/hooks javascript:alert(1) bridge.example/hooks https:// mailto:ops@example.com].each do |bad|
+      sub = WebhookSubscription.new(name: "Bridge", endpoint_url: bad)
+      assert_not sub.valid?, "#{bad.inspect} should be rejected"
+      assert sub.errors[:endpoint_url].any?
+    end
+  end
+
+  test "endpoint_url accepts http and https, and flags plain http" do
+    secure = WebhookSubscription.create!(name: "TLS", endpoint_url: "https://bridge.example/hooks")
+    assert_not secure.insecure_endpoint?
+
+    # The reference deployment's bridge: a container name on the private network,
+    # which has no certificate to present and never leaves the host.
+    internal = WebhookSubscription.create!(name: "Internal", endpoint_url: "http://gov-bridge:8000/")
+    assert internal.insecure_endpoint?
+  end
+
   test "matches? treats empty filters as wildcards (single-bridge reference deployment)" do
     sub = WebhookSubscription.new(active: true, event_types: [], application_ids: [])
     assert sub.matches?(cloud_event_type: "com.governauthzer.access.approved", application_id: SecureRandom.uuid)

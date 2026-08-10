@@ -1,7 +1,9 @@
 # Changelog
 
-Notable changes per release. Format follows [Keep a Changelog](https://keepachangelog.com/);
-versions follow [Semantic Versioning](https://semver.org/).
+What changed, one line each. How it works and why lives in the
+[docs](https://governauthzer.github.io/governauthzer). Format follows
+[Keep a Changelog](https://keepachangelog.com/); versions follow
+[Semantic Versioning](https://semver.org/).
 
 Record what you ship under `## Unreleased`. The release workflow dates that section and
 turns it into the release notes.
@@ -10,37 +12,33 @@ turns it into the release notes.
 
 ### Added
 
-- Published images at `ghcr.io/governauthzer/governauthzer`, for amd64 and arm64 — deploy a
-  release without building it.
-- A worked Kamal deployment: `config/deploy.production.yml`, reading its values from a
-  `.env.production` you keep out of git.
-- Deploying a destination migrates as the database owner, applies `db/grants.sql`, and stops
-  if the audit log did not come out append-only.
+- Published images at `ghcr.io/governauthzer/governauthzer`, for amd64 and arm64.
+- A worked Kamal deployment, configured through an env file kept out of git.
+- Deploying migrates as the database owner and applies `db/grants.sql`.
 - The operator dashboard shows the running version.
+
+### Changed
+
+- A webhook endpoint must be an `http://` or `https://` address.
 
 ### Fixed
 
-- Two approvers deciding the same request at the same moment can no longer both approve
-  it, which granted the access twice and recorded the approval twice.
-- Approving or denying a request that was just withdrawn says so instead of failing with
-  a server error.
+- Two approvers can no longer both approve the same request.
+- Approving or denying a withdrawn request no longer errors.
 
 ### Security
 
-- Webhook signing secrets are encrypted at rest, like OIDC client secrets already were.
-  A read-only leak of the database no longer yields the keys your provisioner trusts.
-  Existing secrets are re-encrypted in place on upgrade; nothing to reconfigure.
+- Webhook signing secrets are encrypted at rest.
 
 ## 0.5.0 — 2026-07-17
 
 ### Changed
 
-- SMTP is configured with environment variables. `SMTP_HOST` unset keeps mail off.
+- SMTP is configured with environment variables.
 
 ### Fixed
 
-- The image builds again: the encryption-key check no longer fires during asset
-  precompilation.
+- The Docker image builds again.
 - `db/grants.sql` runs against all four databases.
 
 ## 0.4.0 — 2026-07-06
@@ -62,8 +60,7 @@ turns it into the release notes.
 
 ### Changed
 
-- **Breaking.** End-user portal events moved to the `web-ui` audit channel. Recorded after
-  the fact — it went out unflagged.
+- **Breaking.** End-user portal events moved to the `web-ui` audit channel.
 
 ### Added
 
