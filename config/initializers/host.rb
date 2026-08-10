@@ -5,6 +5,10 @@
 raw_host = ENV.fetch("GOVERNAUTHZER_HOST", "http://localhost:3000")
 uri = URI.parse(raw_host)
 
+# Kept as configured, so anything that has to name THIS deployment — the CloudEvents
+# `source`, for one — reads the answer from here instead of restating the default.
+Rails.application.config.x.base_url = raw_host
+
 url_options = { protocol: uri.scheme || "http", host: uri.host || raw_host }
 url_options[:port] = uri.port if uri.port && uri.port != uri.default_port
 

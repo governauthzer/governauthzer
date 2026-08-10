@@ -38,11 +38,14 @@ module Outbound
       "access.revoked"  => "com.governauthzer.access.revoked"
     }.freeze
 
-    # CloudEvents `source` identifies the producing instance. Configurable per
-    # deployment; the dataschema host, by contrast, is the canonical project
-    # registry (identical for every install of a given version).
+    # CloudEvents `source` identifies the producing INSTANCE, so it defaults to this
+    # deployment's own base URL. A project-wide default would be the same string on
+    # every install in the world, leaving a consumer that aggregates two governauthzer
+    # deployments unable to tell whose event it is holding. Override only to publish
+    # under a different identifier than the app is reached at. The dataschema host,
+    # by contrast, is genuinely project-wide — see `schema_host`.
     def self.event_source
-      ENV.fetch("GOVERNAUTHZER_EVENT_SOURCE", "https://governauthzer.dev")
+      ENV.fetch("GOVERNAUTHZER_EVENT_SOURCE") { Rails.application.config.x.base_url }
     end
 
     # Host the emitted `dataschema` URLs point at — the schema registry where the

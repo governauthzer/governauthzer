@@ -20,6 +20,7 @@ turns it into the release notes.
 ### Changed
 
 - A webhook endpoint must be an `http://` or `https://` address.
+- The CloudEvents `source` now identifies your deployment instead of the project.
 
 ### Fixed
 

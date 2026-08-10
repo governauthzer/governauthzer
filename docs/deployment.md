@@ -50,7 +50,7 @@ The app **fails to boot** without `SECRET_KEY_BASE` and the three encryption key
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `GOVERNAUTHZER_HOST` | `http://localhost:3000` | Base URL for generated links and emails. Set to your public URL. |
-| `GOVERNAUTHZER_EVENT_SOURCE` | `https://governauthzer.dev` | CloudEvents `source` identifying this instance. Set to your instance URL. |
+| `GOVERNAUTHZER_EVENT_SOURCE` | `GOVERNAUTHZER_HOST` | CloudEvents `source` identifying this instance. Defaults to this deployment's own URL — set it only to publish under a different identifier than the app is reached at. |
 | `GOVERNAUTHZER_SCHEMA_HOST` | `https://governauthzer.dev/schemas` | Registry host the outbound `dataschema` URLs point at. Defaults to the canonical project registry; override only if you mirror the JSON Schemas yourself. |
 | `GOVERNAUTHZER_DATABASE_HOST` | `localhost` | PostgreSQL host. |
 | `GOVERNAUTHZER_DATABASE_USER` | `governauthzer` (owner) | DB role the app connects as. Set to the restricted runtime role for [audit protection](audit-log-protection.md). |

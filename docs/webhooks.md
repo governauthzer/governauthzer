@@ -46,7 +46,7 @@ Events are delivered in CloudEvents **structured mode**: a single JSON object,
 | --- | --- |
 | `specversion` | `1.0` (the CloudEvents spec — a separate axis from our payload version) |
 | `id` | the originating `AuditEvent` id (UUID). Stable across retries → use it for **idempotency** and to **correlate** reconciliation. |
-| `source` | the producing instance (`GOVERNAUTHZER_EVENT_SOURCE`) |
+| `source` | the producing instance — its own URL, or `GOVERNAUTHZER_EVENT_SOURCE` if set. Distinct per deployment, so a consumer fed by two instances can tell them apart. |
 | `type` | `com.governauthzer.access.approved` / `...revoked` |
 | `time` | RFC 3339 timestamp of the decision |
 | `subject` | `access/<access_id>` |

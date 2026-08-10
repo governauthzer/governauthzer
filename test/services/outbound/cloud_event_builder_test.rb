@@ -17,6 +17,18 @@ class Outbound::CloudEventBuilderTest < ActiveSupport::TestCase
     )
   end
 
+  test "source identifies this deployment, not the project" do
+    assert_equal Rails.application.config.x.base_url,
+                 Outbound::CloudEventBuilder.new(approved_event).build["source"],
+                 "a project-wide source would be identical on every install"
+  end
+
+  test "source can be published under a different identifier than the app is reached at" do
+    with_env("GOVERNAUTHZER_EVENT_SOURCE" => "https://iga.example.com") do
+      assert_equal "https://iga.example.com", Outbound::CloudEventBuilder.new(approved_event).build["source"]
+    end
+  end
+
   test "builds a CloudEvent for access.approved" do
     ce = Outbound::CloudEventBuilder.new(approved_event).build
 
@@ -73,5 +85,15 @@ class Outbound::CloudEventBuilderTest < ActiveSupport::TestCase
     assert Outbound::CloudEventBuilder.publishable_type?("access.revoked")
     assert_not Outbound::CloudEventBuilder.publishable_type?("user.terminated")
     assert_not Outbound::CloudEventBuilder.publishable_type?("auth.login.succeeded")
+  end
+
+  private
+
+  def with_env(values)
+    previous = values.transform_values { |_| nil }.merge(ENV.slice(*values.keys))
+    ENV.update(values)
+    yield
+  ensure
+    previous.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
   end
 end
