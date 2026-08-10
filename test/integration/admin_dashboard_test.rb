@@ -33,6 +33,13 @@ class AdminDashboardTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "application.created"
   end
 
+  test "the dashboard shows the running version" do
+    get "/admin"
+    assert_response :ok
+    assert_includes response.body, "v#{Governauthzer::VERSION}"
+    refute_equal "unknown", Governauthzer::VERSION, "VERSION file is missing or empty"
+  end
+
   test "a non-operator is forbidden" do
     plain = User.create!(email: "plain@example.com", name: "Plain")
     sign_in_as plain

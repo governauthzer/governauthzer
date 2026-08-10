@@ -4,7 +4,11 @@
   <%= render "admin/nav" %>
   <%= render "shared/flash" %>
 
-  <h1 class="page-title mb-6">Dashboard</h1>
+  <div class="flex items-baseline gap-2.5 mb-6">
+    <h1 class="page-title">Dashboard</h1>
+    <%# What is actually deployed, without shelling into the container. %>
+    <span class="text-xs text-gray-400 tabular-nums" title="governauthzer version">v<%= Governauthzer::VERSION %></span>
+  </div>
 
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
     <div class="card p-5">

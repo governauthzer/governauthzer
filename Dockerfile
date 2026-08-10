@@ -68,6 +68,17 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 # Final stage for app image
 FROM base
 
+# Release metadata, stamped by the release workflow. `docker inspect` then answers
+# "what is actually running here" without a shell into the container. The `service`
+# label is not decoration: Kamal checks it on pull and refuses an image without it.
+ARG APP_VERSION="dev"
+LABEL service="governauthzer" \
+      org.opencontainers.image.title="governauthzer" \
+      org.opencontainers.image.description="Self-hosted IGA that owns access intent — request, approve, audit — with an append-only audit log and signed webhook events" \
+      org.opencontainers.image.source="https://github.com/governauthzer/governauthzer" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later" \
+      org.opencontainers.image.version="${APP_VERSION}"
+
 # Run and own only the runtime files as a non-root user for security
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash
