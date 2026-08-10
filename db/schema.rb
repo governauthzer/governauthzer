@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -61,6 +61,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_120100) do
     t.datetime "created_at", null: false
     t.string "decision", null: false
     t.datetime "updated_at", null: false
+    t.index ["access_id", "approval_step_id"], name: "index_approval_decisions_unique_approval_per_step", unique: true, where: "((decision)::text = 'approved'::text)"
     t.index ["access_id"], name: "index_approval_decisions_on_access_id"
     t.index ["approval_step_id"], name: "index_approval_decisions_on_approval_step_id"
     t.index ["approver_id"], name: "index_approval_decisions_on_approver_id"

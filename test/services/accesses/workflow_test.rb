@@ -134,6 +134,51 @@ class Accesses::WorkflowTest < ActiveSupport::TestCase
 
   # ----- policy --------------------------------------------------------------
 
+  # ----- concurrent decisions (P1) -------------------------------------------
+  #
+  # These do not simulate contention — two threads racing is unreliable to assert
+  # on. They pin the invariant that makes contention safe: the database refuses a
+  # second approval of a step whatever the application does, and each service
+  # answers with a code instead of an exception when it loses the race.
+
+  test "the database refuses a second approval of the same step" do
+    access = pending_access
+    step = access.current_step
+    access.approval_decisions.create!(approval_step: step, approver: @manager, decision: "approved")
+
+    assert_raises(ActiveRecord::RecordNotUnique) do
+      access.approval_decisions.create!(approval_step: step, approver: @manager, decision: "approved")
+    end
+  end
+
+  test "approving a request that was withdrawn mid-flight reports it is gone" do
+    access = pending_access
+    # What the approver's controller loaded before the requester withdrew — a live
+    # object over a row that is about to disappear. Passing the withdrawn instance
+    # itself would prove nothing: `lock!` no-ops on a record already destroyed in
+    # this process, and no controller is ever in that state.
+    stale = Access.find(access.id)
+    Accesses::Withdrawer.call(access: access, actor: @requester)
+
+    result = Accesses::Approver.call(access: stale, approver: @manager, actor: @manager)
+
+    assert_not result.success
+    assert_equal :no_longer_exists, result.code
+    assert_equal 0, AuditEvent.where(event_type: "access.approved").count
+  end
+
+  test "denying a request that was withdrawn mid-flight reports it is gone" do
+    access = pending_access
+    stale = Access.find(access.id)
+    Accesses::Withdrawer.call(access: access, actor: @requester)
+
+    result = Accesses::Denier.call(access: stale, approver: @manager, actor: @manager)
+
+    assert_not result.success
+    assert_equal :no_longer_exists, result.code
+    assert_equal 0, AuditEvent.where(event_type: "access.denied").count
+  end
+
   test "AccessPolicy authorizes only the current approver and the requester" do
     access = pending_access
 

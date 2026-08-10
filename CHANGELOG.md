@@ -18,6 +18,13 @@ turns it into the release notes.
   if the audit log did not come out append-only.
 - The operator dashboard shows the running version.
 
+### Fixed
+
+- Two approvers deciding the same request at the same moment can no longer both approve
+  it, which granted the access twice and recorded the approval twice.
+- Approving or denying a request that was just withdrawn says so instead of failing with
+  a server error.
+
 ## 0.5.0 — 2026-07-17
 
 ### Changed

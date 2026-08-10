@@ -7,7 +7,9 @@ module AccessFlashMessages
     no_eligible_approver: "No approver is configured for this role — contact an administrator.",
     not_current_approver: "This request is not awaiting your approval.",
     not_requester: "You can only withdraw your own requests.",
-    not_pending: "This request is no longer pending."
+    not_pending: "This request is no longer pending.",
+    already_decided: "Someone else just decided this request.",
+    no_longer_exists: "That request no longer exists — it was withdrawn or already decided."
   }.freeze
 
   private

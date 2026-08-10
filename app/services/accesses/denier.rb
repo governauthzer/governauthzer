@@ -15,9 +15,12 @@ module Accesses
     end
 
     def call
-      return failure(:not_current_approver) unless @access.pending? && @access.current_approver == @approver
-
       ActiveRecord::Base.transaction do
+        # Same reasoning as Accesses::Approver: decide under the row lock, so a denial
+        # racing an approval or a withdrawal resolves to one outcome rather than two.
+        @access.lock!
+        next failure(:not_current_approver) unless @access.pending? && @access.current_approver == @approver
+
         AuditEvent.record!(
           event_type: "access.denied",
           actor: @actor,
@@ -29,6 +32,8 @@ module Accesses
         @access.destroy!
         success(@access)
       end
+    rescue ActiveRecord::RecordNotFound
+      failure(:no_longer_exists)
     end
   end
 end

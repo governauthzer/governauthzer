@@ -15,10 +15,17 @@ module Accesses
     end
 
     def call
-      return failure(:not_current_approver) unless approvable?
-
-      step = @access.current_step
       ActiveRecord::Base.transaction do
+        # Lock first, then decide. Read outside the lock, `approvable?` and
+        # `fully_approved?` are check-then-act: two concurrent approvals of the same
+        # step both pass, both insert, and both reach `grant` — two `access.approved`
+        # audit events, two CloudEvents, a double grant on the target. The row lock
+        # serializes them; the partial unique index on approval_decisions is the
+        # backstop if a future path forgets to take it.
+        @access.lock!
+        next failure(:not_current_approver) unless approvable?
+
+        step = @access.current_step
         @access.approval_decisions.create!(approval_step: step, approver: @approver, decision: "approved", comment: @comment)
         if @access.fully_approved?
           grant
@@ -29,6 +36,12 @@ module Accesses
         end
         success(@access)
       end
+      # Denial and withdrawal destroy the row, so the request can vanish between the
+      # controller's find and this lock.
+    rescue ActiveRecord::RecordNotFound
+      failure(:no_longer_exists)
+    rescue ActiveRecord::RecordNotUnique
+      failure(:already_decided)
     end
 
     private
