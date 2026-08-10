@@ -1,0 +1,149 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Runs the two database steps that the app container deliberately cannot do for
+# itself, in the one window where they are safe: after the new image is on the
+# server, before it starts serving.
+#
+#   1. migrate, connected as the database OWNER
+#   2. apply db/grants.sql to all four databases, then prove it took effect
+#
+# Why this is not in the image's entrypoint. The app serves as a restricted role
+# that cannot UPDATE or DELETE audit_events — that grant is the whole audit-log
+# protection (db/grants.sql, docs/audit-log-protection.md). Migrations need the
+# owner. If the owner's password lived in the app container's environment, a
+# compromised app process could simply reconnect as the owner and rewrite the
+# audit log, and the separation would be decorative. So the owner password stays
+# with whoever deploys: Kamal hands this hook the destination's secrets, and it
+# reaches the database over SSH for the length of one command.
+#
+# Destinations only. A plain `kamal deploy` with no -d keeps the entrypoint's own
+# db:prepare, which is right for a single-role install.
+#
+# Nothing here is sent as a command-line argument: secrets and SQL travel on
+# stdin into a root-only temp directory on the server, which is removed on exit.
+# Command lines are visible in `ps` to anyone on the box; this matches how Kamal
+# itself ships secrets (an env file on the host, never argv).
+
+require "yaml"
+require "shellwords"
+require "securerandom"
+require "open3"
+
+destination = ENV["KAMAL_DESTINATION"].to_s
+if destination.empty?
+  puts "  pre-deploy: no destination — leaving migrations to the container entrypoint"
+  exit 0
+end
+
+# A rollback boots an image that was already migrated. Running its migrations
+# again is at best a no-op and at worst applies a schema the old code cannot read.
+if ENV["KAMAL_COMMAND"] == "rollback"
+  puts "  pre-deploy: rollback — not touching the database"
+  exit 0
+end
+
+version = ENV.fetch("KAMAL_VERSION")
+host = ENV.fetch("KAMAL_HOSTS").split(",").first
+
+# Kamal's own resolved configuration is the source of truth for the image, the
+# SSH identity and the database accessory — so renaming any of them cannot leave
+# this hook pointing at something that no longer exists.
+raw, status = Open3.capture2("bin/kamal", "config", "-d", destination)
+abort "  pre-deploy: could not read the Kamal config for #{destination}" unless status.success?
+config = YAML.safe_load(raw, permitted_classes: [ Symbol ], aliases: true)
+
+service = config[:service_with_version].sub(/-#{Regexp.escape(config[:version])}\z/, "")
+image = "#{config[:repository]}:#{version}"
+
+accessory = config.dig(:accessories, "db") or
+  abort "  pre-deploy: destination #{destination} has no `db` accessory to migrate against"
+db_container = accessory["service"] || "#{service}-db"
+owner = accessory.dig("env", "clear", "POSTGRES_USER")
+primary_db = accessory.dig("env", "clear", "POSTGRES_DB")
+abort "  pre-deploy: the db accessory must set POSTGRES_USER and POSTGRES_DB" unless owner && primary_db
+
+# The restricted runtime role, named the same way db/grants.sql and the verify
+# task name it.
+app_role = ENV.fetch("GOVERNAUTHZER_APP_DB_ROLE", "governauthzer_app")
+databases = [ primary_db, *%w[cache queue cable].map { |s| "#{primary_db}_#{s}" } ]
+
+ssh = config[:ssh_options] || {}
+ssh_args = [ "ssh" ]
+Array(ssh[:keys]).each { |key| ssh_args += [ "-i", File.expand_path(key) ] }
+ssh_args += [ "-o", "IdentitiesOnly=yes" ] if ssh[:keys_only]
+ssh_args += [ "-p", ssh[:port].to_s ] if ssh[:port]
+ssh_args << "#{ssh[:user] || "root"}@#{host}"
+
+# Migrating boots the app in production, so it wants everything a production boot
+# wants — including the three encryption keys, whose absence is a hard failure by
+# design. The database user is the difference that matters: the owner, not the
+# restricted role the app will serve as.
+owner_password = ENV["POSTGRES_PASSWORD"].to_s
+abort "  pre-deploy: POSTGRES_PASSWORD is not set — check .kamal/secrets.#{destination}" if owner_password.empty?
+
+app_env = {
+  "RAILS_ENV" => "production",
+  "SECRET_KEY_BASE" => ENV.fetch("SECRET_KEY_BASE"),
+  "GOVERNAUTHZER_ENCRYPTION_PRIMARY_KEY" => ENV.fetch("GOVERNAUTHZER_ENCRYPTION_PRIMARY_KEY"),
+  "GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY" => ENV.fetch("GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY"),
+  "GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT" => ENV.fetch("GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT"),
+  "GOVERNAUTHZER_DATABASE_HOST" => db_container,
+  "GOVERNAUTHZER_DATABASE_USER" => owner,
+  "GOVERNAUTHZER_DATABASE_PASSWORD" => owner_password
+}
+
+# Random so no secret or SQL line can accidentally terminate its own heredoc.
+marker = "KAMAL_PREDEPLOY_#{SecureRandom.hex(8)}"
+heredoc = ->(path, body) { "cat > #{path} <<'#{marker}'\n#{body}\n#{marker}\n" }
+
+script = +<<~SH
+  set -euo pipefail
+  umask 077
+  d=$(mktemp -d)
+  trap 'rm -rf "$d"' EXIT
+
+  if [ "$(docker inspect -f '{{.State.Running}}' #{db_container} 2>/dev/null)" != "true" ]; then
+    echo "The #{db_container} accessory is not running, so there is nothing to migrate." >&2
+    echo "On a first deployment bring it up first:" >&2
+    echo "  bin/kamal accessory boot db -d #{destination}" >&2
+    exit 1
+  fi
+
+SH
+script << heredoc.("\"$d/app.env\"", app_env.map { |k, v| "#{k}=#{v}" }.join("\n"))
+script << heredoc.("\"$d/db.env\"", "PGPASSWORD=#{owner_password}")
+script << heredoc.("\"$d/grants.sql\"", File.read("db/grants.sql"))
+script << <<~SH
+
+  echo "  migrating as #{owner}"
+  docker run --rm --network kamal --env-file "$d/app.env" #{image} ./bin/rails db:prepare
+
+SH
+
+databases.each do |db|
+  script << <<~SH
+    echo "  granting on #{db}"
+    docker exec -i --env-file "$d/db.env" #{db_container} \
+      psql -v ON_ERROR_STOP=1 -U #{Shellwords.escape(owner)} -d #{Shellwords.escape(db)} \
+      -v app_role=#{Shellwords.escape(app_role)} -v app_db=#{Shellwords.escape(db)} -f - < "$d/grants.sql"
+  SH
+end
+
+# The gate: a deploy that would leave the audit log rewritable stops here, before
+# the new container ever serves a request.
+script << <<~SH
+
+  docker run --rm --network kamal --env-file "$d/app.env" #{image} \
+    ./bin/rails 'db:audit_protection:verify[#{app_role}]'
+SH
+
+puts "  pre-deploy: migrating #{primary_db} on #{host} as #{owner}, then applying grants"
+
+Open3.popen2(*ssh_args, "bash -s") do |stdin, stdout, wait|
+  stdin.write(script)
+  stdin.close
+  stdout.each_line { |line| puts "  #{line.chomp}" }
+  exit_status = wait.value
+  abort "  pre-deploy: database preparation failed — the app was not booted" unless exit_status.success?
+end

@@ -19,6 +19,12 @@ governauthzer is self-hosted OSS. Infrastructure choices (where Postgres lives, 
 SMTP provider, which secret manager) are yours; the app follows 12-factor conventions —
 everything is environment variables.
 
+Released images are published at `ghcr.io/governauthzer/governauthzer` for `linux/amd64`
+and `linux/arm64`, tagged with the full version, the major and minor series, and `latest`
+— so you can run a release without building it. For a worked end-to-end example of doing
+that on one server, see **[Deploying with Kamal](kamal.md)**; this page is the
+provider-neutral reference behind it.
+
 ## Prerequisites
 
 - **PostgreSQL** 13+ (16+ recommended). Uses `gen_random_uuid()`; no extensions needed.
@@ -98,6 +104,12 @@ The runbook is its own page: **[Audit-log protection](audit-log-protection.md)**
 > for single-role installs. For a **role-separated** deploy, set `SKIP_DB_PREPARE=true`
 > and run `bin/rails db:migrate` as the **owner** role at release time; the restricted
 > runtime role cannot run DDL.
+>
+> Whatever runs those migrations must also apply `db/grants.sql` afterwards, and should
+> fail the release when [`db:audit_protection:verify`](audit-log-protection.md) does —
+> otherwise a migration can quietly leave the audit log rewritable. The Kamal deployment
+> does both in a [pre-deploy hook](kamal.md#what-happens-on-each-deploy), between pulling
+> the new image and starting it.
 
 ## TLS
 

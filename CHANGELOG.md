@@ -3,70 +3,63 @@
 Notable changes per release. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
-Every release so far is a pre-release: expect breaking changes, and read the upgrade
-notes before moving between versions.
-
-Record what you ship under `## Unreleased` as you make the change. The release
-workflow dates that section and turns it into the release notes.
+Record what you ship under `## Unreleased`. The release workflow dates that section and
+turns it into the release notes.
 
 ## Unreleased
 
 ### Added
 
-- Released images are published to `ghcr.io/governauthzer/governauthzer`, for `linux/amd64`
-  and `linux/arm64`, tagged with the full version, the major and minor series, and `latest`.
-  Deploying no longer means building the image yourself.
+- Published images at `ghcr.io/governauthzer/governauthzer`, for amd64 and arm64 — deploy a
+  release without building it.
+- A worked Kamal deployment: `config/deploy.production.yml`, reading its values from a
+  `.env.production` you keep out of git.
+- Deploying a destination migrates as the database owner, applies `db/grants.sql`, and stops
+  if the audit log did not come out append-only.
 - The operator dashboard shows the running version.
 
 ## 0.5.0 — 2026-07-17
 
 ### Changed
 
-- Outgoing SMTP is configured through environment variables (`SMTP_HOST`, `SMTP_PORT`,
-  `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_TLS`) instead of `production.rb`. With `SMTP_HOST`
-  unset, mail stays off as before.
+- SMTP is configured with environment variables. `SMTP_HOST` unset keeps mail off.
 
 ### Fixed
 
 - The image builds again: the encryption-key check no longer fires during asset
-  precompilation, where secrets are absent by design.
-- `db/grants.sql` runs against all four databases. The audit-log lockdown applies itself
-  only where the audit table exists, instead of aborting on the cache, queue and cable
-  databases.
+  precompilation.
+- `db/grants.sql` runs against all four databases.
 
 ## 0.4.0 — 2026-07-06
 
 ### Changed
 
-- Audit events raised through the API name the token that made the call.
-- Documented API token security and the rate limits.
+- Audit events name the API token that made the call.
+- Documented API token security.
 
 ## 0.3.0 — 2026-07-03
 
 ### Changed
 
-- Snapshot sync issues fewer queries.
-- API errors say what was wrong.
-- Removed dead code and scaffold leftovers.
+- Faster snapshot sync.
+- Clearer API errors.
+- Leaner internals.
 
 ## 0.2.0 — 2026-07-02
 
 ### Changed
 
-- **Breaking.** End-user portal events are recorded under the `web-ui` audit channel,
-  split out from `admin-ui`. Anything filtering audit events by channel needs updating.
-  This went out unflagged at the time and is recorded here after the fact.
+- **Breaking.** End-user portal events moved to the `web-ui` audit channel. Recorded after
+  the fact — it went out unflagged.
 
 ### Added
 
-- A sweeper that recovers webhook deliveries stuck mid-flight.
+- A sweeper that recovers stuck webhook deliveries.
 
 ### Fixed
 
-- Sign-in through OIDC lands non-operators on a page they can see.
+- OIDC sign-in lands non-operators on a page they can see.
 
 ## 0.1.0 — 2026-07-01
 
-First public preview. Request, approve and audit access, with an append-only audit log,
-OIDC sign-in, a management API for the identity axis, and signed CloudEvents webhooks
-plus a reconciliation API for fulfillment.
+First public preview.

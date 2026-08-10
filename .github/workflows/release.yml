@@ -127,14 +127,10 @@ jobs:
           git tag -a "v${{ steps.prep.outputs.version }}" -m "Release ${{ steps.prep.outputs.version }}"
           git push origin HEAD:${{ github.ref_name }} --follow-tags
 
-      # --prerelease is not a formality: every release so far is one, and the
-      # README still carries the early-stage banner. Drop this flag in the same
-      # change that drops the banner — not before, and not separately.
       - name: Create the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "v${{ steps.prep.outputs.version }}" \
             --title "v${{ steps.prep.outputs.version }}" \
-            --prerelease \
             --notes-file "$RUNNER_TEMP/notes.md"
