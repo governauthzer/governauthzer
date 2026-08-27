@@ -25,7 +25,7 @@ dump does not carry.
 | `governauthzer_production` | **Yes** | Users, catalog, grants, approvals, and the audit log. This is the product. |
 | The three encryption keys | **Yes** | Without them a dump is unreadable where it matters most — see below. |
 | `..._cache` / `..._queue` / `..._cable` | No | Solid Cache, Queue and Cable. Rebuilt on boot. |
-| `governauthzer_storage` volume | No | Active Storage is wired up but nothing attaches files to anything yet. The volume is empty. |
+| `governauthzer_storage` volume | No | Nothing writes to it. The app stores no files. |
 
 Restoring without the queue database costs you jobs that were in flight: unsent
 notification emails, and webhook retries that had been scheduled. Deliveries recover on
