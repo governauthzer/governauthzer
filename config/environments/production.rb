@@ -63,24 +63,11 @@ Rails.application.configure do
   # Mailer link host comes from GOVERNAUTHZER_HOST via config/initializers/host.rb
   # (which sets both routes and Action Mailer default_url_options).
 
-  # Outgoing SMTP is ENV-only, like every production secret (the shipped Docker image
-  # is immutable — editing this file per-install is not a path). Unset SMTP_HOST leaves
-  # Action Mailer unconfigured: deliveries fail inside background jobs, which is safe —
-  # mail is sent async via Solid Queue and never blocks approve/revoke flows.
-  if ENV["SMTP_HOST"].present?
-    smtp_settings = {
-      address: ENV["SMTP_HOST"],
-      port: Integer(ENV.fetch("SMTP_PORT", "587")),
-      # Only the exact string "false" disables STARTTLS (same convention as FORCE_SSL).
-      enable_starttls_auto: ENV.fetch("SMTP_TLS", "true") != "false"
-    }
-    if ENV["SMTP_USER"].present?
-      smtp_settings[:user_name] = ENV["SMTP_USER"]
-      smtp_settings[:password] = ENV["SMTP_PASSWORD"]
-      smtp_settings[:authentication] = :plain
-    end
-    config.action_mailer.smtp_settings = smtp_settings
-  end
+  # Outgoing SMTP is configured by an operator in the admin UI (Notifications), stored
+  # in notification_settings and applied per message by ApplicationMailer — there is
+  # deliberately no ENV path, so the server a message goes to has one source of truth.
+  # Until email is switched on there, no notification is even enqueued.
+  config.action_mailer.delivery_method = :smtp
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

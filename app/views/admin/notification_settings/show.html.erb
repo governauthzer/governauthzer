@@ -1,0 +1,97 @@
+<% content_for :title, "Notifications — Governauthzer" %>
+
+<div class="max-w-5xl mx-auto space-y-8">
+  <%= render "admin/nav" %>
+
+  <div>
+    <h1 class="page-title">Notifications</h1>
+    <p class="field-hint mt-1">
+      How governauthzer tells approvers that a request is waiting, and requesters what was decided.
+      Without a channel switched on, approvers only see requests in their in-app inbox.
+    </p>
+  </div>
+
+  <section class="card p-5 space-y-5">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="section-label">Email</h2>
+      <span class="pill <%= @settings.email_enabled_in_database ? 'bg-green-50 text-green-800' : 'bg-gray-100 text-gray-600' %>">
+        <%= @settings.email_enabled_in_database ? "On" : "Off" %>
+      </span>
+    </div>
+
+    <%= form_with model: @settings, url: admin_notification_settings_path, method: :patch,
+                  local: true, class: "space-y-5 max-w-xl" do |f| %>
+      <% if @settings.errors.any? %>
+        <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm space-y-1">
+          <% @settings.errors.full_messages.each do |msg| %>
+            <div>• <%= msg %></div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="flex items-center gap-2">
+        <%= f.check_box :email_enabled %>
+        <%= f.label :email_enabled, "Send email notifications", class: "text-sm" %>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="sm:col-span-2">
+          <%= f.label :smtp_host, "SMTP server", class: "field-label" %>
+          <%= f.text_field :smtp_host, placeholder: "smtp.example.com", class: "#{input_class} font-mono" %>
+        </div>
+        <div>
+          <%= f.label :smtp_port, "Port", class: "field-label" %>
+          <%= f.number_field :smtp_port, min: 1, max: 65_535, class: input_class %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :smtp_security, "Encryption", class: "field-label" %>
+        <%= f.select :smtp_security,
+              [ [ "STARTTLS (usually port 587)", "starttls" ],
+                [ "TLS from the start (usually port 465)", "tls" ],
+                [ "None", "none" ] ],
+              {}, class: input_class %>
+        <p class="field-hint">
+          STARTTLS is required, not attempted: a server that does not offer it is refused rather
+          than spoken to in clear. Choose None only for a relay on the same private network.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <%= f.label :smtp_username, "Username", class: "field-label" %>
+          <%= f.text_field :smtp_username, autocomplete: "off", class: input_class %>
+          <p class="field-hint">Leave blank for a relay that does not authenticate.</p>
+        </div>
+        <div>
+          <%= f.label :smtp_password, "Password", class: "field-label" %>
+          <%= f.password_field :smtp_password, value: nil, autocomplete: "new-password",
+                placeholder: (@settings.smtp_password.present? ? "Leave blank to keep current" : nil),
+                class: input_class %>
+          <p class="field-hint">Stored encrypted. Never shown again.</p>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :mail_from, "From address", class: "field-label" %>
+        <%= f.text_field :mail_from, placeholder: "governauthzer@example.com", class: input_class %>
+        <p class="field-hint">Plain or with a name: <code>Access Requests &lt;access@example.com&gt;</code>.</p>
+      </div>
+
+      <div class="pt-2">
+        <%= f.submit "Save", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+
+    <div class="pt-4 border-t border-gray-100 space-y-2">
+      <%= button_to "Send test email", test_email_admin_notification_settings_path,
+            class: "btn btn-secondary",
+            disabled: !(@settings.persisted? && @settings.smtp_configured?) %>
+      <p class="field-hint">
+        Sends to <%= current_user.email %> with the saved settings, even while email is off,
+        and shows the server's answer.
+      </p>
+    </div>
+  </section>
+</div>

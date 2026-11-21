@@ -32,9 +32,7 @@
 
    domain = required.("DOMAIN")
    # DNS usually points at the box already; an IP is only needed when it does not.
-   server = value.("SERVER_HOST") || domain
-   smtp_host = value.("SMTP_HOST")
-   smtp_user = value.("SMTP_USER") %>
+   server = value.("SERVER_HOST") || domain %>
 
 # Production runs published releases, not local builds — deploying is the last
 # check that what GHCR actually serves boots and migrates. Overrides the
@@ -83,18 +81,6 @@ env:
     # in the pre-deploy hook, which is why the entrypoint must not run db:prepare.
     GOVERNAUTHZER_DATABASE_USER: governauthzer_app
     SKIP_DB_PREPARE: true
-<% if smtp_host -%>
-    SMTP_HOST: <%= smtp_host %>
-    SMTP_PORT: <%= ENV.fetch("SMTP_PORT", "587") %>
-    SMTP_TLS: <%= ENV.fetch("SMTP_TLS", "true") %>
-<% if smtp_user -%>
-    SMTP_USER: <%= smtp_user %>
-<% end -%>
-<% else -%>
-    # Mail is off: SMTP_HOST is unset in .env.production, so Action Mailer stays
-    # unconfigured and delivery jobs fail quietly in the background. Nothing in the
-    # approval loop blocks on it — the in-app inbox carries the workflow.
-<% end -%>
   # NOTE: a destination's env.secret REPLACES the base list (Kamal deep-merge
   # replaces arrays) — the base secrets are repeated here in full.
   secret:
@@ -103,9 +89,6 @@ env:
     - GOVERNAUTHZER_ENCRYPTION_DETERMINISTIC_KEY
     - GOVERNAUTHZER_ENCRYPTION_KEY_DERIVATION_SALT
     - GOVERNAUTHZER_DATABASE_PASSWORD
-<% if smtp_user -%>
-    - SMTP_PASSWORD
-<% end -%>
 
 # Postgres on the same server, private to the app. The owner role is the
 # in-container superuser; the init script below creates the restricted runtime

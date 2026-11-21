@@ -34,6 +34,9 @@ Rails.application.routes.draw do
     resources :webhook_subscriptions do
       member { post :rotate_secret }
     end
+    resource :notification_settings, only: %i[show update] do
+      post :test_email
+    end
     root to: "dashboard#index"
   end
 

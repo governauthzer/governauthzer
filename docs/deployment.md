@@ -16,8 +16,10 @@ Running governauthzer in production: configuration, secrets, TLS, and bootstrap.
 ---
 
 governauthzer is self-hosted OSS. Infrastructure choices (where Postgres lives, which
-SMTP provider, which secret manager) are yours; the app follows 12-factor conventions —
-everything is environment variables.
+SMTP provider, which secret manager) are yours. Deployment configuration follows 12-factor
+conventions — it is all environment variables. What the app connects to once it runs (OIDC
+providers, webhook endpoints, the SMTP server) is configured by an operator in the admin UI,
+with its credentials encrypted in the database.
 
 Released images are published at `ghcr.io/governauthzer/governauthzer` for `linux/amd64`
 and `linux/arm64`, tagged with the full version, the major and minor series, and `latest`
@@ -57,12 +59,6 @@ The app **fails to boot** without `SECRET_KEY_BASE` and the three encryption key
 | `GOVERNAUTHZER_DATABASE_PASSWORD` | — | password for that role |
 | `FORCE_SSL` | `true` | Enforce HTTPS (redirect + HSTS + secure cookies). Set `false` only behind upstream TLS — logs a loud warning. |
 | `ASSUME_SSL` | `false` | Set `true` behind a TLS-terminating proxy that doesn't forward `X-Forwarded-Proto` (avoids a redirect loop). |
-| `MAIL_FROM` | app default | `From:` address on notification emails. |
-| `SMTP_HOST` | — | SMTP server for outgoing mail. Unset ⇒ mail is not configured; deliveries fail inside background jobs and never block approve/revoke. |
-| `SMTP_PORT` | `587` | SMTP port. |
-| `SMTP_USER` | — | SMTP login. Unset ⇒ unauthenticated relay. |
-| `SMTP_PASSWORD` | — | SMTP password (only used with `SMTP_USER`). |
-| `SMTP_TLS` | `true` | STARTTLS. Only the exact string `false` disables it. |
 
 ### Optional
 
@@ -164,11 +160,11 @@ else (their OIDC identity is linked by an operator in the admin UI).
 ## Email
 
 Notifications (review requests, approvals, denials) go through Action Mailer, sent
-asynchronously via Solid Queue (an SMTP outage never blocks approve/revoke). Configure
-SMTP entirely via environment variables — `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
-`SMTP_PASSWORD`, `SMTP_TLS` (see the table above). Any SMTP provider works (SES,
-Postmark, Mailgun, corporate Exchange). `MAIL_FROM` sets the `From:` address. In
-development, mail is captured by `letter_opener_web` at `/letter_opener`.
+asynchronously via Solid Queue (an SMTP outage never blocks approve/revoke). Email is off
+on a fresh install. An operator configures the SMTP server, the `From:` address and a test
+send in **Admin → Notifications** — see the [admin guide](admin-guide.md#notifications).
+There are no mail environment variables. In development, mail is captured by
+`letter_opener_web` at `/letter_opener`.
 
 ## Background jobs
 

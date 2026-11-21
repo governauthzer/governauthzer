@@ -43,6 +43,8 @@ tokens · Webhooks**, with **App ↗** to jump to the end-user UI.
    link each person's OIDC identity so they can sign in.
 5. *(optional)* **[Wire fulfillment](#webhooks)** — a webhook subscription + an API token so
    approved grants reach your target systems.
+6. *(optional)* **[Turn on notifications](#notifications)** — so approvers hear about requests
+   without opening their inbox.
 
 ## Dashboard
 
@@ -200,6 +202,28 @@ The subscription page shows the **signing secret** (both sides need it to verify
 **rotate** it there) and a **recent-deliveries** table (status / attempts / last response
 code) for observability. The full contract — signing, retries, reconciliation — is in
 [Webhooks & CloudEvents](webhooks.md).
+
+## Notifications
+
+**Admin → Notifications.** Email tells an approver that a request is waiting for them, and
+tells the requester when it was approved or denied. It is **off** until you switch it on;
+until then nothing is queued, and approvers find requests only in their in-app inbox.
+
+| Field | Notes |
+| --- | --- |
+| **SMTP server / Port** | Any relay: your mail server, SES, Postmark, Mailgun, Google Workspace. |
+| **Encryption** | *STARTTLS* (usually 587) is **required**, not attempted — a server that doesn't offer it is refused, not spoken to in clear. *TLS* (usually 465) encrypts from the first byte. *None* is for a relay on the same private network only. |
+| **Username / Password** | Leave blank for a relay that doesn't authenticate. The password is stored encrypted and never shown again; a blank field keeps the stored one. |
+| **From address** | `access@example.com`, or with a name: `Access Requests <access@example.com>`. |
+
+**Send test email** sends to you with the *saved* settings, even while email is off, and
+shows the server's answer — prove the relay works, then switch email on. Changes apply to
+the next message without a restart. Saving and test sends are both in the audit log
+(`notification_settings.updated`, `notification_settings.email_tested`); the password never
+is.
+
+Mail is sent in the background: an SMTP outage never blocks an approval, and an email
+lost to one is not retried. Messages already queued when you switch email off are dropped.
 
 ## Audit log
 

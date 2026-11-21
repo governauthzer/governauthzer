@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_10_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -150,6 +150,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_120100) do
     t.uuid "user_id", null: false
     t.index ["source", "external_id"], name: "index_external_identities_on_source_and_external_id", unique: true
     t.index ["user_id"], name: "index_external_identities_on_user_id"
+  end
+
+  create_table "notification_settings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "email_enabled", default: false, null: false
+    t.string "mail_from"
+    t.boolean "singleton", default: true, null: false
+    t.string "smtp_host"
+    t.text "smtp_password"
+    t.integer "smtp_port", default: 587, null: false
+    t.string "smtp_security", default: "starttls", null: false
+    t.string "smtp_username"
+    t.datetime "updated_at", null: false
+    t.index ["singleton"], name: "index_notification_settings_on_singleton", unique: true
+    t.check_constraint "singleton", name: "notification_settings_single_row"
   end
 
   create_table "omniauth_identities", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

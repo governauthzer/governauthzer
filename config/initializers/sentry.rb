@@ -1,4 +1,4 @@
-# Error tracking is opt-in and self-hosted-friendly, the same shape as SMTP and the
+# Error tracking is opt-in and self-hosted-friendly, the same shape as the
 # rest of governauthzer's infra config: with no SENTRY_DSN set the SDK is never
 # initialized and nothing leaves the process. Set SENTRY_DSN to a self-hosted Sentry
 # or a Sentry.io tenant to activate.

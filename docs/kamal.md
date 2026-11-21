@@ -51,11 +51,8 @@ bin/governauthzer generate-encryption-keys   # the three encryption keys
 ```
 
 Back the file up in a password manager. Losing the encryption keys loses every encrypted
-value — currently the OIDC client secrets — and the database passwords are baked into the
+value — the OIDC client secrets, webhook signing secrets and the SMTP password — and the database passwords are baked into the
 Postgres volume when it first boots.
-
-Leave `SMTP_HOST` unset to run without mail: approval notifications then fail quietly in
-the background and the in-app inbox carries the workflow. Setting it wires the rest in.
 
 ## First deployment
 

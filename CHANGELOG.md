@@ -17,11 +17,18 @@ turns it into the release notes.
 - Deploying migrates as the database owner and applies `db/grants.sql`.
 - The operator dashboard shows the running version.
 - Documented backup, restore and upgrades.
+- Email is configured in UI
 
 ### Changed
 
 - A webhook endpoint must be an `http://` or `https://` address.
 - The CloudEvents `source` now identifies your deployment instead of the project.
+- Email is off until an operator switches it on, and no notification is queued while
+  it is off.
+
+### Removed
+
+- The SMTP environment variables.
 
 ### Fixed
 

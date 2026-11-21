@@ -2,6 +2,10 @@
 # `.with(...)` (not AR records) so the mail survives a request row being destroyed
 # (deny) and serializes cleanly for the queue.
 class AccessMailer < ApplicationMailer
+  # Callers check before enqueuing; this covers mail already queued when an operator
+  # switched email off.
+  after_action -> { mail.perform_deliveries = false unless notification_settings.email_enabled? }
+
   def review_request
     @approver_name    = params[:name]
     @requester_name   = params[:requester_name]

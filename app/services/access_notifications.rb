@@ -1,12 +1,19 @@
 # Mailer wiring for the approval workflow, mixed into the access services. Each
 # helper enqueues a non-blocking notification (deliver_later) at a decision point.
 # Reads happen at call time (before the deny path destroys the row), and only
-# primitives are passed to the mailer.
+# primitives are passed to the mailer. Nothing is enqueued while email is switched
+# off in the notification settings, so a mail-less install has no failing jobs.
 module AccessNotifications
   private
 
+  def email_notifications?
+    NotificationSetting.email_enabled?
+  end
+
   # The request now sits with an approver → ask them to review.
   def notify_review(access)
+    return unless email_notifications?
+
     approver = access.current_approver
     return if approver.nil?
 
@@ -21,6 +28,8 @@ module AccessNotifications
 
   # The request was granted → tell the subject.
   def notify_approved(access)
+    return unless email_notifications?
+
     AccessMailer.with(
       email: access.user.email, name: access.user.name,
       role_name: access.role.name,
@@ -30,6 +39,8 @@ module AccessNotifications
 
   # The request was denied → tell the requester (read before the row is destroyed).
   def notify_denied(access, comment)
+    return unless email_notifications?
+
     requester = access.requested_by
     return if requester.nil?
 

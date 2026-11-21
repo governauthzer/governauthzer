@@ -8,6 +8,7 @@ class AccessWorkflowTest < ActionDispatch::IntegrationTest
     @workflow = ApprovalWorkflow.create!(name: "Manager", slug: "mgr-flow")
     @workflow.approval_steps.create!(position: 0, strategy: "manager_of_requester", fallback_user: @manager)
     @role = Role.create!(application: @application, name: "Slack User", slug: "slack-user", approval_workflow: @workflow)
+    NotificationSetting.create!(email_enabled: true, smtp_host: "smtp.example.com", mail_from: "gov@example.com")
   end
 
   test "dashboard requires login" do
@@ -38,6 +39,21 @@ class AccessWorkflowTest < ActionDispatch::IntegrationTest
 
     # one email to the requester on grant
     assert_enqueued_emails 1 do
+      post "/approvals/#{access.id}/approve", params: { comment: "ok" }
+    end
+    assert_equal "approved", access.reload.status
+  end
+
+  test "with email switched off, the workflow runs and no mail is enqueued" do
+    NotificationSetting.current.update!(email_enabled: false)
+    sign_in_as @requester
+    assert_no_enqueued_emails do
+      post "/access_requests", params: { role_id: @role.id, justification: "need it" }
+    end
+    access = Access.find_by!(user: @requester, role: @role)
+
+    sign_in_as @manager
+    assert_no_enqueued_emails do
       post "/approvals/#{access.id}/approve", params: { comment: "ok" }
     end
     assert_equal "approved", access.reload.status
