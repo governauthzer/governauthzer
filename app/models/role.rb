@@ -3,6 +3,11 @@ class Role < ApplicationRecord
 
   belongs_to :application
   belongs_to :approval_workflow, optional: true
+
+  # Role names repeat across applications ("Admin"), so the audit trail names both.
+  def audit_display
+    "#{name} (#{application.name})"
+  end
   has_many :accesses, dependent: :restrict_with_error
   has_many :users, through: :accesses
 

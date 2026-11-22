@@ -22,6 +22,24 @@ class AdminAuditEventsTest < ActionDispatch::IntegrationTest
     sign_in_as @operator
   end
 
+  test "an access event lists once, as the access, naming the role's application" do
+    app = Application.create!(name: "Demo App", slug: "demo-app")
+    role = app.roles.create!(name: "demo role", slug: "demo-role")
+    access = Access.create!(user: @target, role: role, status: "approved", source: "manual")
+    event = Current.set(correlation_id: SecureRandom.uuid) do
+      AuditEvent.record!(event_type: "access.granted", actor: @operator, targets: [ @target, access, role ])
+    end
+
+    get "/admin/audit_events"
+    row = css_select("tr").find { |tr| tr.text.include?("access.granted") }
+    targets_cell = row.css("td")[3].text.strip
+    assert_equal "Target → demo role (Demo App)", targets_cell
+
+    get "/admin/audit_events/#{event.id}"
+    assert_includes response.body, "demo role (Demo App)"
+    assert_select "a", text: "events", count: 3
+  end
+
   test "index lists all events" do
     get "/admin/audit_events"
     assert_response :ok

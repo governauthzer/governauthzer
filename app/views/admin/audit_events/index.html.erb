@@ -62,7 +62,7 @@
               <td class="font-mono text-gray-900"><%= event.event_type %></td>
               <td class="text-gray-700"><%= event.actor_display || "system" %></td>
               <td class="text-gray-500 truncate max-w-xs">
-                <%= event.targets.map { |t| t["display"] }.compact.join(", ").presence || "—" %>
+                <%= audit_targets_summary(event) %>
               </td>
               <td class="text-right">
                 <%= link_to "Details", admin_audit_event_path(event), class: "text-copper-700 hover:underline" %>

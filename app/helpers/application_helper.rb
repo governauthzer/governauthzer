@@ -3,6 +3,16 @@ module ApplicationHelper
     "input"
   end
 
+  # One line for an audit event's targets in a list. Access events also carry the user
+  # and the role as targets, so each can be looked up on its own after the access row is
+  # deleted; the access's own label already names both, so the list shows just that.
+  # The event page still lists every target.
+  def audit_targets_summary(event)
+    targets = event.targets.select { |t| t["display"].present? }
+    access = targets.find { |t| t["type"] == "Access" }
+    (access ? [ access ] : targets).map { |t| t["display"] }.join(", ").presence || "—"
+  end
+
   # A calm dot-chip: neutral chip + a single semantic dot. Keeps the monochrome
   # brand while making status scannable. Works for User and Access states.
   def status_pill(status)

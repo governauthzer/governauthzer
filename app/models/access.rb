@@ -56,7 +56,7 @@ class Access < ApplicationRecord
   end
 
   def audit_display
-    "#{user.name} → #{role.name}"
+    "#{user.name} → #{role.audit_display}"
   end
 
   private
