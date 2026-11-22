@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -156,6 +156,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_21_120000) do
     t.datetime "created_at", null: false
     t.boolean "email_enabled", default: false, null: false
     t.string "mail_from"
+    t.boolean "messenger_enabled", default: false, null: false
+    t.datetime "messenger_last_attempted_at"
+    t.text "messenger_last_error"
+    t.integer "messenger_last_response_code"
+    t.text "messenger_template", default: "{\"text\": \"{{text}}\"}", null: false
+    t.text "messenger_url"
     t.boolean "singleton", default: true, null: false
     t.string "smtp_host"
     t.text "smtp_password"

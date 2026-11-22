@@ -93,3 +93,87 @@ class NotificationSettingTest < ActiveSupport::TestCase
     assert_nil settings.reload.smtp_password
   end
 end
+
+class NotificationSettingMessengerTest < ActiveSupport::TestCase
+  def messenger(**attrs)
+    NotificationSetting.new({ messenger_enabled: true, messenger_url: "https://hooks.example.com/T1/B2/secret" }.merge(attrs))
+  end
+
+  test "switching the messenger on requires a URL" do
+    settings = NotificationSetting.new(messenger_enabled: true)
+    assert_not settings.valid?
+    assert settings.errors.of_kind?(:messenger_url, :blank)
+  end
+
+  test "the URL must be an http or https address" do
+    assert_not messenger(messenger_url: "ftp://hooks.example.com/x").valid?
+    assert_not messenger(messenger_url: "hooks.example.com/x").valid?
+    assert messenger(messenger_url: "http://mattermost.internal/hooks/abc").valid?
+    assert messenger(messenger_url: "http://mattermost.internal/hooks/abc").insecure_messenger_url?
+  end
+
+  test "the template must be a JSON object or array using known placeholders" do
+    assert_not messenger(messenger_template: "{ broken").valid?
+    assert_not messenger(messenger_template: '"just a string"').valid?
+    invalid = messenger(messenger_template: '{"text": "{{txet}}"}')
+    assert_not invalid.valid?
+    assert_match "txet", invalid.errors[:messenger_template].join
+    assert messenger(messenger_template: '{"text": "{{ requester }} wants {{role}}"}').valid?
+  end
+
+  test "every preset is a valid template" do
+    NotificationSetting::MESSENGER_PRESETS.each do |key, preset|
+      assert messenger(messenger_template: preset[:template]).valid?, "preset #{key} must validate"
+    end
+  end
+
+  test "rendering fills placeholders inside string values only, so values cannot break out" do
+    settings = messenger(messenger_template: '{"text": "{{text}}", "meta": ["{{event}}", 1, true]}')
+    hostile = %q(need it", "admin": true, "x": "{{event}}) + "\n}"
+    body = JSON.parse(settings.render_messenger_body("text" => hostile, "event" => "approved"))
+
+    assert_equal [ "meta", "text" ], body.keys.sort, "a value must never add a field"
+    assert_equal hostile, body["text"], "a value is inserted verbatim, not re-expanded"
+    assert_equal [ "approved", 1, true ], body["meta"]
+  end
+
+  test "an unset placeholder renders empty" do
+    body = messenger(messenger_template: '{"text": "[{{comment}}]"}').render_messenger_body("text" => "x")
+    assert_equal({ "text" => "[]" }, JSON.parse(body))
+  end
+
+  test "the webhook URL is encrypted at rest, and only its host is exposed" do
+    settings = NotificationSetting.create!(messenger_enabled: true, messenger_url: "https://hooks.example.com/T1/B2/secret")
+    raw = NotificationSetting.connection.select_value(
+      "SELECT messenger_url FROM notification_settings WHERE id = #{NotificationSetting.connection.quote(settings.id)}"
+    )
+    assert_not_includes raw, "secret"
+    assert_equal "hooks.example.com", settings.reload.saved_messenger_host
+  end
+
+  test "a new URL or template clears the last delivery result, other edits keep it" do
+    settings = NotificationSetting.create!(messenger_enabled: true, messenger_url: "https://hooks.example.com/a")
+    settings.record_messenger_result!(code: 403, error: "HTTP 403: invalid_token")
+
+    settings.update!(mail_from: "gov@example.com")
+    assert_equal 403, settings.reload.messenger_last_response_code
+
+    settings.update!(messenger_url: "https://hooks.example.com/b")
+    settings.reload
+    assert_nil settings.messenger_last_response_code
+    assert_nil settings.messenger_last_error
+    assert_nil settings.messenger_last_attempted_at
+  end
+
+  test "recording a result touches neither updated_at nor validation" do
+    settings = NotificationSetting.create!(messenger_enabled: true, messenger_url: "https://hooks.example.com/a")
+    before = settings.updated_at
+    travel 1.minute do
+      settings.record_messenger_result!(code: 200, error: nil)
+    end
+    settings.reload
+    assert_equal 200, settings.messenger_last_response_code
+    assert_equal before, settings.updated_at
+    assert settings.messenger_last_attempted_at.present?
+  end
+end

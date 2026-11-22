@@ -36,6 +36,7 @@ Rails.application.routes.draw do
     end
     resource :notification_settings, only: %i[show update] do
       post :test_email
+      post :test_messenger
     end
     root to: "dashboard#index"
   end

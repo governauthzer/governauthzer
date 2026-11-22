@@ -59,6 +59,47 @@ class AccessWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal "approved", access.reload.status
   end
 
+  test "with the messenger on, request, approval and denial each post to the channel" do
+    NotificationSetting.current.update!(messenger_enabled: true, messenger_url: "https://hooks.example.com/x")
+    other_role = Role.create!(application: @application, name: "Slack Admin", slug: "slack-admin", approval_workflow: @workflow)
+    sign_in_as @requester
+
+    assert_enqueued_with(job: Notifications::MessengerDeliveryJob) do
+      post "/access_requests", params: { role_id: @role.id, justification: "on-call rotation" }
+    end
+    review = enqueued_jobs.select { |j| j["job_class"] == "Notifications::MessengerDeliveryJob" }.last["arguments"].first
+    assert_equal "review_requested", review["event"]
+    assert_equal @manager.name, review["approver"]
+    assert_match "#{@requester.name} requested Slack User (Slack)", review["text"]
+    assert_match "Awaiting approval from #{@manager.name}", review["text"]
+    assert_match "Justification: on-call rotation", review["text"]
+    assert_match %r{http://\S+/\z}, review["text"], "the message ends with a bare link"
+
+    post "/access_requests", params: { role_id: other_role.id }
+    access = Access.find_by!(user: @requester, role: @role)
+    other = Access.find_by!(user: @requester, role: other_role)
+    sign_in_as @manager
+
+    clear_enqueued_jobs
+    post "/approvals/#{access.id}/approve"
+    approved = enqueued_jobs.find { |j| j["job_class"] == "Notifications::MessengerDeliveryJob" }["arguments"].first
+    assert_equal "approved", approved["event"]
+    assert_match "#{@requester.name} was granted Slack User (Slack).", approved["text"]
+
+    clear_enqueued_jobs
+    post "/approvals/#{other.id}/deny", params: { comment: "use the shared account" }
+    denied = enqueued_jobs.find { |j| j["job_class"] == "Notifications::MessengerDeliveryJob" }["arguments"].first
+    assert_equal "denied", denied["event"]
+    assert_match "request for Slack Admin (Slack) was denied. Comment: use the shared account", denied["text"]
+  end
+
+  test "with the messenger off, nothing is posted" do
+    sign_in_as @requester
+    assert_no_enqueued_jobs only: Notifications::MessengerDeliveryJob do
+      post "/access_requests", params: { role_id: @role.id }
+    end
+  end
+
   test "non-approver cannot approve" do
     sign_in_as @requester
     post "/access_requests", params: { role_id: @role.id }

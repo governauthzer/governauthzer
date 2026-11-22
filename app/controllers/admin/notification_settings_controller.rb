@@ -26,11 +26,29 @@ class Admin::NotificationSettingsController < Admin::BaseController
     end
 
     error = deliver_test_email
-    record_test_audit(error)
+    record_test_audit("notification_settings.email_tested", error,
+                      "recipient" => current_user.email, "smtp_host" => @settings.smtp_host)
     if error
       redirect_to admin_notification_settings_path, alert: "Test email failed: #{error}"
     else
       redirect_to admin_notification_settings_path, notice: "Test email sent to #{current_user.email}."
+    end
+  end
+
+  # Posts a sample message to the SAVED messenger webhook, synchronously, and shows
+  # the endpoint's answer. Like the test email it works while the channel is off, is
+  # audited, and its result becomes the channel's last known state.
+  def test_messenger
+    unless @settings.persisted? && @settings.messenger_configured?
+      return redirect_to admin_notification_settings_path, alert: "Save a webhook URL first."
+    end
+
+    error = deliver_test_message
+    record_test_audit("notification_settings.messenger_tested", error, "host" => @settings.saved_messenger_host)
+    if error
+      redirect_to admin_notification_settings_path, alert: "Test message failed: #{error}"
+    else
+      redirect_to admin_notification_settings_path, notice: "Test message posted."
     end
   end
 
@@ -50,25 +68,48 @@ class Admin::NotificationSettingsController < Admin::BaseController
     "#{e.class.name}: #{e.message}".truncate(300)
   end
 
-  def record_test_audit(error)
-    metadata = { "source" => "admin-ui", "recipient" => current_user.email, "smtp_host" => @settings.smtp_host,
-                 "outcome" => error ? "failed" : "delivered" }
+  # Returns nil on success, or the failure as text — the endpoint's status and body,
+  # or the network error. Rescued broadly for the same reason as the test email.
+  def deliver_test_message
+    link = root_url
+    body = @settings.render_messenger_body(
+      "text" => "Test message from governauthzer, sent by #{current_user.name}. " \
+                "If you can read this, notifications will arrive here.\n#{link}",
+      "event" => "test", "requester" => current_user.name, "role" => "Example role",
+      "application" => "Example application", "approver" => current_user.name,
+      "justification" => "Testing the notification channel", "comment" => "", "link" => link
+    )
+    response = Notifications::MessengerDeliveryJob.deliver(@settings, body)
+    (200..299).cover?(response.code) ? nil : Notifications::MessengerDeliveryJob.describe(response)
+  rescue StandardError => e
+    message = "#{e.class.name}: #{e.message}".truncate(Notifications::MessengerDeliveryJob::ERROR_BODY_LIMIT)
+    @settings.record_messenger_result!(code: nil, error: message)
+    message
+  end
+
+  def record_test_audit(event_type, error, details)
+    metadata = { "source" => "admin-ui", "outcome" => error ? "failed" : "delivered" }.merge(details)
     metadata["error"] = error if error
-    AuditEvent.record!(event_type: "notification_settings.email_tested", actor: current_user,
-                       targets: @settings, metadata: metadata)
+    AuditEvent.record!(event_type: event_type, actor: current_user, targets: @settings, metadata: metadata)
   end
 
   def settings_params
     attrs = params.require(:notification_setting).permit(
-      :email_enabled, :smtp_host, :smtp_port, :smtp_security, :smtp_username, :smtp_password, :mail_from
+      :email_enabled, :smtp_host, :smtp_port, :smtp_security, :smtp_username, :smtp_password, :mail_from,
+      :messenger_enabled, :messenger_url, :messenger_template
     )
-    # A blank password field means "keep the stored one" — it is never rendered back.
+    # Blank secret fields mean "keep the stored value" — neither is ever rendered back.
     attrs.delete(:smtp_password) if attrs[:smtp_password].blank?
+    attrs.delete(:messenger_url) if attrs[:messenger_url].blank?
     attrs
   end
 
+  SECRET_ATTRIBUTES = %w[smtp_password messenger_url].freeze
+
   def redact_secret_diff(changes)
-    return changes unless changes.key?("smtp_password")
-    changes.merge("smtp_password" => [ "[REDACTED]", "[REDACTED]" ])
+    SECRET_ATTRIBUTES.each do |attr|
+      changes = changes.merge(attr => [ "[REDACTED]", "[REDACTED]" ]) if changes.key?(attr)
+    end
+    changes
   end
 end

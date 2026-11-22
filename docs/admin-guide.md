@@ -205,9 +205,13 @@ code) for observability. The full contract — signing, retries, reconciliation 
 
 ## Notifications
 
-**Admin → Notifications.** Email tells an approver that a request is waiting for them, and
-tells the requester when it was approved or denied. It is **off** until you switch it on;
-until then nothing is queued, and approvers find requests only in their in-app inbox.
+**Admin → Notifications.** Two channels, each switched on separately: **email** to the
+person concerned, and a **messenger webhook** that posts to a team channel. Both carry the
+same three moments — a request is waiting for an approver, it was approved, it was denied.
+Both are **off** until you switch them on; until then nothing is queued, and approvers find
+requests only in their in-app inbox.
+
+### Email
 
 | Field | Notes |
 | --- | --- |
@@ -224,6 +228,40 @@ is.
 
 Mail is sent in the background: an SMTP outage never blocks an approval, and an email
 lost to one is not retried. Messages already queued when you switch email off are dropped.
+
+### Messenger webhook
+
+One incoming-webhook URL and a JSON body template. That covers Slack, Mattermost,
+Rocket.Chat, Google Chat, Discord, Microsoft Teams (Workflows) and Telegram — pick a
+**preset** to fill the template, then adjust it.
+
+| Field | Notes |
+| --- | --- |
+| **Webhook URL** | The incoming-webhook address your messenger gives you. It *is* the credential — anyone holding it can post — so it is stored encrypted and never shown again; the page shows only its host. `http://` works and is flagged, for a self-hosted messenger on your private network. |
+| **Message body (JSON)** | Sent as `application/json`. Placeholders are filled inside string values only, and escaped, so nothing a requester types can change the document's shape. Saving checks that it is JSON and that every placeholder exists. |
+
+| Placeholder | Value |
+| --- | --- |
+| `{{text}}` | The whole message, ending with a link to governauthzer — all most templates need. |
+| `{{event}}` | `review_requested`, `approved` or `denied` (`test` for a test message). |
+| `{{requester}}` `{{role}}` `{{application}}` | Who asked, for what. |
+| `{{approver}}` | Who must decide (review requests only). |
+| `{{justification}}` `{{comment}}` | The requester's justification; the approver's comment on a denial. |
+| `{{link}}` | The link on its own. |
+
+For Telegram, the URL is `https://api.telegram.org/bot<token>/sendMessage` and the preset
+needs your chat id. For Teams, create a *Workflows* webhook ("Post to a channel when a
+webhook request is received"); the retired Office 365 connectors are not supported.
+
+Messages go to a **channel**, not a person: everyone in it sees the request and its
+justification, and the approver is named but not notified individually — use email for that.
+
+**Send test message** posts a sample with the *saved* settings, even while the channel is
+off, and shows the answer. The page also shows the **last post's result** — so a webhook
+revoked on the messenger's side shows up here instead of failing silently. A network error
+or `5xx` is retried a few times with backoff; a `4xx` is not, since repeating a refused
+request only repeats the refusal. Test messages are audited
+(`notification_settings.messenger_tested`) with the host only, never the URL.
 
 ## Audit log
 

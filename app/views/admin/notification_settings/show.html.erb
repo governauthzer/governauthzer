@@ -11,6 +11,14 @@
     </p>
   </div>
 
+  <% if @settings.errors.any? %>
+    <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm space-y-1">
+      <% @settings.errors.full_messages.each do |msg| %>
+        <div>• <%= msg %></div>
+      <% end %>
+    </div>
+  <% end %>
+
   <section class="card p-5 space-y-5">
     <div class="flex items-center justify-between gap-3">
       <h2 class="section-label">Email</h2>
@@ -21,13 +29,6 @@
 
     <%= form_with model: @settings, url: admin_notification_settings_path, method: :patch,
                   local: true, class: "space-y-5 max-w-xl" do |f| %>
-      <% if @settings.errors.any? %>
-        <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm space-y-1">
-          <% @settings.errors.full_messages.each do |msg| %>
-            <div>• <%= msg %></div>
-          <% end %>
-        </div>
-      <% end %>
 
       <div class="flex items-center gap-2">
         <%= f.check_box :email_enabled %>
@@ -92,6 +93,91 @@
         Sends to <%= current_user.email %> with the saved settings, even while email is off,
         and shows the server's answer.
       </p>
+    </div>
+  </section>
+
+  <% saved_url = @settings.messenger_url_in_database %>
+  <section class="card p-5 space-y-5">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="section-label">Messenger webhook</h2>
+      <span class="pill <%= @settings.messenger_enabled_in_database ? 'bg-green-50 text-green-800' : 'bg-gray-100 text-gray-600' %>">
+        <%= @settings.messenger_enabled_in_database ? "On" : "Off" %>
+      </span>
+    </div>
+    <p class="field-hint">
+      Posts the same notifications to a channel through its incoming webhook — Slack, Mattermost,
+      Teams, Discord, Google Chat, Telegram or anything that takes a JSON POST. Everyone in the
+      channel sees the requests, including their justification.
+    </p>
+
+    <%= form_with model: @settings, url: admin_notification_settings_path, method: :patch,
+                  local: true, class: "space-y-5 max-w-xl",
+                  data: { controller: "template-preset",
+                          template_preset_presets_value: NotificationSetting::MESSENGER_PRESETS.transform_values { |p| p[:template] } } do |f| %>
+      <div class="flex items-center gap-2">
+        <%= f.check_box :messenger_enabled %>
+        <%= f.label :messenger_enabled, "Post notifications to a messenger", class: "text-sm" %>
+      </div>
+
+      <div>
+        <%= f.label :messenger_url, "Webhook URL", class: "field-label" %>
+        <%= f.password_field :messenger_url, value: nil, autocomplete: "off",
+              placeholder: (saved_url.present? ? "Leave blank to keep current" : "https://hooks.slack.com/services/…"),
+              class: "#{input_class} font-mono" %>
+        <p class="field-hint">
+          The URL is the credential — anyone holding it can post as governauthzer — so it is stored
+          encrypted and never shown again.
+          <% if saved_url.present? %>
+            Current host: <code><%= @settings.saved_messenger_host %></code>.
+            <% if @settings.insecure_messenger_url? && !@settings.messenger_url_changed? %>
+              <span class="pill bg-amber-50 text-amber-800"
+                    title="Messages carry names and justifications. Plain HTTP is fine on a private network and exposed anywhere else.">plain HTTP</span>
+            <% end %>
+          <% end %>
+        </p>
+      </div>
+
+      <div>
+        <label for="messenger-preset" class="field-label">Start from a preset</label>
+        <select id="messenger-preset" class="<%= input_class %>" data-action="template-preset#apply">
+          <option value="">Choose a messenger…</option>
+          <% NotificationSetting::MESSENGER_PRESETS.each do |key, preset| %>
+            <option value="<%= key %>"><%= preset[:label] %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div>
+        <%= f.label :messenger_template, "Message body (JSON)", class: "field-label" %>
+        <%= f.text_area :messenger_template, rows: 8, class: "#{input_class} font-mono text-xs",
+              data: { template_preset_target: "template" } %>
+        <p class="field-hint">
+          Placeholders are filled inside string values, escaped:
+          <% NotificationSetting::MESSENGER_PLACEHOLDERS.each do |name| %><code>{{<%= name %>}}</code> <% end %>.
+          <code>{{text}}</code> is the whole message with its link; the rest let you compose your own.
+        </p>
+      </div>
+
+      <div class="pt-2">
+        <%= f.submit "Save", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+
+    <div class="pt-4 border-t border-gray-100 space-y-2">
+      <% if @settings.messenger_last_attempted_at_in_database %>
+        <p class="text-sm">
+          <span class="text-gray-500">Last post:</span>
+          <% if @settings.messenger_last_error_in_database.present? %>
+            <span class="text-red-700">failed</span> <%= time_ago_in_words(@settings.messenger_last_attempted_at_in_database) %> ago —
+            <span class="font-mono text-xs break-all"><%= @settings.messenger_last_error_in_database %></span>
+          <% else %>
+            <span class="text-green-700">delivered</span> <%= time_ago_in_words(@settings.messenger_last_attempted_at_in_database) %> ago
+          <% end %>
+        </p>
+      <% end %>
+      <%= button_to "Send test message", test_messenger_admin_notification_settings_path,
+            class: "btn btn-secondary", disabled: saved_url.blank? %>
+      <p class="field-hint">Posts a sample message with the saved settings, even while the channel is off, and shows the answer.</p>
     </div>
   </section>
 </div>

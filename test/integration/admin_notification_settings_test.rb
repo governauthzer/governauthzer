@@ -112,6 +112,108 @@ class AdminNotificationSettingsTest < ActionDispatch::IntegrationTest
     assert_match "Save an SMTP server", flash[:alert]
   end
 
+  # ----- messenger -----------------------------------------------------------
+
+  class FakePoster
+    def initialize(&block) = (@block = block)
+    def post(**kwargs) = @block.call(**kwargs)
+  end
+
+  def with_poster(&block)
+    Notifications::MessengerDeliveryJob.http_poster = FakePoster.new(&block)
+  end
+
+  def teardown
+    Notifications::MessengerDeliveryJob.http_poster = Outbound::HttpPoster
+  end
+
+  def messenger_params(**overrides)
+    { messenger_enabled: "1", messenger_url: "https://hooks.example.com/T1/B2/secret",
+      messenger_template: '{"text": "{{text}}"}' }.merge(overrides)
+  end
+
+  test "operator saves the messenger webhook, with the URL redacted from the audit event and never rendered" do
+    assert_difference("AuditEvent.where(event_type: 'notification_settings.updated').count", 1) do
+      patch "/admin/notification_settings", params: { notification_setting: messenger_params }
+    end
+    assert_redirected_to "/admin/notification_settings"
+    assert NotificationSetting.current.messenger_enabled?
+
+    event = AuditEvent.where(event_type: "notification_settings.updated").order(:occurred_at).last
+    assert_equal [ "[REDACTED]", "[REDACTED]" ], event.attribute_changes["messenger_url"]
+    assert_not_includes event.attribute_changes.to_json, "secret"
+
+    get "/admin/notification_settings"
+    assert_not_includes response.body, "/T1/B2/secret"
+    assert_includes response.body, "hooks.example.com"
+  end
+
+  test "a blank URL field keeps the stored URL" do
+    patch "/admin/notification_settings", params: { notification_setting: messenger_params }
+    patch "/admin/notification_settings", params: { notification_setting: messenger_params(messenger_url: "", messenger_template: '{"content": "{{text}}"}') }
+    settings = NotificationSetting.current
+    assert_equal "https://hooks.example.com/T1/B2/secret", settings.messenger_url
+    assert_equal '{"content": "{{text}}"}', settings.messenger_template
+  end
+
+  test "saving the messenger form leaves the email settings alone" do
+    patch "/admin/notification_settings", params: { notification_setting: settings_params }
+    patch "/admin/notification_settings", params: { notification_setting: messenger_params }
+    settings = NotificationSetting.current
+    assert settings.email_enabled?
+    assert_equal "s3cret", settings.smtp_password
+  end
+
+  test "an invalid template re-renders unprocessable and saves nothing" do
+    assert_no_difference("AuditEvent.count") do
+      patch "/admin/notification_settings", params: { notification_setting: messenger_params(messenger_template: '{"text": "{{nope}}"}') }
+    end
+    assert_response :unprocessable_content
+    assert_includes response.body, "unknown placeholders"
+  end
+
+  test "a test message posts to the saved webhook while the channel is off, and is audited by host only" do
+    patch "/admin/notification_settings", params: { notification_setting: messenger_params(messenger_enabled: "0") }
+    posted = nil
+    with_poster do |url:, body:, **|
+      posted = [ url, JSON.parse(body) ]
+      Outbound::HttpPoster::Response.new(code: 200, body: "ok")
+    end
+
+    assert_difference("AuditEvent.where(event_type: 'notification_settings.messenger_tested').count", 1) do
+      post "/admin/notification_settings/test_messenger"
+    end
+    assert_redirected_to "/admin/notification_settings"
+    assert_match "Test message posted", flash[:notice]
+    assert_equal "https://hooks.example.com/T1/B2/secret", posted[0]
+    assert_match "Test message from governauthzer", posted[1]["text"]
+
+    event = AuditEvent.where(event_type: "notification_settings.messenger_tested").order(:occurred_at).last
+    assert_equal "delivered", event.metadata["outcome"]
+    assert_equal "hooks.example.com", event.metadata["host"]
+    assert_not_includes event.metadata.to_json, "secret"
+    assert_equal 200, NotificationSetting.current.messenger_last_response_code
+  end
+
+  test "a refused test message shows the endpoint's answer and becomes the channel's last result" do
+    patch "/admin/notification_settings", params: { notification_setting: messenger_params }
+    with_poster { |**| Outbound::HttpPoster::Response.new(code: 404, body: "no_service") }
+
+    post "/admin/notification_settings/test_messenger"
+    assert_match "HTTP 404: no_service", flash[:alert]
+    assert_equal "HTTP 404: no_service", NotificationSetting.current.messenger_last_error
+
+    get "/admin/notification_settings"
+    assert_includes response.body, "HTTP 404: no_service"
+  end
+
+  test "a test message before any URL is saved is refused" do
+    assert_no_difference("AuditEvent.count") do
+      post "/admin/notification_settings/test_messenger"
+    end
+    assert_match "Save a webhook URL first", flash[:alert]
+  end
+
   private
 
   def sign_in_as(user)

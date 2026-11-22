@@ -18,6 +18,7 @@ turns it into the release notes.
 - The operator dashboard shows the running version.
 - Documented backup, restore and upgrades.
 - Email is configured in UI
+- Notifications can also be posted to a messenger channel through an incoming webhook
 
 ### Changed
 
