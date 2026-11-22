@@ -59,6 +59,10 @@ Rails.application.config.middleware.use OmniAuth::Builder do
 end
 
 OmniAuth.config.allowed_request_methods = [ :post ]
+# Callback URLs come from GOVERNAUTHZER_HOST, never from the request's Host or
+# X-Forwarded-Host header, which a client can forge. (The OIDC redirect_uri above is
+# already built from it; this covers everything else OmniAuth derives from the host.)
+OmniAuth.config.full_host = Rails.application.config.x.base_url
 OmniAuth.config.silence_get_warning     = true
 
 # OIDC spec mandates HTTPS for discovery. The `swd` gem hardcodes `URI::HTTPS` as

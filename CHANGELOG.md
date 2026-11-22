@@ -38,6 +38,8 @@ turns it into the release notes.
 
 ### Security
 
+- Ruby 4.0.10, Rails 8.1.4.1 and current dependencies, with no known advisories.
+- OmniAuth does not build callback URLs from request headers.
 - The emergency-login token moved out of the URL path.
 - Webhook signing secrets are encrypted at rest.
 

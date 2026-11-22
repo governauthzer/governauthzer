@@ -1,12 +1,36 @@
+# Minor and patch bumps arrive as one grouped PR per ecosystem a week; majors stay
+# separate so each gets its own look. The cooldown holds back any release younger than
+# a week — a compromised maintainer account is usually caught and yanked within days.
+# Security updates are not delayed by it.
 version: 2
 updates:
 - package-ecosystem: bundler
   directory: "/"
   schedule:
     interval: weekly
+  cooldown:
+    default-days: 7
+  groups:
+    minor-and-patch:
+      update-types: [minor, patch]
   open-pull-requests-limit: 10
+- package-ecosystem: bundler
+  directory: "/docs"
+  schedule:
+    interval: weekly
+  cooldown:
+    default-days: 7
+  groups:
+    docs-site:
+      update-types: [minor, patch]
+  open-pull-requests-limit: 5
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
     interval: weekly
+  cooldown:
+    default-days: 7
+  groups:
+    minor-and-patch:
+      update-types: [minor, patch]
   open-pull-requests-limit: 10
