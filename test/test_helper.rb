@@ -56,3 +56,14 @@ class ActionDispatch::IntegrationTest
     }
   end
 end
+
+class ActionDispatch::IntegrationTest
+  # Signs in through the real break-glass path — a minted emergency token, redeemed by
+  # POST — so every integration test gets a genuine session cookie.
+  def sign_in_as(user)
+    raw = SecureRandom.urlsafe_base64(32)
+    EmergencyToken.create!(user: user, token_digest: EmergencyToken.digest(raw),
+                           reason: "test sign-in", expires_at: 5.minutes.from_now)
+    post "/emergency-login", params: { token: raw }
+  end
+end

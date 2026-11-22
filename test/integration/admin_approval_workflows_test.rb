@@ -76,13 +76,4 @@ class AdminApprovalWorkflowsTest < ActionDispatch::IntegrationTest
     get "/admin/approval_workflows/#{workflow.id}/approval_steps/new"; assert_response :ok
     get "/admin/approval_steps/#{step.id}/edit";        assert_response :ok
   end
-
-  private
-
-  def sign_in_as(user)
-    raw = SecureRandom.urlsafe_base64(32)
-    EmergencyToken.create!(user: user, token_digest: EmergencyToken.digest(raw),
-                           reason: "test sign-in", expires_at: 5.minutes.from_now)
-    get "/emergency-login/#{raw}"
-  end
 end

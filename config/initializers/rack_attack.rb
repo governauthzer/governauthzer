@@ -58,10 +58,11 @@ class Rack::Attack
     req.ip if req.post? && req.path.start_with?("/auth/")
   end
 
-  # Emergency-login redemption — generic abuse limiter (token entropy is the real
-  # defense). Catches retry storms and access-log flooding.
+  # Emergency-login redemption (POST — the GET is only the confirm page) — generic
+  # abuse limiter (token entropy is the real defense). Catches retry storms and
+  # access-log flooding.
   throttle("emergency-login/ip", limit: 5, period: 20) do |req|
-    req.ip if req.path.start_with?("/emergency-login/")
+    req.ip if req.post? && req.path == "/emergency-login"
   end
 
   # --- 429 responder ---------------------------------------------------------

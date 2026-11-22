@@ -3,8 +3,8 @@ module Governauthzer
     # Issues a single-use, short-TTL login URL for the given user.
     #
     # Generates a 256-bit random token (`SecureRandom.urlsafe_base64(32)`), stores its
-    # SHA-256 digest in `emergency_tokens.token_digest` (one-way), and prints the URL
-    # with the raw token in the path. The plain token never persists.
+    # SHA-256 digest in `emergency_tokens.token_digest` (one-way), and prints a URL
+    # carrying the raw token in its fragment. The plain token never persists.
     #
     # Wrapped in one transaction + one `Current.set(correlation_id:)`.
     # Emits `auth.emergency_token.issued` audit event.
@@ -62,14 +62,20 @@ module Governauthzer
       end
 
       def print_url(user:, token:, raw_token:)
-        url = Rails.application.routes.url_helpers.emergency_login_url(token: raw_token)
+        # After `#`: browsers never send the fragment, so the token stays out of every
+        # access log, proxy log and error report between the browser and the app.
+        url = "#{Rails.application.routes.url_helpers.emergency_login_url}##{raw_token}"
         puts <<~OUT
           Issued one-time login URL for #{user.email}.
 
             #{url}
 
+          Open it and confirm. Without JavaScript, open the URL and paste this token:
+
+            #{raw_token}
+
           Expires: #{token.expires_at.utc.iso8601} (#{(::EmergencyToken::TTL / 60).to_i} minutes)
-          Single use; clicking the URL invalidates further uses.
+          Single use. Don't paste the URL into a chat or email: link previews would open it.
         OUT
       end
     end

@@ -38,6 +38,7 @@ turns it into the release notes.
 
 ### Security
 
+- The emergency-login token moved out of the URL path.
 - Webhook signing secrets are encrypted at rest.
 
 ## 0.5.0 — 2026-07-17

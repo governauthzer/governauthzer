@@ -153,9 +153,14 @@ bin/governauthzer seed-admin --email you@example.com --name "Your Name"
 bin/governauthzer emergency-login --user you@example.com --reason "bootstrap"
 ```
 
-Open the printed URL to sign in, then configure your first OIDC provider in
+Open the printed URL in your browser and click **Sign in**, then configure your first OIDC provider in
 **Admin → OIDC providers**. After that, operators arrive through HRIS like everyone
 else (their OIDC identity is linked by an operator in the admin UI).
+
+The token sits after `#` in the URL, which browsers never send, so it stays out of
+access logs, proxy logs and error reports; the page posts it only when you click. Don't
+paste the URL into a chat or email — link previews would open it. Without JavaScript,
+open the URL and paste the token the command prints on its own line.
 
 ## Email
 

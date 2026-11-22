@@ -107,13 +107,4 @@ class AdminAuthProvidersTest < ActionDispatch::IntegrationTest
     get "/admin/auth_providers"
     assert_response :forbidden
   end
-
-  private
-
-  def sign_in_as(user)
-    raw = SecureRandom.urlsafe_base64(32)
-    EmergencyToken.create!(user: user, token_digest: EmergencyToken.digest(raw),
-                           reason: "test sign-in", expires_at: 5.minutes.from_now)
-    get "/emergency-login/#{raw}"
-  end
 end

@@ -1,0 +1,22 @@
+<% content_for :title, "Emergency sign-in — Governauthzer" %>
+
+<div class="max-w-md w-full" data-controller="emergency-token">
+  <h1 class="page-title mb-4">Emergency sign-in</h1>
+  <p class="mb-6 text-sm text-gray-600">
+    Sign in with a one-time token issued from the server shell. It works once, within ten
+    minutes of being issued.
+  </p>
+
+  <%= form_with url: emergency_login_path, method: :post, local: true, class: "space-y-4" do |f| %>
+    <div data-emergency-token-target="manual">
+      <%= f.label :token, "Token", class: "field-label" %>
+      <%= f.password_field :token, required: true, autocomplete: "off", class: "input font-mono",
+            data: { emergency_token_target: "input" } %>
+      <p class="field-hint">Paste the token the command printed.</p>
+    </div>
+    <p class="hidden text-sm text-gray-700" data-emergency-token-target="detected">
+      Your sign-in link carries a token. Confirm to use it.
+    </p>
+    <%= f.submit "Sign in", class: "btn btn-primary" %>
+  <% end %>
+</div>

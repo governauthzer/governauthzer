@@ -19,11 +19,11 @@ class RateLimitingTest < ActionDispatch::IntegrationTest
   test "trips the emergency-login per-IP throttle and returns the rate_limited envelope" do
     # Limit is 5 per 20s; the 6th request from the same IP is throttled.
     5.times do
-      get "/emergency-login/does-not-exist"
+      post "/emergency-login", params: { token: "does-not-exist" }
       assert_not_equal 429, response.status
     end
 
-    get "/emergency-login/does-not-exist"
+    post "/emergency-login", params: { token: "does-not-exist" }
 
     assert_response :too_many_requests
     assert_equal "rate_limited", JSON.parse(response.body).dig("error", "code")
@@ -31,9 +31,16 @@ class RateLimitingTest < ActionDispatch::IntegrationTest
     assert JSON.parse(response.body).dig("error", "details", "retry_after").positive?
   end
 
+  test "the confirm page is not throttled — only redemption counts" do
+    10.times do
+      get "/emergency-login"
+      assert_response :ok
+    end
+  end
+
   test "lets requests under the limit through" do
     3.times do
-      get "/emergency-login/does-not-exist"
+      post "/emergency-login", params: { token: "does-not-exist" }
       assert_not_equal 429, response.status
     end
   end

@@ -5,7 +5,10 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  get    "/emergency-login/:token" => "emergency_logins#redeem", as: :emergency_login
+  # The token never appears in a path: the CLI puts it after `#`, which browsers do not
+  # send, and the confirm page POSTs it. See EmergencyLoginsController.
+  get    "/emergency-login"        => "emergency_logins#show", as: :emergency_login
+  post   "/emergency-login"        => "emergency_logins#create"
   delete "/logout"                 => "sessions#destroy",        as: :logout
 
   get  "/login"                  => "logins#show",                 as: :login
