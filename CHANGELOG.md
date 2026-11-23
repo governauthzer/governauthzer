@@ -44,6 +44,7 @@ turns it into the release notes.
 - Sentry no longer records outbound request URLs, which could carry a messenger webhook's secret.
 - The API docs page serves its script from the app itself, under a policy that blocks
   loading anything from elsewhere.
+- A crafted sign-in failure link can no longer put its own text on the login page.
 - Webhook signing secrets are encrypted at rest.
 
 ## 0.5.0 — 2026-07-17

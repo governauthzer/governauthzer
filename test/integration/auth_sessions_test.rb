@@ -114,6 +114,15 @@ class AuthSessionsTest < ActionDispatch::IntegrationTest
     assert cookies[:session].blank?
   end
 
+  test "a sign-in failure shows fixed text, never the error from the query string" do
+    get "/auth/failure", params: { message: "Your account is locked. Call +1 555 0100 to unlock" }
+    assert_redirected_to login_path
+    assert_equal "Sign-in failed. Try again or contact your administrator.", flash[:alert]
+
+    follow_redirect!
+    assert_not_includes response.body, "555 0100"
+  end
+
   test "the login page lists only enabled providers" do
     AuthProvider.create!(name: "VisibleIdP", slug: "visible", oidc_issuer_url: "https://i",
                          oidc_client_id: "c", oidc_scope: "openid", claim_mappings: [], enabled: true)

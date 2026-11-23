@@ -44,9 +44,14 @@ class OmniauthSessionsController < ApplicationController
     redirect_to root_path, notice: "Signed in as #{user.name}."
   end
 
+  # OmniAuth redirects here with the error code in the query string, which anyone can
+  # also craft by hand — so it goes to the log for the operator, never onto the page,
+  # where it would let a link put arbitrary text in front of a user.
   def failure
-    message = params[:message].to_s
-    Rails.logger.warn("[oidc] auth failure: #{message} strategy=#{params[:strategy]}")
-    redirect_to login_path, alert: "Sign-in failed: #{message.presence || 'unknown error'}"
+    Rails.logger.warn(
+      "[oidc] auth failure: #{params[:message].to_s.truncate(100).inspect} " \
+      "strategy=#{params[:strategy].to_s.truncate(50).inspect}"
+    )
+    redirect_to login_path, alert: "Sign-in failed. Try again or contact your administrator."
   end
 end
