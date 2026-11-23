@@ -6,7 +6,7 @@ A self-hosted open source IGA: request, approve, audit. Provision access however
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![Rails 8.1](https://img.shields.io/badge/Rails-8.1-CC0000.svg)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13%2B-336791.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-336791.svg)
 
 
 ## What it is

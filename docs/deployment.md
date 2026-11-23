@@ -29,7 +29,7 @@ provider-neutral reference behind it.
 
 ## Prerequisites
 
-- **PostgreSQL** 13+ (16+ recommended). Uses `gen_random_uuid()`; no extensions needed.
+- **PostgreSQL** 16+. Uses `gen_random_uuid()`; no extensions needed.
 - The Solid stack (Queue / Cache / Cable) runs **on Postgres** — production uses four
   databases (`primary` / `cache` / `queue` / `cable`).
 - Ruby per [`.ruby-version`](https://github.com/governauthzer/governauthzer/blob/main/.ruby-version).
