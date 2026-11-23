@@ -42,6 +42,8 @@ turns it into the release notes.
 - OmniAuth does not build callback URLs from request headers.
 - The emergency-login token moved out of the URL path.
 - Sentry no longer records outbound request URLs, which could carry a messenger webhook's secret.
+- The API docs page serves its script from the app itself, under a policy that blocks
+  loading anything from elsewhere.
 - Webhook signing secrets are encrypted at rest.
 
 ## 0.5.0 — 2026-07-17

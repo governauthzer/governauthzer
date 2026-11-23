@@ -9,9 +9,12 @@
   </head>
   <body>
     <redoc spec-url="<%= api_docs_spec_path %>"></redoc>
-    <%# Redoc standalone bundle from CDN. Deferred hardening (Phase 6): pin an exact
-        version + SRI, and vendor the bundle so air-gapped deployments work offline.
-        The raw contract stays available at the spec-url above regardless. %>
-    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+    <%# Redoc 2.5.4, vendored (vendor/javascript/redoc.standalone.js, MIT). Served from
+        this origin, not a CDN: a script from elsewhere runs with the operator session's
+        origin, and an internal network may have no route to the CDN at all. Pinned to
+        2.x on purpose — 3.x sends usage telemetry to Redocly by default and loads its
+        icons from their CDN. To upgrade, replace the file from the npm tarball after
+        checking its `dist.integrity`. %>
+    <%= javascript_include_tag "redoc.standalone" %>
   </body>
 </html>
