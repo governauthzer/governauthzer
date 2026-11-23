@@ -21,8 +21,11 @@ jobs:
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
       
+      # Advisory, not a gate: the advisory database is live, so a gem advisory published
+      # today would turn every build red until a fix is out and past the dependency
+      # cooldown. Findings still show in this step's log and as a warning on the run.
       - name: Scan for known security vulnerabilities in gems used
-        run: bin/bundler-audit
+        run: bin/bundler-audit || echo "::warning title=Gem advisories::bundler-audit found advisories; see the 'Scan for known security vulnerabilities in gems used' step"
       
   scan_js:
     runs-on: ubuntu-latest

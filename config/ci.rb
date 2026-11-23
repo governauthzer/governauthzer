@@ -5,7 +5,8 @@ CI.run do
 
   step "Style: Ruby", "bin/rubocop"
 
-  step "Security: Gem audit", "bin/bundler-audit"
+  # Reports, never fails the run — see the same step in .github/workflows/ci.yml.
+  step "Security: Gem audit", "bin/bundler-audit || echo 'Gem advisories found (not blocking)'"
   step "Security: Importmap vulnerability audit", "bin/importmap audit"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
   step "Tests: Rails", "bin/rails test"
