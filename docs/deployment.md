@@ -68,7 +68,7 @@ The app **fails to boot** without `SECRET_KEY_BASE` and the three encryption key
 | `SENTRY_DSN` | — | Enables Sentry error tracking. No DSN ⇒ the SDK is a no-op (nothing leaves the box). |
 | `SENTRY_ENVIRONMENT` | `Rails.env` | Sentry environment tag. |
 | `SENTRY_SEND_PII` | `false` | Opt-in PII in Sentry events (off by default for an identity app). |
-| `SENTRY_TRACES_SAMPLE_RATE` | `0.0` | Sentry performance tracing sample rate. |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.0` | Sentry performance tracing sample rate. Outbound HTTP calls are never traced or recorded: a messenger webhook URL is itself a credential. |
 | `GOVERNAUTHZER_RELEASE` | — | Release identifier reported to Sentry. |
 | `SKIP_DB_PREPARE` | `false` | Set `true` to stop the container entrypoint auto-migrating on boot — required when serving under the restricted DB role (it can't run DDL). Run migrations as the owner separately. |
 

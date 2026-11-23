@@ -41,6 +41,7 @@ turns it into the release notes.
 - Ruby 4.0.10, Rails 8.1.4.1 and current dependencies, with no known advisories.
 - OmniAuth does not build callback URLs from request headers.
 - The emergency-login token moved out of the URL path.
+- Sentry no longer records outbound request URLs, which could carry a messenger webhook's secret.
 - Webhook signing secrets are encrypted at rest.
 
 ## 0.5.0 — 2026-07-17
