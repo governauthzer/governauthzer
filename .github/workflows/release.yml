@@ -1,6 +1,7 @@
 name: Release
 
-# One button: Actions → Release → Run workflow → pick the bump. Everything the
+# One button: Actions → Release → Run workflow → pick the bump, and tick "beta" for a
+# pre-release of the next version. Everything the
 # release needs — version, changelog, tag, image, GitHub Release — happens here,
 # in one job, in an order chosen so a failure never leaves a half-release:
 # the image is built and pushed BEFORE the tag exists, so a broken build means
@@ -23,6 +24,10 @@ on:
         options: [ patch, minor, major ]
         default: patch
         required: true
+      beta:
+        description: "Beta: from a release, the first beta of the bumped version; from a beta, the next one. Unticked on a beta releases it."
+        type: boolean
+        default: false
 
 permissions:
   contents: write # commit the bump, push the tag, create the release
@@ -83,7 +88,19 @@ jobs:
 
       - name: Bump version and roll the changelog
         id: prep
-        run: ruby .github/scripts/prepare_release.rb "${{ inputs.bump }}" "$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
+        run: ruby .github/scripts/prepare_release.rb "${{ inputs.bump }}" "$RUNNER_TEMP/notes.md" "${{ inputs.beta }}" >> "$GITHUB_OUTPUT"
+
+      # A beta gets its exact tag only: anyone deploying `latest`, `1` or `1.0` must
+      # not be moved onto it.
+      - name: Pick image tags
+        id: tags
+        run: |
+          image="ghcr.io/${{ github.repository }}"
+          tags="$image:${{ steps.prep.outputs.version }}"
+          if [ "${{ steps.prep.outputs.prerelease }}" != "true" ]; then
+            tags="$tags,$image:${{ steps.prep.outputs.major_minor }},$image:${{ steps.prep.outputs.major }},$image:latest"
+          fi
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -108,11 +125,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: APP_VERSION=${{ steps.prep.outputs.version }}
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.prep.outputs.version }}
-            ghcr.io/${{ github.repository }}:${{ steps.prep.outputs.major_minor }}
-            ghcr.io/${{ github.repository }}:${{ steps.prep.outputs.major }}
-            ghcr.io/${{ github.repository }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -120,7 +133,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add VERSION CHANGELOG.md
+          git add VERSION CHANGELOG.md # a beta leaves CHANGELOG.md unchanged
           git commit -m "Release ${{ steps.prep.outputs.version }}"
           # Annotated, not lightweight: --follow-tags silently skips lightweight
           # tags, so the commit lands and the tag stays behind on the runner.
@@ -131,6 +144,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          prerelease=""
+          [ "${{ steps.prep.outputs.prerelease }}" = "true" ] && prerelease="--prerelease"
           gh release create "v${{ steps.prep.outputs.version }}" \
             --title "v${{ steps.prep.outputs.version }}" \
+            $prerelease \
             --notes-file "$RUNNER_TEMP/notes.md"

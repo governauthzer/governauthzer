@@ -23,7 +23,8 @@ with its credentials encrypted in the database.
 
 Released images are published at `ghcr.io/governauthzer/governauthzer` for `linux/amd64`
 and `linux/arm64`, tagged with the full version, the major and minor series, and `latest`
-— so you can run a release without building it. For a worked end-to-end example of doing
+— so you can run a release without building it. A beta (`1.0.0-beta.1`) gets only its
+exact tag, so following `latest` or a series never moves you onto one. For a worked end-to-end example of doing
 that on one server, see **[Deploying with Kamal](kamal.md)**; this page is the
 provider-neutral reference behind it.
 
