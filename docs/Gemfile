@@ -10,7 +10,7 @@ gem "just-the-docs", "~> 0.10"
 # Rewrites inline [text](page.md) links to .html at build time (the same plugin
 # GitHub Pages enables by default), so cross-page links work both in these source
 # files (viewed on GitHub) and on the built site.
-gem "jekyll-relative-links", "~> 0.7"
+gem "jekyll-relative-links", "~> 0.9"
 
 # Local preview server (`bundle exec jekyll serve`).
 gem "webrick", "~> 1.9"
